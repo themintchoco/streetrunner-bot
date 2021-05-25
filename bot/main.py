@@ -20,5 +20,4 @@ async def rank(ctx, username: str):
 async def on_command_error(ctx, error):
 	await ctx.send('gib username pls')
 
-# bot.run(os.environ['TOKEN'])
-bot.run('ODQ2NzU1MzQzNDMwNDUxMjQw.YK0IXQ.BMKLmbw8QmBeyWcLHliwaDvHXdc')
+bot.run(os.environ['TOKEN'])
