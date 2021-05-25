@@ -19,6 +19,10 @@ async def rank(ctx, username: str):
 
 @rank.error
 async def on_command_error(ctx, error):
-	await ctx.send('gib username pls')
+	print(error)
+	if isinstance(error, MissingRequiredArgument):
+		await ctx.send('gib username pls')
+	else:
+		await ctx.send(str(error))
 
 bot.run(os.environ['TOKEN'])
