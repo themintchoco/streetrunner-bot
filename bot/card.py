@@ -11,8 +11,8 @@ CARD_HEIGHT = 220
 
 SPACING = 12
 
-FONT_BOLD = '../fonts/Roboto-Black.ttf'
-FONT_REGULAR = '../fonts/Roboto-Regular.ttf'
+FONT_BOLD = '/app/fonts/Roboto-Black.ttf'
+FONT_REGULAR = '/app/fonts/Roboto-Regular.ttf'
 
 
 async def get_skin(username: str) -> bytes:

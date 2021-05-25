@@ -20,7 +20,7 @@ async def rank(ctx, username: str):
 @rank.error
 async def on_command_error(ctx, error):
 	print(error)
-	if isinstance(error, MissingRequiredArgument):
+	if isinstance(error, commands.MissingRequiredArgument):
 		await ctx.send('gib username pls')
 	else:
 		await ctx.send(str(error))
