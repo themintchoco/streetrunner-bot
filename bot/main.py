@@ -10,12 +10,7 @@ bot = commands.Bot(command_prefix='!')
 @bot.command()
 async def rank(ctx, username: str):
 	image = await card.gen_card(username)
-
-	fp = BytesIO()
-	image.save(fp, format='PNG')
-	fp.seek(0)
-
-	await ctx.send(file=discord.File(fp, 'rank_card.png'))
+	await ctx.send(file=discord.File(image, 'rank_card.png'))
 
 @rank.error
 async def on_command_error(ctx, error):
