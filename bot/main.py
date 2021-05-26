@@ -1,23 +1,16 @@
+import os
 import discord
 from discord.ext import commands
+from bot.PlayerCog import PlayerCog
+from bot.WebServerCog import WebServerCog
 
-import os
-from bot import card
-from io import BytesIO
 
-bot = commands.Bot(command_prefix='!')
+intents = discord.Intents.default()
+intents.members = True
 
-@bot.command()
-async def rank(ctx, username: str):
-	image = await card.gen_card(username)
-	await ctx.send(file=discord.File(image, 'rank_card.png'))
+bot = commands.Bot(command_prefix='!', intents=intents)
 
-@rank.error
-async def on_command_error(ctx, error):
-	print(error)
-	if isinstance(error, commands.MissingRequiredArgument):
-		await ctx.send('gib username pls')
-	else:
-		await ctx.send(str(error))
+bot.add_cog(PlayerCog(bot))
+bot.add_cog(WebServerCog(bot))
 
 bot.run(os.environ['TOKEN'])

@@ -2,6 +2,7 @@ import aiohttp
 import asyncio
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
+import os
 
 import random
 import string
@@ -11,8 +12,8 @@ CARD_HEIGHT = 220
 
 SPACING = 12
 
-FONT_BOLD = '/app/fonts/Roboto-Black.ttf'
-FONT_REGULAR = '/app/fonts/Roboto-Regular.ttf'
+FONT_BOLD = 'fonts/Roboto-Black.ttf'
+FONT_REGULAR = 'fonts/Roboto-Regular.ttf'
 
 
 async def get_skin(username: str) -> BytesIO:
@@ -25,6 +26,14 @@ async def get_skin(username: str) -> BytesIO:
 
 
 async def get_stats(username: str) -> dict:
+	# async with aiohttp.ClientSession() as s:
+	# 	async with s.get('https://streetrunner.dev/api/player?mc_username=' + username, headers={'Authorization': os.environ['API_KEY']}) as r:
+	# 		player = await r.json()
+	#
+	# return {
+	# 	'rank': player['rank'],
+	# 	'kda': round((player['stats'][0] + player['stats'][1]) / player['stats'][2], 2)
+	# }
 	return {
 		'rank': ('' if (r := random.randint(0, 5)) == 0 else str(r)) + random.choice(string.ascii_uppercase),
 		'kda': round(random.uniform(0.5, 1.5), 2)
