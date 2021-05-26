@@ -55,8 +55,10 @@ async def gen_card(username: str) -> BytesIO:
 	draw_base.text((9 * SPACING + image_skin.width, 5 * SPACING + 24), 'RANK', (127, 127, 127), font_stats_header)
 	draw_base.text((9 * SPACING + image_skin.width, 6 * SPACING + 24 + 18), stats['rank'], (252, 234, 168), font_stats)
 
-	draw_base.text((9 * SPACING + image_skin.width + 150, 5 * SPACING + 24), 'KDA', (127, 127, 127), font_stats_header)
-	draw_base.text((9 * SPACING + image_skin.width + 150, 6 * SPACING + 24 + 18), str(stats['kda']), (252, 234, 168), font_stats)
+	length_stats_rank = draw_base.textlength(stats['rank'], font_stats)
+
+	draw_base.text((13 * SPACING + image_skin.width + max(length_stats_rank, 100), 5 * SPACING + 24), 'KDA', (127, 127, 127), font_stats_header)
+	draw_base.text((13 * SPACING + image_skin.width + max(length_stats_rank, 100), 6 * SPACING + 24 + 18), str(stats['kda']), (252, 234, 168), font_stats)
 
 	fp = BytesIO()
 	image_base.save(fp, format='PNG')
