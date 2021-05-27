@@ -23,6 +23,24 @@ class WebServerCog(commands.Cog):
 		async def index(request):
 			raise web.HTTPFound('https://streetrunner.dev')
 
+		@self.routes.get('/channels')
+		@auth.required
+		async def list_channels(request):
+			guild = self.bot.get_guild(int(os.environ['GUILD_ID']))
+			if not guild:
+				raise web.HTTPNotFound()
+
+			response = []
+			for channel in guild.channels:
+				if str(channel.type) == 'text':
+					response.append({
+						'id': channel.id,
+						'name': channel.name,
+						'category': channel.category.name if channel.category else None
+					})
+
+			return web.json_response(response)
+
 		@self.routes.post('/channel/{id}/send')
 		@auth.required
 		async def send_channel(request):
