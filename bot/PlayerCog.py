@@ -21,6 +21,8 @@ class PlayerCog(commands.Cog):
 	async def on_command_error(self, ctx, error):
 		if isinstance(error, commands.MissingRequiredArgument):
 			await ctx.send(f'usage: {self.bot.command_prefix}rank <Minecraft username>')
+		elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, card.UsernameError):
+			await ctx.send(f'That username appears to be invalid')
 		else:
 			await self.handle_command_error(ctx, error)
 
@@ -48,5 +50,5 @@ class PlayerCog(commands.Cog):
 		await self.handle_command_error(ctx, error)
 
 	async def handle_command_error(self, ctx, error):
-		await ctx.send('Sorry, an error has occured. An admin will be notified. ')
+		await ctx.send('Sorry, an error has occured. Please try again at a later time. ')
 		raise
