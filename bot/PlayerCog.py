@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 from bot import card
+import os
 
 
 class PlayerCog(commands.Cog):
@@ -14,8 +15,13 @@ class PlayerCog(commands.Cog):
 
 	@rank.error
 	async def on_command_error(self, ctx, error):
-		print(error)
 		if isinstance(error, commands.MissingRequiredArgument):
-			await ctx.send('gib username pls')
+			await ctx.send(f'usage: {self.bot.command_prefix}rank <Minecraft username>')
 		else:
-			await ctx.send(str(error))
+			await handle_command_error(ctx, error)
+
+	async def handle_command_error(self, ctx, error):
+		await ctx.send('Sorry, an error has occured. An admin will be notified. ')
+		admin_user = self.bot.get_user(int(os.environ['ADMIN_USER_ID']))
+		if admin_user:
+			await admin_user.send(f'An error has occurred: {error}\nMessage: {ctx.message}')
