@@ -8,12 +8,14 @@ PEDDLER_NAME = 'Luthor'
 PEDDLER_AVATAR = 'images/peddler_avatar.png'
 
 
-class PlayerCog(commands.Cog):
+class Player(commands.Cog):
+	"""rank, peddler"""
 	def __init__(self, bot):
 		self.bot = bot
 
 	@commands.command(aliases=['kda'])
 	async def rank(self, ctx, username: str):
+		"""Displays player stats"""
 		image = await card.gen_card(username)
 		await ctx.send(file=discord.File(image, 'rank_card.png'))
 
@@ -28,6 +30,7 @@ class PlayerCog(commands.Cog):
 
 	@commands.command(aliases=['luthor'])
 	async def peddler(self, ctx):
+		"""Asks the mysterious peddler when he's leaving for his next destination"""
 		for webhook in await ctx.channel.webhooks():
 			if webhook.name == PEDDLER_NAME:
 				return await self.handle_peddler(webhook)

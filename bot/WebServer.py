@@ -5,7 +5,7 @@ from aiohttp_basicauth import BasicAuthMiddleware
 import os
 
 
-class WebServerCog(commands.Cog):
+class WebServer(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 		self.web_server.start()

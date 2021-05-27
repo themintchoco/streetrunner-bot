@@ -1,8 +1,9 @@
 import os
 import discord
 from discord.ext import commands
-from bot.PlayerCog import PlayerCog
-from bot.WebServerCog import WebServerCog
+from bot.Player import Player
+from bot.WebServer import WebServer
+from pretty_help import PrettyHelp
 import sentry_sdk
 
 sentry_sdk.init(
@@ -13,10 +14,10 @@ sentry_sdk.init(
 intents = discord.Intents.default()
 intents.members = True
 
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents, help_command=PrettyHelp(no_category='Other'))
 
-bot.add_cog(PlayerCog(bot))
-bot.add_cog(WebServerCog(bot))
+bot.add_cog(Player(bot))
+bot.add_cog(WebServer(bot))
 
 @bot.event
 async def on_error(event, *args, **kwargs):
