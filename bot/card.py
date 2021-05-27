@@ -26,17 +26,13 @@ async def get_skin(username: str) -> BytesIO:
 
 
 async def get_stats(username: str) -> dict:
-	# async with aiohttp.ClientSession() as s:
-	# 	async with s.get('https://streetrunner.dev/api/player?mc_username=' + username, headers={'Authorization': os.environ['API_KEY']}) as r:
-	# 		player = await r.json()
-	#
-	# return {
-	# 	'rank': player['rank'],
-	# 	'kda': round((player['stats'][0] + player['stats'][1]) / player['stats'][2], 2)
-	# }
+	async with aiohttp.ClientSession() as s:
+		async with s.get('https://streetrunner.dev/api/player?mc_username=' + username, headers={'Authorization': os.environ['API_KEY']}) as r:
+			player = await r.json()
+
 	return {
-		'rank': ('' if (r := random.randint(0, 5)) == 0 else str(r)) + random.choice(string.ascii_uppercase),
-		'kda': round(random.uniform(0.5, 1.5), 2)
+		'rank': player['rank'],
+		'kda': round((player['stats']['kills'] + player['stats']['assists']) / max(player['stats']['deaths'], 1), 2)
 	}
 
 
