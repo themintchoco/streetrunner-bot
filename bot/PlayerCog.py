@@ -49,6 +49,4 @@ class PlayerCog(commands.Cog):
 
 	async def handle_command_error(self, ctx, error):
 		await ctx.send('Sorry, an error has occured. An admin will be notified. ')
-		admin_user = self.bot.get_user(int(os.environ['ADMIN_USER_ID']))
-		if admin_user:
-			await admin_user.send(f'An error has occurred: {error}\nMessage: {ctx.message}')
+		raise
