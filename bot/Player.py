@@ -22,7 +22,7 @@ class Player(commands.Cog):
 	@rank.error
 	async def on_command_error(self, ctx, error):
 		if isinstance(error, commands.MissingRequiredArgument):
-			await ctx.send(f'usage: {self.bot.command_prefix}rank <Minecraft username>')
+			await ctx.send(f'usage: {self.bot.command_prefix}{ctx.invoked_with} <Minecraft username>')
 		elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, card.UsernameError):
 			await ctx.send(f'That username appears to be invalid')
 		else:
