@@ -71,14 +71,17 @@ async def gen_card(username: str) -> BytesIO:
 
 	fp = BytesIO()
 	image_base.save(fp, format='PNG')
-	fp.seek(0)
 
+	image_skin.close()
+	image_base.close()
+
+	fp.seek(0)
 	return fp
 
 
 async def main():
-	image = await gen_card('threeleaves')
-	image.show()
+	with Image.open(await gen_card('threeleaves')) as image:
+		image.show()
 
 
 if __name__ ==  '__main__':
