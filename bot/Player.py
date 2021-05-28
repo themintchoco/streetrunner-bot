@@ -18,14 +18,14 @@ class Player(commands.Cog):
 	@commands.command(aliases=['prison'])
 	async def rank(self, ctx, username: str):
 		"""Displays player Prison stats"""
-		image = await card.gen_card(username, CardType.Prison)
-		await ctx.send(file=discord.File(image, 'rank_card.png'))
+		render = await card.render_card(username, CardType.Prison)
+		await ctx.send(file=discord.File(render.file, 'rank_card.png'))
 
 	@commands.command(aliases=['arena'])
 	async def infamy(self, ctx, username: str):
 		"""Displays player Arena stats"""
-		image = await card.gen_card(username, CardType.Arena)
-		await ctx.send(file=discord.File(image, 'rank_card.png'))
+		render = await card.render_card(username, CardType.Arena)
+		await ctx.send(file=discord.File(render.file, 'rank_card.png'))
 
 	@rank.error
 	async def on_command_error(self, ctx, error):
