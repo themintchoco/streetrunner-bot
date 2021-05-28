@@ -259,11 +259,9 @@ async def gen_card(username: str, card_type: CardType) -> BytesIO:
     image_skin = await gen_render(skin_data['skin'], skin_data['slim'], 6)
 
     if card_type == CardType.PRISON:
-        image_base = Image.open(
-            os.path.join(os.path.abspath(os.path.join(os.getcwd(), os.pardir)), 'images', 'prison.png'))
+        image_base = Image.open('images/prison.png')
     elif card_type == CardType.ARENA:
-        image_base = Image.open(
-            os.path.join(os.path.abspath(os.path.join(os.getcwd(), os.pardir)), 'images', 'arena.png'))
+        image_base = Image.open('images/arena.png')
     else:
         image_base = Image.new('RGBA', (CARD_WIDTH, CARD_HEIGHT), color=(0, 0, 0, 0))
 
