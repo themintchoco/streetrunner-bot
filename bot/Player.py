@@ -4,6 +4,8 @@ from bot import card
 import os
 import datetime
 
+from bot.card import CardType
+
 PEDDLER_NAME = 'Luthor'
 PEDDLER_AVATAR = 'images/peddler_avatar.png'
 
@@ -16,7 +18,7 @@ class Player(commands.Cog):
 	@commands.command(aliases=['kda'])
 	async def rank(self, ctx, username: str):
 		"""Displays player stats"""
-		image = await card.gen_card(username)
+		image = await card.gen_card(username, CardType.PRISON)
 		await ctx.send(file=discord.File(image, 'rank_card.png'))
 
 	@rank.error
