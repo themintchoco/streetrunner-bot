@@ -319,7 +319,7 @@ async def render_card(username: str, card_type: CardType) -> BytesIO:
 	length_stats_rank = draw_base.textlength(player_info.stats_prison.rank, font_stats)
 
 	draw_base.text((14 * SPACING + image_skin.width + max(length_stats_rank, 80), 8 * SPACING), stats[1][0],
-				   (127, 127, 127), font_stats_header)
+				   (192, 192, 192), font_stats_header)
 	draw_base.text((14 * SPACING + image_skin.width + max(length_stats_rank, 80), 10 * SPACING), stats[1][1],
 				   (77, 189, 138), font_stats)
 
@@ -327,7 +327,7 @@ async def render_card(username: str, card_type: CardType) -> BytesIO:
 
 
 async def main():
-	(await render_card('threeleaves', card_type=CardType.Arena)).image.show()
+	(await render_card('vive202000', card_type=CardType.Prison)).image.show()
 	# skin_data = await get_skin('1e3cb08c-e29d-478b-a0b9-3b2cacd899bd')
 	# image_skin = await gen_render(skin_data['skin'], skin_data['slim'], 6)
 	# image_skin.show()
