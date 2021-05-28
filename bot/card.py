@@ -64,7 +64,6 @@ class Render:
 	def __init__(self, image: Image):
 		self.image = image
 
-	@property
 	def file(self, format: str = None) -> BytesIO:
 		fp = BytesIO()
 		self.image.save(fp, format)
@@ -296,12 +295,12 @@ async def render_card(username: str, card_type: CardType) -> BytesIO:
 	image_card = image_base.copy()
 	draw_card = ImageDraw.Draw(image_card)
 	draw_card.rounded_rectangle((SPACING, SPACING, CARD_WIDTH - SPACING, CARD_HEIGHT - SPACING),
-								fill=(255, 255, 255, 255), radius=6)
+								fill=(255, 255, 255, 255), radius=15)
 
 	image_card.paste(image_mask, mask=image_card)
 
 	draw_base.rounded_rectangle((SPACING, SPACING, CARD_WIDTH - SPACING, CARD_HEIGHT - SPACING),
-								fill=(255, 255, 255, 255), radius=6)
+								fill=(32, 34, 37, 255), radius=15)
 	image_base.paste(image_card, mask=image_card)
 
 	image_skin = image_skin.crop((0, 0, image_skin.width, CARD_HEIGHT - 3 * SPACING))
@@ -309,12 +308,12 @@ async def render_card(username: str, card_type: CardType) -> BytesIO:
 	image_base.paste(image_skin, (5 * SPACING, 2 * SPACING), mask=image_skin)
 
 	font_username = ImageFont.truetype(FONT_BOLD, 36)
-	draw_base.text((10 * SPACING + image_skin.width, 3 * SPACING), player_info.username, (94, 94, 94), font_username)
+	draw_base.text((10 * SPACING + image_skin.width, 3 * SPACING), player_info.username, (235, 235, 235), font_username)
 
 	font_stats_header = ImageFont.truetype(FONT_LIGHT, 18)
 	font_stats = ImageFont.truetype(FONT_BLACK, 54)
 
-	draw_base.text((10 * SPACING + image_skin.width, 8 * SPACING), stats[0][0], (94, 94, 94), font_stats_header)
+	draw_base.text((10 * SPACING + image_skin.width, 8 * SPACING), stats[0][0], (192, 192, 192), font_stats_header)
 	draw_base.text((10 * SPACING + image_skin.width, 10 * SPACING), stats[0][1], (77, 189, 138), font_stats)
 
 	length_stats_rank = draw_base.textlength(player_info.stats_prison.rank, font_stats)
