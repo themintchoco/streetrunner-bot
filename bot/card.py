@@ -8,6 +8,7 @@ import urllib
 import base64
 import json
 import datetime
+from enum import Enum
 
 CARD_WIDTH = 640
 CARD_HEIGHT = 220
@@ -20,6 +21,37 @@ FONT_REGULAR = 'fonts/Roboto-Regular.ttf'
 
 class UsernameError(ValueError):
 	pass
+
+
+class PlayerStatsType(Enum):
+    Prison, Arena = range(2)
+
+
+class PlayerStats:
+	def __init__(self, **kwargs):
+		self.type = kwargs['type']
+
+
+class PlayerStatsPrison(PlayerStats):
+	def __init__(self, **kwargs):
+		super().__init__(type=PlayerStatsType.Prison)
+		self.rank = kwargs['rank']
+		self.blocks = kwargs['blocks']
+
+
+class PlayerStatsArena(PlayerStats):
+	def __init__(self, **kwargs):
+		super().__init__(type=PlayerStatsType.Arena)
+		self.infamy = kwargs['infamy']
+		self.kda = kwargs['kda']
+
+
+class PlayerInfo:
+	def __init__(self, uuid, username, **kwargs):
+		self.uuid = uuid
+		self.username = username
+		self.stats_prison = kwargs.get('stats_prison', None)
+		self.stats_arena = kwargs.get('stats_arena', None)
 
 
 async def get_skin(uuid: str) -> dict:
@@ -45,34 +77,39 @@ async def get_skin(uuid: str) -> dict:
 
 					client.conn.hset(f'skins:{uuid}', mapping={
 						'skin': base64.b64encode(skin).decode(),
-						'slim': 1 if skin_data['metadata']['model'] == 'slim' else 0
+						'slim': 1 if skin_data.get('metadata', {}).get('model', '') == 'slim' else 0
 					})
 
 					client.conn.expire(f'skins:{uuid}', datetime.timedelta(days=1))
 
 					return {
 						'skin': BytesIO(skin),
-						'slim': skin_data['metadata']['model'] == 'slim'
+						'slim': skin_data.get('metadata', {}).get('model', '') == 'slim'
 					}
 			raise
 
 
-async def get_player_info(username: str) -> dict:
+async def get_player_info(username: str, type: PlayerStatsType = None) -> PlayerInfo:
 	async with aiohttp.ClientSession() as s:
-		async with s.get(f'https://streetrunner.dev/api/player?mc_username={urllib.parse.quote(username)}', headers={'Authorization': os.environ['API_KEY']}) as r:
+		async with s.get(f'https://streetrunner.dev/api/player?mc_username={urllib.parse.quote(username)}{f"&type={type.name.lower()}" if type else ""}', headers={'Authorization': os.environ['API_KEY']}) as r:
 			if r.status != 200:
 				raise UsernameError({'message': 'The username provided is invalid', 'username': username})
-			player = await r.json()
+			player_data = await r.json()
 
-	return {
-		'username': player['username'],
-		'uuid': player['uuid'],
-		'rank': player['rank'],
-		'kda': round((player['stats']['kills'] + player['stats']['assists']) / max(player['stats']['deaths'], 1), 2)
-	}
+	player_stats_prison = None
+	player_stats_arena = None
+
+	if prison_data := player_data.get('prison', None):
+		player_stats_prison = PlayerStatsPrison(rank=prison_data['rank'], blocks=prison_data['amount'])
+
+	if arena_data := player_data.get('arena', None):
+		player_stats_arena = PlayerStatsArena(infamy=arena_data['infamy'], kda=round((arena_data['kills'] + arena_data['assists']) / max(arena_data['deaths'], 1), 2))
 
 
-async def gen_render(skin, slim: bool, scale: int):
+	return PlayerInfo(player_data['uuid'], player_data['username'], stats_prison=player_stats_prison, stats_arena=player_stats_arena)
+
+
+async def gen_render(skin, slim: bool, scale: int) -> Image:
 	image_render = Image.new('RGBA', (20 * scale, 45 * scale), (0, 0, 0, 0))
 
 	image_skin = Image.open(skin)
@@ -181,7 +218,7 @@ async def gen_render(skin, slim: bool, scale: int):
 
 	render_front = render_front.transform((image_render.width, image_render.height), Image.AFFINE, (1, 0, 0, 0.5, 45/52, -0.5))
 
-	image_render.paste(render_top, (-585, -130))
+	image_render.paste(render_top, (round(-97.5 * scale + 1/6), round(-21.65 * scale + 0.254)))
 	image_render.alpha_composite(render_right)
 	image_render.alpha_composite(render_front)
 	image_render.alpha_composite(render_right_head)
@@ -191,7 +228,7 @@ async def gen_render(skin, slim: bool, scale: int):
 
 async def gen_card(username: str) -> BytesIO:
 	player_info = await get_player_info(username)
-	skin_data = await get_skin(player_info['uuid'])
+	skin_data = await get_skin(player_info.uuid)
 	image_skin = await gen_render(skin_data['skin'], skin_data['slim'], 6)
 
 	image_base = Image.new('RGBA', (CARD_WIDTH, CARD_HEIGHT), color=(0, 0, 0, 0))
@@ -204,18 +241,18 @@ async def gen_card(username: str) -> BytesIO:
 	image_base.paste(image_skin, (5 * SPACING, 2 * SPACING), mask=image_skin)
 
 	font_username = ImageFont.truetype(FONT_REGULAR, 24)
-	draw_base.text((9 * SPACING + image_skin.width, 3 * SPACING), player_info['username'], (77, 190, 138), font_username)
+	draw_base.text((9 * SPACING + image_skin.width, 3 * SPACING), player_info.username, (77, 190, 138), font_username)
 
 	font_stats_header = ImageFont.truetype(FONT_REGULAR, 18)
 	font_stats = ImageFont.truetype(FONT_BOLD, 64)
 
 	draw_base.text((9 * SPACING + image_skin.width, 5 * SPACING + 24), 'RANK', (127, 127, 127), font_stats_header)
-	draw_base.text((9 * SPACING + image_skin.width, 6 * SPACING + 24 + 18), player_info['rank'], (252, 234, 168), font_stats)
+	draw_base.text((9 * SPACING + image_skin.width, 6 * SPACING + 24 + 18), player_info.stats_prison.rank, (252, 234, 168), font_stats)
 
-	length_stats_rank = draw_base.textlength(player_info['rank'], font_stats)
+	length_stats_rank = draw_base.textlength(player_info.stats_prison.rank, font_stats)
 
 	draw_base.text((13 * SPACING + image_skin.width + max(length_stats_rank, 100), 5 * SPACING + 24), 'KDA', (127, 127, 127), font_stats_header)
-	draw_base.text((13 * SPACING + image_skin.width + max(length_stats_rank, 100), 6 * SPACING + 24 + 18), str(player_info['kda']), (252, 234, 168), font_stats)
+	draw_base.text((13 * SPACING + image_skin.width + max(length_stats_rank, 100), 6 * SPACING + 24 + 18), str(player_info.stats_arena.kda), (252, 234, 168), font_stats)
 
 	fp = BytesIO()
 	image_base.save(fp, format='PNG')
@@ -228,8 +265,11 @@ async def gen_card(username: str) -> BytesIO:
 
 
 async def main():
-	with Image.open(await gen_card('keyutedev')) as image:
-		image.show()
+	# with Image.open(await gen_card('keyutedev')) as image:
+	# 	image.show()
+	skin_data = await get_skin('1e3cb08c-e29d-478b-a0b9-3b2cacd899bd')
+	image_skin = await gen_render(skin_data['skin'], skin_data['slim'], 6)
+	image_skin.show()
 
 
 if __name__ ==  '__main__':
