@@ -13,6 +13,9 @@ from enum import Enum
 CARD_WIDTH = 640
 CARD_HEIGHT = 220
 
+LEADERBOARD_WIDTH = 540
+LEADERBOARD_HEIGHT = 500
+
 SPACING = 12
 
 FONT_BLACK = 'fonts/Roboto-Black.ttf'
@@ -33,6 +36,10 @@ class PlayerStatsType(Enum):
 	Prison, Arena = range(2)
 
 
+class LeaderboardType(Enum):
+	Rank, Kda, Kills = range(3)
+
+
 class PlayerStats:
 	def __init__(self, **kwargs):
 		self.type = kwargs['type']
@@ -49,7 +56,13 @@ class PlayerStatsArena(PlayerStats):
 	def __init__(self, **kwargs):
 		super().__init__(type=PlayerStatsType.Arena)
 		self.infamy = kwargs['infamy']
-		self.kda = kwargs['kda']
+		self.kills = kwargs['kills']
+		self.deaths = kwargs['deaths']
+		self.assists = kwargs['assists']
+
+	@property
+	def kda(self) -> float:
+		return round((self.kills + self.assists) / max(self.deaths, 1), 2)
 
 
 class PlayerInfo:
@@ -123,12 +136,45 @@ async def get_player_info(username: str, type: PlayerStatsType = None) -> Player
 		player_stats_prison = PlayerStatsPrison(rank=prison_data['rank'], blocks=prison_data['amount'])
 
 	if arena_data := player_data.get('arena', None):
-		player_stats_arena = PlayerStatsArena(infamy=arena_data['infamy'], kda=round(
-			(arena_data['kills'] + arena_data['assists']) / max(arena_data['deaths'], 1), 2))
+		player_stats_arena = PlayerStatsArena(infamy=arena_data['infamy'], kills=arena_data['kills'],
+											  deaths=arena_data['deaths'], assists=arena_data['assists'])
 
 	return PlayerInfo(player_data['uuid'], player_data['username'], stats_prison=player_stats_prison,
 					  stats_arena=player_stats_arena)
 
+
+async def get_leaderboard(type: LeaderboardType):
+	async with aiohttp.ClientSession() as s:
+		async with s.get(
+				f'https://streetrunner.dev/api/leaderboard?type={type.name.lower()}',
+				headers={'Authorization': os.environ['API_KEY']}) as r:
+			if r.status != 200:
+				raise
+			leaderboard_data = await r.json()
+
+	for player_data in leaderboard_data[type.name.lower()]:
+		player_stats_prison = None
+		player_stats_arena = None
+
+		if prison_data := player_data.get('prison', None):
+			player_stats_prison = PlayerStatsPrison(rank=prison_data['rank'], blocks=prison_data['amount'])
+
+		if arena_data := player_data.get('arena', None):
+			player_stats_arena = PlayerStatsArena(infamy=arena_data['infamy'], kills=arena_data['kills'],
+											  deaths=arena_data['deaths'], assists=arena_data['assists'])
+
+		yield PlayerInfo(player_data['uuid'], player_data['username'], stats_prison=player_stats_prison,
+						  stats_arena=player_stats_arena)
+
+
+async def render_avatar(skin, scale: int) -> Render:
+	image_skin = Image.open(skin)
+
+	head_front = image_skin.crop((8, 8, 16, 16)).resize((8 * scale, 8 * scale), Image.NEAREST)
+	if image_skin.crop((32, 0, 64, 32)).getextrema()[3][0] < 255:
+		head_front.alpha_composite(image_skin.crop((40, 8, 48, 16)).resize((8 * scale, 8 * scale), Image.NEAREST))
+
+	return Render(head_front)
 
 async def render_model(skin, slim: bool, scale: int) -> Render:
 	image_render = Image.new('RGBA', (20 * scale, 45 * scale), (0, 0, 0, 0))
@@ -266,7 +312,7 @@ async def render_model(skin, slim: bool, scale: int) -> Render:
 	return Render(image_render)
 
 
-async def render_card(username: str, card_type: CardType) -> BytesIO:
+async def render_card(username: str, type: CardType) -> BytesIO:
 	player_info = await get_player_info(username)
 	skin_data = await get_skin(player_info.uuid)
 	image_skin = (await render_model(skin_data['skin'], skin_data['slim'], 6)).image
@@ -274,10 +320,10 @@ async def render_card(username: str, card_type: CardType) -> BytesIO:
 	image_base = Image.new('RGBA', (CARD_WIDTH, CARD_HEIGHT), color=(0, 0, 0, 0))
 	draw_base = ImageDraw.Draw(image_base)
 
-	if card_type == CardType.Prison:
+	if type == CardType.Prison:
 		image_background = Image.open('images/prison.png')
 		stats = [('RANK', player_info.stats_prison.rank), ('BLOCKS MINED', str(player_info.stats_prison.blocks))]
-	elif card_type == CardType.Arena:
+	elif type == CardType.Arena:
 		image_background = Image.open('images/arena.png')
 		stats = [('INFAMY', str(player_info.stats_arena.infamy)), ('KDA', str(player_info.stats_arena.kda))]
 	else:
@@ -326,8 +372,117 @@ async def render_card(username: str, card_type: CardType) -> BytesIO:
 	return Render(image_base)
 
 
+async def render_leaderboard(type: LeaderboardType):
+	if type == LeaderboardType.Rank:
+		get_stats = lambda player_info: player_info.stats_prison.rank
+	elif type == LeaderboardType.Kda:
+		get_stats = lambda player_info: player_info.stats_arena.kda
+	elif type == LeaderboardType.Kills:
+		get_stats = lambda player_info: player_info.stats_arena.kills
+
+	leaderboard = get_leaderboard(type)
+	leaderboard_highlight = [await leaderboard.__anext__() for i in range(3)]
+
+	image_highlight = Image.new('RGBA', (LEADERBOARD_WIDTH, LEADERBOARD_HEIGHT + SPACING), color=(0, 0, 0, 0))
+	draw_highlight = ImageDraw.Draw(image_highlight)
+
+	draw_highlight.rounded_rectangle((0, 0, LEADERBOARD_WIDTH, LEADERBOARD_HEIGHT), fill=(32, 34, 37, 255), radius=15)
+
+	font_title = ImageFont.truetype(FONT_BOLD, 36)
+	font_subtitle = ImageFont.truetype(FONT_BOLD, 18)
+
+	bounds_title = draw_highlight.textbbox((0, 56), type.name.upper(), font_title)
+	draw_highlight.text(((LEADERBOARD_WIDTH - bounds_title[2]) // 2, 56), type.name.upper(), (255, 255, 255, 255), font_title)
+
+	length_subtitle = draw_highlight.textlength('LEADERBOARD', font_subtitle)
+	draw_highlight.text(((LEADERBOARD_WIDTH - length_subtitle) // 2, bounds_title[3] + SPACING), 'LEADERBOARD', (255, 255, 255, 255), font_subtitle)
+
+	skin_data_big = await get_skin(leaderboard_highlight[0].uuid)
+	image_avatar_big = (await render_avatar(skin_data_big['skin'], 10)).image
+
+	image_highlight.paste(image_avatar_big, (277 - image_avatar_big.width // 2, 177))
+
+	skin_data_two = await get_skin(leaderboard_highlight[1].uuid)
+	image_avatar_two = (await render_avatar(skin_data_two['skin'], 7)).image
+
+	image_highlight.paste(image_avatar_two, (100 - image_avatar_two.width // 2, 225))
+
+	skin_data_three = await get_skin(leaderboard_highlight[2].uuid)
+	image_avatar_three = (await render_avatar(skin_data_three['skin'], 7)).image
+
+	image_highlight.paste(image_avatar_three, (456 - image_avatar_three.width // 2, 235))
+
+	font_highlight_big = ImageFont.truetype(FONT_BOLD, 24)
+	font_highlight_med = ImageFont.truetype(FONT_BOLD, 18)
+
+	length_highlight_big = draw_highlight.textlength(leaderboard_highlight[0].username, font_highlight_big)
+	draw_highlight.text((277 - length_highlight_big // 2, 270), leaderboard_highlight[0].username, (255, 255, 255, 255), font_highlight_big)
+
+	length_highlight_two = draw_highlight.textlength(leaderboard_highlight[1].username, font_highlight_med)
+	draw_highlight.text((100 - length_highlight_two // 2, 298), leaderboard_highlight[1].username, (255, 255, 255, 255), font_highlight_med)
+
+	length_highlight_three = draw_highlight.textlength(leaderboard_highlight[2].username, font_highlight_med)
+	draw_highlight.text((456 - length_highlight_three // 2, 308), leaderboard_highlight[2].username, (255, 255, 255, 255), font_highlight_med)
+
+	draw_highlight.polygon([(217, LEADERBOARD_HEIGHT + SPACING),
+							(170, 392),
+							(502, 392),
+							(459, LEADERBOARD_HEIGHT + SPACING)], fill=(77, 189, 138))
+	draw_highlight.polygon([(100, LEADERBOARD_HEIGHT + SPACING),
+							(55, 374),
+							(384, 374),
+							(340, LEADERBOARD_HEIGHT + SPACING)], fill=(94, 207, 149))
+	draw_highlight.polygon([(194, LEADERBOARD_HEIGHT + SPACING),
+							(162, 344),
+							(395, 344),
+							(362, LEADERBOARD_HEIGHT + SPACING)], fill=(158, 205, 187))
+
+	font_stats_big = ImageFont.truetype(FONT_BLACK, 48)
+	font_stats_med = ImageFont.truetype(FONT_BLACK, 36)
+
+	length_stats_big = draw_highlight.textlength(get_stats(leaderboard_highlight[0]), font_stats_big)
+	draw_highlight.text((277 - length_stats_big // 2, 368), get_stats(leaderboard_highlight[0]), (14, 14, 38, 255), font_stats_big)
+
+	length_stats_two = draw_highlight.textlength(get_stats(leaderboard_highlight[1]), font_stats_med)
+	draw_highlight.text((124 - length_stats_two // 2, 400), get_stats(leaderboard_highlight[1]), (14, 14, 38, 255), font_stats_med)
+
+	length_stats_three = draw_highlight.textlength(get_stats(leaderboard_highlight[2]), font_stats_med)
+	draw_highlight.text((431 - length_stats_three // 2, 415), get_stats(leaderboard_highlight[2]), (14, 14, 38, 255), font_stats_med)
+
+	additional_rows = []
+
+	async for player_info in leaderboard:
+		image_row = Image.new('RGBA', (LEADERBOARD_WIDTH, 100), color=(0, 0, 0, 0))
+		draw_row = ImageDraw.Draw(image_row)
+
+		draw_row.rounded_rectangle((0, 0, image_row.width, image_row.height), fill=(32, 34, 37, 255), radius=15)
+
+		skin_data = await get_skin(player_info.uuid)
+		image_avatar = (await render_avatar(skin_data['skin'], 6)).image
+
+		image_row.paste(image_avatar, (44, (image_row.height - image_avatar.height) // 2))
+
+		font_stats = ImageFont.truetype(FONT_BOLD, 18)
+
+		bounds_name = draw_row.textbbox((0, 0), player_info.username, font_stats)
+		draw_row.text((120, (image_row.height - bounds_name[3]) // 2), player_info.username, (255, 255, 255, 255), font_stats)
+
+		bounds_stats = draw_row.textbbox((0, 0), get_stats(player_info), font_stats)
+		draw_row.text((image_row.width - 44 - bounds_stats[2], (image_row.height - bounds_stats[3]) // 2), get_stats(player_info), (255, 255, 255, 255), font_stats)
+
+		additional_rows.append(image_row)
+
+	image_base = Image.new('RGBA', (LEADERBOARD_WIDTH, LEADERBOARD_HEIGHT + SPACING + (100 + SPACING) * len(additional_rows)), color=(0, 0, 0, 0))
+	image_base.paste(image_highlight)
+
+	for i in range(len(additional_rows)):
+		image_base.paste(additional_rows[i], (0, LEADERBOARD_HEIGHT + SPACING + (100 + SPACING) * i))
+
+	return Render(image_base)
+
 async def main():
-	(await render_card('vive202000', card_type=CardType.Prison)).image.show()
+	(await render_leaderboard(LeaderboardType.Rank)).image.show()
+	# (await render_card('threeleaves', type=CardType.Prison)).image.show()
 	# skin_data = await get_skin('1e3cb08c-e29d-478b-a0b9-3b2cacd899bd')
 	# image_skin = await gen_render(skin_data['skin'], skin_data['slim'], 6)
 	# image_skin.show()
