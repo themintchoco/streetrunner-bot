@@ -24,8 +24,7 @@ class UsernameError(ValueError):
 
 
 class CardType(Enum):
-    PRISON = "PRISON"
-    ARENA = "ARENA"
+    Prison, Arena = range(2)
 
 
 class PlayerStatsType(Enum):
@@ -258,23 +257,31 @@ async def gen_card(username: str, card_type: CardType) -> BytesIO:
     skin_data = await get_skin(player_info.uuid)
     image_skin = await gen_render(skin_data['skin'], skin_data['slim'], 6)
 
-    if card_type == CardType.PRISON:
-        image_base = Image.open('images/prison.png')
-    elif card_type == CardType.ARENA:
-        image_base = Image.open('images/arena.png')
+    image_base = Image.new('RGBA', (CARD_WIDTH, CARD_HEIGHT), color=(0, 0, 0, 0))
+
+    if card_type == CardType.Prison:
+        image_background = Image.open('images/prison.png')
+    elif card_type == CardType.Arena:
+        image_background = Image.open('images/arena.png')
     else:
-        image_base = Image.new('RGBA', (CARD_WIDTH, CARD_HEIGHT), color=(0, 0, 0, 0))
+        raise
+
+    if image_background.width != CARD_WIDTH or image_background.height != CARD_HEIGHT:
+        image_background = image_background.resize((CARD_WIDTH, CARD_HEIGHT))
 
     draw_base = ImageDraw.Draw(image_base)
-    draw_base.rounded_rectangle((SPACING, SPACING, CARD_WIDTH - SPACING, CARD_HEIGHT - SPACING), fill=(32, 34, 37, 255),
+    draw_base.rounded_rectangle((SPACING, SPACING, CARD_WIDTH - SPACING, CARD_HEIGHT - SPACING), fill=(32, 34, 37, 220),
                                 radius=15)
+
+    image_background.alpha_composite(image_base)
+    image_base.paste(image_background)
 
     image_skin = image_skin.crop((0, 0, image_skin.width, CARD_HEIGHT - 3 * SPACING))
 
     image_base.paste(image_skin, (5 * SPACING, 2 * SPACING), mask=image_skin)
 
     font_username = ImageFont.truetype(FONT_REGULAR, 24)
-    draw_base.text((9 * SPACING + image_skin.width, 3 * SPACING), player_info.username, (77, 190, 138), font_username)
+    draw_base.text((9 * SPACING + image_skin.width, 3 * SPACING), player_info.username, (200, 200, 200), font_username)
 
     font_stats_header = ImageFont.truetype(FONT_REGULAR, 18)
     font_stats = ImageFont.truetype(FONT_BOLD, 64)
@@ -301,11 +308,11 @@ async def gen_card(username: str, card_type: CardType) -> BytesIO:
 
 
 async def main():
-    # with Image.open(await gen_card('keyutedev')) as image:
-    # 	image.show()
-    skin_data = await get_skin('1e3cb08c-e29d-478b-a0b9-3b2cacd899bd')
-    image_skin = await gen_render(skin_data['skin'], skin_data['slim'], 6)
-    image_skin.show()
+    with Image.open(await gen_card('keyutedev', card_type=CardType.Prison)) as image:
+    	image.show()
+    # skin_data = await get_skin('1e3cb08c-e29d-478b-a0b9-3b2cacd899bd')
+    # image_skin = await gen_render(skin_data['skin'], skin_data['slim'], 6)
+    # image_skin.show()
 
 
 if __name__ == '__main__':

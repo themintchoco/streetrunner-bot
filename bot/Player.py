@@ -15,10 +15,16 @@ class Player(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
 
-	@commands.command(aliases=['kda'])
+	@commands.command(aliases=['prison'])
 	async def rank(self, ctx, username: str):
-		"""Displays player stats"""
-		image = await card.gen_card(username, CardType.PRISON)
+		"""Displays player Prison stats"""
+		image = await card.gen_card(username, CardType.Prison)
+		await ctx.send(file=discord.File(image, 'rank_card.png'))
+
+	@commands.command(aliases=['arena'])
+	async def infamy(self, ctx, username: str):
+		"""Displays player Arena stats"""
+		image = await card.gen_card(username, CardType.Arena)
 		await ctx.send(file=discord.File(image, 'rank_card.png'))
 
 	@rank.error
