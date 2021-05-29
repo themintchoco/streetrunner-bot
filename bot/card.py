@@ -170,9 +170,9 @@ async def get_leaderboard(type: LeaderboardType):
 						  stats_arena=player_stats_arena)
 
 
-async def get_number_representation(number: int) -> dict:
+def get_number_representation(number: int) -> dict:
 	magnitude = (len(str(number)) - 1) // 3
-	return f'{(number / (10 ** (magnitude * 3))):.3g} {" KMGTPEZY"[magnitude]}'
+	return f'{(number / (10 ** (magnitude * 3))):.3g}{" KMGTPEZY"[magnitude]}'
 
 
 async def render_avatar(skin, scale: int) -> Render:
@@ -330,7 +330,7 @@ async def render_card(username: str, type: CardType) -> BytesIO:
 
 	if type == CardType.Prison:
 		image_background = Image.open('images/prison.png')
-		stats = [('RANK', player_info.stats_prison.rank), ('BLOCKS MINED', await get_number_representation(player_info.stats_prison.blocks))]
+		stats = [('RANK', player_info.stats_prison.rank), ('BLOCKS MINED', get_number_representation(player_info.stats_prison.blocks))]
 	elif type == CardType.Arena:
 		image_background = Image.open('images/arena.png')
 		stats = [('INFAMY', str(player_info.stats_arena.infamy)), ('KDA', str(player_info.stats_arena.kda))]
@@ -384,11 +384,11 @@ async def render_leaderboard(type: LeaderboardType):
 	if type == LeaderboardType.Rank:
 		get_stats = lambda player_info: player_info.stats_prison.rank
 	elif type == LeaderboardType.Kda:
-		get_stats = lambda player_info: player_info.stats_arena.kda
+		get_stats = lambda player_info: str(player_info.stats_arena.kda)
 	elif type == LeaderboardType.Kills:
-		get_stats = lambda player_info: player_info.stats_arena.kills
+		get_stats = lambda player_info: get_number_representation(player_info.stats_arena.kills)
 	elif type == LeaderboardType.Blocks:
-		get_stats = lambda player_info: player_info.stats_prison.blocks
+		get_stats = lambda player_info: get_number_representation(player_info.stats_prison.blocks)
 
 	leaderboard = get_leaderboard(type)
 	leaderboard_highlight = [await leaderboard.__anext__() for i in range(3)]
