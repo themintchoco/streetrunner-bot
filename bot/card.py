@@ -9,6 +9,7 @@ import base64
 import json
 import datetime
 from enum import Enum
+from cachetools import cached, TTLCache
 
 CARD_WIDTH = 640
 CARD_HEIGHT = 220
@@ -85,6 +86,7 @@ class Render:
 		return fp
 
 
+@cached(cache=TTLCache(maxsize=1024, ttl=86400))
 async def get_skin(uuid: str) -> dict:
 	client = RedisClient()
 
