@@ -2,6 +2,7 @@ import os
 import discord
 from discord.ext import commands
 from bot.Player import Player
+from bot.Admin import Admin
 from bot.WebServer import WebServer
 from pretty_help import PrettyHelp
 import sentry_sdk
@@ -17,6 +18,7 @@ intents.members = True
 bot = commands.Bot(command_prefix='!', intents=intents, help_command=PrettyHelp(no_category='Other'))
 
 bot.add_cog(Player(bot))
+bot.add_cog(Admin(bot))
 bot.add_cog(WebServer(bot))
 
 
