@@ -9,7 +9,8 @@ import base64
 import json
 import datetime
 from enum import Enum
-from cachetools import cached, TTLCache
+from asyncache import cached
+from cachetools import TTLCache
 
 CARD_WIDTH = 640
 CARD_HEIGHT = 220
@@ -490,8 +491,9 @@ async def render_leaderboard(type: LeaderboardType):
 	return Render(image_base)
 
 async def main():
-	# (await render_leaderboard(LeaderboardType.Rank)).image.show()
-	(await render_card('vive202000', type=CardType.Prison)).image.show()
+	for i in range(3):
+		(await render_leaderboard(LeaderboardType.Rank)).image.show()
+	# (await render_card('vive202000', type=CardType.Prison)).image.show()
 	# skin_data = await get_skin('1e3cb08c-e29d-478b-a0b9-3b2cacd899bd')
 	# image_skin = await gen_render(skin_data['skin'], skin_data['slim'], 6)
 	# image_skin.show()
