@@ -16,24 +16,24 @@ class Player(commands.Cog):
 		self.bot = bot
 
 	@commands.command(aliases=['prison'])
-	async def rank(self, ctx, username: str):
+	async def rank(self, ctx, username: str = None):
 		"""Displays player Prison stats"""
-		render = await card.render_card(username, CardType.Prison)
+		render = await (card.render_card(username=username, type=CardType.Prison) if username else card.render_card(discord_user=ctx.author, type=CardType.Prison))
 		await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
 	@commands.command(aliases=['arena'])
-	async def infamy(self, ctx, username: str):
+	async def infamy(self, ctx, username: str = None):
 		"""Displays player Arena stats"""
-		render = await card.render_card(username, CardType.Arena)
+		render = await (card.render_card(username=username, type=CardType.Arena) if iusername else card.render_card(discord_user=ctx.author, type=CardType.Arena))
 		await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
 	@rank.error
 	@infamy.error
 	async def on_command_error(self, ctx, error):
 		if isinstance(error, commands.MissingRequiredArgument):
-			await ctx.send(f'usage: {self.bot.command_prefix}{ctx.invoked_with} <Minecraft username>')
+			await ctx.send(f'usage: {self.bot.command_prefix}{ctx.invoked_with} <Minecraft username|@Discord mention>')
 		elif isinstance(error, commands.CommandInvokeError) and isinstance(error.original, card.UsernameError):
-			await ctx.send(f'That username appears to be invalid')
+			await ctx.send(error.original.args[0]['message'])
 		else:
 			await self.handle_command_error(ctx, error)
 
@@ -61,7 +61,7 @@ class Player(commands.Cog):
 	async def leaderboard(self, ctx):
 		"""Displays the current leaderboard!"""
 		if ctx.invoked_subcommand is None:
-			await ctx.send(f'usage: {self.bot.command_prefix}{ctx.invoked_with} [rank|kda|kills]')
+			await ctx.send(f'usage: {self.bot.command_prefix}{ctx.invoked_with} <rank|kda|kills|blocks>')
 
 	@leaderboard.command(name='rank')
 	async def leaderboard_rank(self, ctx):

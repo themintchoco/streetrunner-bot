@@ -1,3 +1,5 @@
+import discord
+from typing import Union
 import aiohttp
 import asyncio
 from io import BytesIO
@@ -11,6 +13,7 @@ import datetime
 from enum import Enum
 from asyncache import cached
 from cachetools import TTLCache
+
 
 CARD_WIDTH = 640
 CARD_HEIGHT = 220
@@ -123,13 +126,16 @@ async def get_skin(uuid: str) -> dict:
 			raise
 
 
-async def get_player_info(username: str, type: PlayerStatsType = None) -> PlayerInfo:
+async def get_player_info(*, username: str = None, discord_user: discord.User = None, type: PlayerStatsType = None) -> PlayerInfo:
 	async with aiohttp.ClientSession() as s:
 		async with s.get(
-				f'https://streetrunner.dev/api/player?mc_username={urllib.parse.quote(username)}{f"&type={type.name.lower()}" if type else ""}',
+				f'https://streetrunner.dev/api/player?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}{f"&type={type.name.lower()}" if type else ""}',
 				headers={'Authorization': os.environ['API_KEY']}) as r:
 			if r.status != 200:
-				raise UsernameError({'message': 'The username provided is invalid', 'username': username})
+				if username:
+					raise UsernameError({'message': f'The username provided is invalid', 'username': username})
+				else:
+					raise UsernameError({'message': f'You have not linked your Discord account to your Minecraft account. Please link your account using the /discord command in-game. ', 'discord_id': discord_user})
 			player_data = await r.json()
 
 	player_stats_prison = None
@@ -320,8 +326,8 @@ async def render_model(skin, slim: bool, scale: int) -> Render:
 	return Render(image_render)
 
 
-async def render_card(username: str, type: CardType) -> BytesIO:
-	player_info = await get_player_info(username)
+async def render_card(*, username: str = None, discord_user: discord.User = None, type: CardType) -> BytesIO:
+	player_info = await (get_player_info(username=username) if username else get_player_info(discord_user=discord_user))
 	skin_data = await get_skin(player_info.uuid)
 	image_skin = (await render_model(skin_data['skin'], skin_data['slim'], 6)).image
 
