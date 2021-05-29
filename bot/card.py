@@ -169,6 +169,11 @@ async def get_leaderboard(type: LeaderboardType):
 						  stats_arena=player_stats_arena)
 
 
+async def get_number_representation(number: int) -> dict:
+	magnitude = (len(str(number)) - 1) // 3
+	return f'{(number / (10 ** (magnitude * 3))):.3g} {" KMGTPEZY"[magnitude]}'
+
+
 async def render_avatar(skin, scale: int) -> Render:
 	image_skin = Image.open(skin)
 
@@ -324,7 +329,7 @@ async def render_card(username: str, type: CardType) -> BytesIO:
 
 	if type == CardType.Prison:
 		image_background = Image.open('images/prison.png')
-		stats = [('RANK', player_info.stats_prison.rank), ('BLOCKS MINED', str(player_info.stats_prison.blocks))]
+		stats = [('RANK', player_info.stats_prison.rank), ('BLOCKS MINED', await get_number_representation(player_info.stats_prison.blocks))]
 	elif type == CardType.Arena:
 		image_background = Image.open('images/arena.png')
 		stats = [('INFAMY', str(player_info.stats_arena.infamy)), ('KDA', str(player_info.stats_arena.kda))]
@@ -483,8 +488,8 @@ async def render_leaderboard(type: LeaderboardType):
 	return Render(image_base)
 
 async def main():
-	(await render_leaderboard(LeaderboardType.Rank)).image.show()
-	# (await render_card('threeleaves', type=CardType.Prison)).image.show()
+	# (await render_leaderboard(LeaderboardType.Rank)).image.show()
+	(await render_card('vive202000', type=CardType.Prison)).image.show()
 	# skin_data = await get_skin('1e3cb08c-e29d-478b-a0b9-3b2cacd899bd')
 	# image_skin = await gen_render(skin_data['skin'], skin_data['slim'], 6)
 	# image_skin.show()
