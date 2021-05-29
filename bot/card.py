@@ -38,7 +38,7 @@ class PlayerStatsType(Enum):
 
 
 class LeaderboardType(Enum):
-	Rank, Kda, Kills, Blocks = range(3)
+	Rank, Kda, Kills, Blocks = range(4)
 
 
 class PlayerStats:
