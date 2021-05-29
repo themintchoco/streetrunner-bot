@@ -24,7 +24,7 @@ class Player(commands.Cog):
 	@commands.command(aliases=['arena'])
 	async def infamy(self, ctx, username: str = None):
 		"""Displays player Arena stats"""
-		render = await (card.render_card(username=username, type=CardType.Arena) if iusername else card.render_card(discord_user=ctx.author, type=CardType.Arena))
+		render = await (card.render_card(username=username, type=CardType.Arena) if username else card.render_card(discord_user=ctx.author, type=CardType.Arena))
 		await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
 	@rank.error
