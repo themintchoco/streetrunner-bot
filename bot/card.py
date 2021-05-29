@@ -38,7 +38,7 @@ class PlayerStatsType(Enum):
 
 
 class LeaderboardType(Enum):
-	Rank, Kda, Kills = range(3)
+	Rank, Kda, Kills, Blocks = range(3)
 
 
 class PlayerStats:
@@ -386,6 +386,8 @@ async def render_leaderboard(type: LeaderboardType):
 		get_stats = lambda player_info: player_info.stats_arena.kda
 	elif type == LeaderboardType.Kills:
 		get_stats = lambda player_info: player_info.stats_arena.kills
+	elif type == LeaderboardType.Blocks:
+		get_stats = lambda player_info: player_info.stats_prison.blocks
 
 	leaderboard = get_leaderboard(type)
 	leaderboard_highlight = [await leaderboard.__anext__() for i in range(3)]

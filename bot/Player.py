@@ -70,6 +70,13 @@ class Player(commands.Cog):
 			render = await card.render_leaderboard(card.LeaderboardType.Rank)
 		await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
+	@leaderboard.command(name='blocks')
+	async def leaderboard_blocks(self, ctx):
+		"""Displays the current leaderboard in terms of blocks mined"""
+		async with ctx.typing():
+			render = await card.render_leaderboard(card.LeaderboardType.Blocks)
+		await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
+
 	@leaderboard.command(name='kda')
 	async def leaderboard_kda(self, ctx):
 		"""Displays the current leaderboard in terms of arena KDA"""
