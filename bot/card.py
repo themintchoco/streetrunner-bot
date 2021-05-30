@@ -156,7 +156,7 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
 					  stats_arena=player_stats_arena)
 
 
-async def get_leaderboard(type: LeaderboardType) -> AsyncGenerator[PlayerInfo]:
+async def get_leaderboard(type: LeaderboardType) -> AsyncGenerator[PlayerInfo, None]:
 	async with aiohttp.ClientSession() as s:
 		async with s.get(
 				f'https://streetrunner.dev/api/leaderboard?type={type.name.lower()}',
