@@ -83,7 +83,7 @@ class Player(commands.Cog):
 
 	@leaderboard.command(name='infamy')
 	async def leaderboard_infamy(self, ctx):
-		"""Displays the current leaderboard in terms of arena Infamy"""
+		"""Displays the current leaderboard in terms of arena infamy"""
 		async with ctx.typing():
 			render = await card.render_leaderboard(card.LeaderboardType.Infamy)
 		await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
@@ -104,6 +104,7 @@ class Player(commands.Cog):
 
 	@leaderboard.error
 	@leaderboard_rank.error
+	@leaderboard_infamy.error
 	@leaderboard_kda.error
 	@leaderboard_kills.error
 	async def on_command_error(self, ctx, error):
