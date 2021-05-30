@@ -104,6 +104,7 @@ class Player(commands.Cog):
 
 	@leaderboard.error
 	@leaderboard_rank.error
+	@leaderboard_blocks.error
 	@leaderboard_infamy.error
 	@leaderboard_kda.error
 	@leaderboard_kills.error
