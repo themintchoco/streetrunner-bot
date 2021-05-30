@@ -65,7 +65,7 @@ class Player(commands.Cog):
 	async def leaderboard(self, ctx):
 		"""Displays the current leaderboard!"""
 		if ctx.invoked_subcommand is None:
-			await ctx.send(f'usage: {self.bot.command_prefix}{ctx.invoked_with} <rank|kda|kills|blocks>')
+			await ctx.send(f'usage: {self.bot.command_prefix}{ctx.invoked_with} <rank|blocks|infamy|kda|kills>')
 
 	@leaderboard.command(name='rank')
 	async def leaderboard_rank(self, ctx):
@@ -79,6 +79,13 @@ class Player(commands.Cog):
 		"""Displays the current leaderboard in terms of blocks mined"""
 		async with ctx.typing():
 			render = await card.render_leaderboard(card.LeaderboardType.Blocks)
+		await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
+
+	@leaderboard.command(name='infamy')
+	async def leaderboard_infamy(self, ctx):
+		"""Displays the current leaderboard in terms of arena Infamy"""
+		async with ctx.typing():
+			render = await card.render_leaderboard(card.LeaderboardType.Infamy)
 		await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
 	@leaderboard.command(name='kda')

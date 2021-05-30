@@ -46,7 +46,7 @@ class PlayerStatsType(Enum):
 
 
 class LeaderboardType(Enum):
-	Rank, Kda, Kills, Blocks = range(4)
+	Rank, Kda, Kills, Blocks, Infamy = range(5)
 
 
 class PlayerStats:
@@ -399,6 +399,8 @@ async def render_leaderboard(type: LeaderboardType) -> Render:
 		get_stats = lambda player_info: get_number_representation(player_info.stats_arena.kills)
 	elif type == LeaderboardType.Blocks:
 		get_stats = lambda player_info: get_number_representation(player_info.stats_prison.blocks)
+	elif type == LeaderboardType.Infamy:
+		get_stats = lambda player_info: str(player_info.stats_arena.infamy)
 	else:
 		raise
 
