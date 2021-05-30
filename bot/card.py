@@ -33,6 +33,10 @@ class UsernameError(ValueError):
 	pass
 
 
+class NotEnoughDataError(RuntimeError):
+	pass
+
+
 class CardType(Enum):
 	Prison, Arena = range(2)
 
@@ -397,7 +401,11 @@ async def render_leaderboard(type: LeaderboardType):
 		get_stats = lambda player_info: get_number_representation(player_info.stats_prison.blocks)
 
 	leaderboard = get_leaderboard(type)
-	leaderboard_highlight = [await leaderboard.__anext__() for i in range(3)]
+
+	try:
+		leaderboard_highlight = [await leaderboard.__anext__() for i in range(3)]
+	except StopAsyncIteration:
+		raise NotEnoughDataError()
 
 	image_highlight = Image.new('RGBA', (LEADERBOARD_WIDTH, LEADERBOARD_HEIGHT + SPACING), color=(0, 0, 0, 0))
 	draw_highlight = ImageDraw.Draw(image_highlight)

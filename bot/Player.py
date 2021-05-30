@@ -57,6 +57,10 @@ class Player(commands.Cog):
 			hours, minutes = td.seconds // 3600, (td.seconds // 60) % 60
 			await webhook.send(f'I will leave for another mine in around {f"{hours} hours" if hours > 1 else "1 hour" if hours == 1 else ""}{" and " if hours > 0 and minutes > 0 else ""}{f"{minutes} minutes" if minutes > 0 else ""}. ')
 
+	@peddler.error
+	async def on_command_error(self, ctx, error):
+		await self.handle_command_error(ctx, error)
+
 	@commands.group()
 	async def leaderboard(self, ctx):
 		"""Displays the current leaderboard!"""
@@ -91,13 +95,15 @@ class Player(commands.Cog):
 			render = await card.render_leaderboard(card.LeaderboardType.Kills)
 		await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
-	@peddler.error
 	@leaderboard.error
 	@leaderboard_rank.error
 	@leaderboard_kda.error
 	@leaderboard_kills.error
 	async def on_command_error(self, ctx, error):
-		await self.handle_command_error(ctx, error)
+		if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, card.NotEnoughDataError):
+			await ctx.send(f'There isn’t enough data to display the leaderboard at the moment. Please try again later!')
+		else:
+			await self.handle_command_error(ctx, error)
 
 	async def handle_command_error(self, ctx, error):
 		await ctx.send('Sorry, an error has occured. Please try again at a later time. ')
