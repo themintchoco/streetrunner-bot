@@ -156,7 +156,7 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
 					  stats_arena=player_stats_arena)
 
 
-async def get_leaderboard(type: LeaderboardType):
+async def get_leaderboard(type: LeaderboardType) -> AsyncGenerator[PlayerInfo]:
 	async with aiohttp.ClientSession() as s:
 		async with s.get(
 				f'https://streetrunner.dev/api/leaderboard?type={type.name.lower()}',
@@ -180,7 +180,7 @@ async def get_leaderboard(type: LeaderboardType):
 						  stats_arena=player_stats_arena)
 
 
-def get_number_representation(number: int) -> dict:
+def get_number_representation(number: int) -> str:
 	magnitude = (len(str(number)) - 1) // 3
 	return f'{(number / (10 ** (magnitude * 3))):.3g}{" KMGTPEZY"[magnitude]}'
 
@@ -330,7 +330,7 @@ async def render_model(skin, slim: bool, scale: int) -> Render:
 	return Render(image_render)
 
 
-async def render_card(*, username: str = None, discord_user: discord.User = None, type: CardType) -> BytesIO:
+async def render_card(*, username: str = None, discord_user: discord.User = None, type: CardType) -> Render:
 	player_info = await (get_player_info(username=username) if username else get_player_info(discord_user=discord_user))
 	skin_data = await get_skin(player_info.uuid)
 	image_skin = (await render_model(skin_data['skin'], skin_data['slim'], 6)).image
@@ -390,7 +390,7 @@ async def render_card(*, username: str = None, discord_user: discord.User = None
 	return Render(image_base)
 
 
-async def render_leaderboard(type: LeaderboardType):
+async def render_leaderboard(type: LeaderboardType) -> Render:
 	if type == LeaderboardType.Rank:
 		get_stats = lambda player_info: player_info.stats_prison.rank
 	elif type == LeaderboardType.Kda:
@@ -399,6 +399,8 @@ async def render_leaderboard(type: LeaderboardType):
 		get_stats = lambda player_info: get_number_representation(player_info.stats_arena.kills)
 	elif type == LeaderboardType.Blocks:
 		get_stats = lambda player_info: get_number_representation(player_info.stats_prison.blocks)
+	else:
+		raise
 
 	leaderboard = get_leaderboard(type)
 
