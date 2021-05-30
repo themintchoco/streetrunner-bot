@@ -428,54 +428,54 @@ async def render_leaderboard(type: LeaderboardType) -> Render:
 	skin_data_big = await get_skin(leaderboard_highlight[0].uuid)
 	image_avatar_big = (await render_avatar(skin_data_big['skin'], 10)).image
 
-	image_highlight.paste(image_avatar_big, (277 - image_avatar_big.width // 2, 177))
+	image_highlight.paste(image_avatar_big, (270 - image_avatar_big.width // 2, 177))
 
 	skin_data_two = await get_skin(leaderboard_highlight[1].uuid)
 	image_avatar_two = (await render_avatar(skin_data_two['skin'], 7)).image
 
-	image_highlight.paste(image_avatar_two, (100 - image_avatar_two.width // 2, 225))
+	image_highlight.paste(image_avatar_two, (93 - image_avatar_two.width // 2, 225))
 
 	skin_data_three = await get_skin(leaderboard_highlight[2].uuid)
 	image_avatar_three = (await render_avatar(skin_data_three['skin'], 7)).image
 
-	image_highlight.paste(image_avatar_three, (456 - image_avatar_three.width // 2, 235))
+	image_highlight.paste(image_avatar_three, (449 - image_avatar_three.width // 2, 235))
 
 	font_highlight_big = ImageFont.truetype(FONT_BOLD, 24)
 	font_highlight_med = ImageFont.truetype(FONT_BOLD, 18)
 
 	length_highlight_big = draw_highlight.textlength(leaderboard_highlight[0].username, font_highlight_big)
-	draw_highlight.text((277 - length_highlight_big // 2, 270), leaderboard_highlight[0].username, (255, 255, 255, 255), font_highlight_big)
+	draw_highlight.text((270 - length_highlight_big // 2, 270), leaderboard_highlight[0].username, (255, 255, 255, 255), font_highlight_big)
 
 	length_highlight_two = draw_highlight.textlength(leaderboard_highlight[1].username, font_highlight_med)
-	draw_highlight.text((100 - length_highlight_two // 2, 298), leaderboard_highlight[1].username, (255, 255, 255, 255), font_highlight_med)
+	draw_highlight.text((93 - length_highlight_two // 2, 298), leaderboard_highlight[1].username, (255, 255, 255, 255), font_highlight_med)
 
 	length_highlight_three = draw_highlight.textlength(leaderboard_highlight[2].username, font_highlight_med)
-	draw_highlight.text((456 - length_highlight_three // 2, 308), leaderboard_highlight[2].username, (255, 255, 255, 255), font_highlight_med)
+	draw_highlight.text((449 - length_highlight_three // 2, 308), leaderboard_highlight[2].username, (255, 255, 255, 255), font_highlight_med)
 
-	draw_highlight.polygon([(217, LEADERBOARD_HEIGHT + SPACING),
-							(170, 392),
-							(502, 392),
-							(459, LEADERBOARD_HEIGHT + SPACING)], fill=(77, 189, 138))
-	draw_highlight.polygon([(100, LEADERBOARD_HEIGHT + SPACING),
-							(55, 374),
-							(384, 374),
-							(340, LEADERBOARD_HEIGHT + SPACING)], fill=(94, 207, 149))
-	draw_highlight.polygon([(194, LEADERBOARD_HEIGHT + SPACING),
-							(162, 344),
-							(395, 344),
-							(362, LEADERBOARD_HEIGHT + SPACING)], fill=(158, 205, 187))
+	draw_highlight.polygon([(210, LEADERBOARD_HEIGHT + SPACING),
+							(163, 392),
+							(495, 392),
+							(452, LEADERBOARD_HEIGHT + SPACING)], fill=(77, 189, 138))
+	draw_highlight.polygon([(93, LEADERBOARD_HEIGHT + SPACING),
+							(48, 374),
+							(377, 374),
+							(333, LEADERBOARD_HEIGHT + SPACING)], fill=(94, 207, 149))
+	draw_highlight.polygon([(187, LEADERBOARD_HEIGHT + SPACING),
+							(155, 344),
+							(388, 344),
+							(355, LEADERBOARD_HEIGHT + SPACING)], fill=(158, 205, 187))
 
 	font_stats_big = ImageFont.truetype(FONT_BLACK, 48)
 	font_stats_med = ImageFont.truetype(FONT_BLACK, 36)
 
 	length_stats_big = draw_highlight.textlength(get_stats(leaderboard_highlight[0]), font_stats_big)
-	draw_highlight.text((277 - length_stats_big // 2, 368), get_stats(leaderboard_highlight[0]), (14, 14, 38, 255), font_stats_big)
+	draw_highlight.text((270 - length_stats_big // 2, 368), get_stats(leaderboard_highlight[0]), (14, 14, 38, 255), font_stats_big)
 
 	length_stats_two = draw_highlight.textlength(get_stats(leaderboard_highlight[1]), font_stats_med)
-	draw_highlight.text((124 - length_stats_two // 2, 400), get_stats(leaderboard_highlight[1]), (14, 14, 38, 255), font_stats_med)
+	draw_highlight.text((117 - length_stats_two // 2, 400), get_stats(leaderboard_highlight[1]), (14, 14, 38, 255), font_stats_med)
 
 	length_stats_three = draw_highlight.textlength(get_stats(leaderboard_highlight[2]), font_stats_med)
-	draw_highlight.text((431 - length_stats_three // 2, 415), get_stats(leaderboard_highlight[2]), (14, 14, 38, 255), font_stats_med)
+	draw_highlight.text((424 - length_stats_three // 2, 415), get_stats(leaderboard_highlight[2]), (14, 14, 38, 255), font_stats_med)
 
 	additional_rows = []
 
@@ -509,8 +509,7 @@ async def render_leaderboard(type: LeaderboardType) -> Render:
 	return Render(image_base)
 
 async def main():
-	for i in range(3):
-		(await render_leaderboard(LeaderboardType.Rank)).image.show()
+	(await render_leaderboard(LeaderboardType.Rank)).image.show()
 	# (await render_card('vive202000', type=CardType.Prison)).image.show()
 	# skin_data = await get_skin('1e3cb08c-e29d-478b-a0b9-3b2cacd899bd')
 	# image_skin = await gen_render(skin_data['skin'], skin_data['slim'], 6)
