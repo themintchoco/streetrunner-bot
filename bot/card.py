@@ -1,5 +1,5 @@
 import discord
-from typing import Union
+from typing import Union, AsyncGenerator
 import aiohttp
 import asyncio
 from io import BytesIO
