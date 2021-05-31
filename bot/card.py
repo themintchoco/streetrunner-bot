@@ -39,7 +39,7 @@ class NotEnoughDataError(RuntimeError):
 
 
 class CardType(Enum):
-    Prison, Arena = range(2)
+    Prison, Infamy, Kills = range(3)
 
 
 class PlayerStatsType(Enum):
@@ -347,9 +347,12 @@ async def render_card(*, username: str = None, discord_user: discord.User = None
         image_background = Image.open('images/prison.png')
         stats = [('RANK', player_info.stats_prison.rank),
                  ('BLOCKS MINED', get_number_representation(player_info.stats_prison.blocks))]
-    elif type == CardType.Arena:
+    elif type == CardType.Infamy:
         image_background = Image.open('images/arena.png')
         stats = [('INFAMY', str(player_info.stats_arena.infamy)), ('KDA', str(player_info.stats_arena.kda))]
+    elif type == CardType.Kills:
+        image_background = Image.open('images/arena.png')
+        stats = [('KILLS', str(player_info.stats_arena.kills)), ('KDA', str(player_info.stats_arena.kda))]
     else:
         raise
 
