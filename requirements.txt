@@ -7,3 +7,4 @@ discord-pretty-help~=1.3.0
 redis~=3.5.0
 cachetools~=4.2.0
 asyncache~=0.1.0
+asyncstdlib~=3.9.0

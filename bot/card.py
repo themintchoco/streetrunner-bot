@@ -9,6 +9,7 @@ from io import BytesIO
 from typing import AsyncGenerator
 
 import aiohttp
+import asyncstdlib as a
 import discord
 from PIL import Image, ImageDraw, ImageFont
 from asyncache import cached
@@ -31,6 +32,10 @@ FONT_LIGHT = 'fonts/Roboto-Light.ttf'
 
 
 class UsernameError(ValueError):
+	pass
+
+
+class DiscordNotLinkedError(UsernameError):
 	pass
 
 
@@ -141,7 +146,7 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
 				if username:
 					raise UsernameError({'message': f'The username provided is invalid', 'username': username})
 				else:
-					raise UsernameError({
+					raise DiscordNotLinkedError({
 						'message': f'You have not linked your Discord account to your Minecraft account. Please link your account using the /discord command in-game. ',
 						'discord_id': discord_user})
 			player_data = await r.json()
@@ -182,6 +187,18 @@ async def get_leaderboard(type: LeaderboardType) -> AsyncGenerator[PlayerInfo, N
 
 		yield PlayerInfo(player_data['uuid'], player_data['username'], stats_prison=player_stats_prison,
 						 stats_arena=player_stats_arena)
+
+
+async def get_position(*, username: str = None, discord_user: discord.User = None, type: LeaderboardType) -> int:
+	async with aiohttp.ClientSession() as s:
+		async with s.get(
+				f'https://streetrunner.dev/api/position/?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}&type={type.name.lower()}',
+				headers={'Authorization': os.environ['API_KEY']}) as r:
+			if r.status == 400:
+				raise DiscordNotLinkedError()
+			elif r.status != 200:
+				raise UsernameError({'message': f'The username provided is invalid', 'username': username})
+			return (await r.json())[type.name.lower()]
 
 
 def get_number_representation(number: int) -> str:
@@ -401,7 +418,36 @@ async def render_card(*, username: str = None, discord_user: discord.User = None
 	return Render(image_base)
 
 
-async def render_leaderboard(type: LeaderboardType) -> Render:
+async def render_leaderboard(*, username: str = None, discord_user: discord.User = None,
+							 type: LeaderboardType) -> Render:
+	async def render_row(player_info: PlayerInfo, position: int) -> Render:
+		image_row = Image.new('RGBA', (LEADERBOARD_WIDTH, 100), color=(0, 0, 0, 0))
+		draw_row = ImageDraw.Draw(image_row)
+
+		draw_row.rounded_rectangle((0, 0, image_row.width, image_row.height), fill=(32, 34, 37, 255), radius=15)
+
+		bounds_position = draw_row.textbbox((0, 0), f'#{position}', font_position)
+		draw_row.text(
+			(2 * SPACING + (position_length - bounds_position[2]) // 2, (image_row.height - bounds_position[3]) // 2),
+			f'#{position}', (214, 214, 214, 255), font_position)
+
+		skin_data = await get_skin(player_info.uuid)
+		image_avatar = (await render_avatar(skin_data['skin'], 6)).image
+
+		image_row.paste(image_avatar, (4 * SPACING + position_length, (image_row.height - image_avatar.height) // 2))
+
+		bounds_name = draw_row.textbbox((0, 0), player_info.username, font_stats)
+		draw_row.text((6 * SPACING + position_length + image_avatar.width, (image_row.height - bounds_name[3]) // 2),
+					  player_info.username,
+					  (212, 175, 55, 255) if player_info.username == target_player_info.username else (
+					  255, 255, 255, 255), font_stats)
+
+		bounds_stats = draw_row.textbbox((0, 0), get_stats(player_info), font_stats)
+		draw_row.text((image_row.width - 2 * SPACING - bounds_stats[2], (image_row.height - bounds_stats[3]) // 2),
+					  get_stats(player_info), (255, 255, 255, 255), font_stats)
+
+		return Render(image_row)
+
 	if type == LeaderboardType.Rank:
 		get_stats = lambda player_info: player_info.stats_prison.rank
 	elif type == LeaderboardType.Kda:
@@ -418,6 +464,17 @@ async def render_leaderboard(type: LeaderboardType) -> Render:
 		raise
 
 	leaderboard = get_leaderboard(type)
+
+	position = -1
+	if username or discord_user:
+		try:
+			position = await (
+				get_position(username=username, type=type) if username else get_position(discord_user=discord_user,
+																						 type=type))
+			target_player_info = await (
+				get_player_info(username=username) if username else get_player_info(discord_user=discord_user))
+		except DiscordNotLinkedError:
+			pass
 
 	try:
 		leaderboard_highlight = [await leaderboard.__anext__() for i in range(3)]
@@ -459,16 +516,19 @@ async def render_leaderboard(type: LeaderboardType) -> Render:
 	font_highlight_med = ImageFont.truetype(FONT_BOLD, 18)
 
 	length_highlight_big = draw_highlight.textlength(leaderboard_highlight[0].username, font_highlight_big)
-	draw_highlight.text((270 - length_highlight_big // 2, 270), leaderboard_highlight[0].username, (255, 255, 255, 255),
-						font_highlight_big)
+	draw_highlight.text((270 - length_highlight_big // 2, 270), leaderboard_highlight[0].username,
+						(212, 175, 55, 255) if position != -1 and leaderboard_highlight[0].username == target_player_info.username else (
+						255, 255, 255, 255), font_highlight_big)
 
 	length_highlight_two = draw_highlight.textlength(leaderboard_highlight[1].username, font_highlight_med)
-	draw_highlight.text((93 - length_highlight_two // 2, 298), leaderboard_highlight[1].username, (255, 255, 255, 255),
-						font_highlight_med)
+	draw_highlight.text((93 - length_highlight_two // 2, 298), leaderboard_highlight[1].username,
+						(212, 175, 55, 255) if position != -1 and leaderboard_highlight[1].username == target_player_info.username else (
+						255, 255, 255, 255), font_highlight_med)
 
 	length_highlight_three = draw_highlight.textlength(leaderboard_highlight[2].username, font_highlight_med)
 	draw_highlight.text((449 - length_highlight_three // 2, 308), leaderboard_highlight[2].username,
-						(255, 255, 255, 255), font_highlight_med)
+						(212, 175, 55, 255) if position != -1 and leaderboard_highlight[2].username == target_player_info.username else (
+						255, 255, 255, 255), font_highlight_med)
 
 	draw_highlight.polygon([(210, LEADERBOARD_HEIGHT + SPACING),
 							(163, 392),
@@ -500,46 +560,58 @@ async def render_leaderboard(type: LeaderboardType) -> Render:
 
 	additional_rows = []
 
-	async for player_info in leaderboard:
-		image_row = Image.new('RGBA', (LEADERBOARD_WIDTH, 100), color=(0, 0, 0, 0))
+	font_position = ImageFont.truetype(FONT_BLACK, 24)
+	font_stats = ImageFont.truetype(FONT_BOLD, 18)
+
+	position_length = max(round(draw_highlight.textlength(f'#{position}', font_position)), 4 * SPACING)
+
+	async for i, player_info in a.enumerate(a.islice(leaderboard, 5 if position < 8 else 4)):
+		additional_rows.append((await render_row(player_info, i + 4)).image)
+
+	if position >= 8:
+		row_height = 30
+		radius = 10
+
+		image_row = Image.new('RGBA', (LEADERBOARD_WIDTH, row_height), color=(0, 0, 0, 0))
 		draw_row = ImageDraw.Draw(image_row)
-
-		draw_row.rounded_rectangle((0, 0, image_row.width, image_row.height), fill=(32, 34, 37, 255), radius=15)
-
-		skin_data = await get_skin(player_info.uuid)
-		image_avatar = (await render_avatar(skin_data['skin'], 6)).image
-
-		image_row.paste(image_avatar, (44, (image_row.height - image_avatar.height) // 2))
-
-		font_stats = ImageFont.truetype(FONT_BOLD, 18)
-
-		bounds_name = draw_row.textbbox((0, 0), player_info.username, font_stats)
-		draw_row.text((120, (image_row.height - bounds_name[3]) // 2), player_info.username, (255, 255, 255, 255),
-					  font_stats)
-
-		bounds_stats = draw_row.textbbox((0, 0), get_stats(player_info), font_stats)
-		draw_row.text((image_row.width - 44 - bounds_stats[2], (image_row.height - bounds_stats[3]) // 2),
-					  get_stats(player_info), (255, 255, 255, 255), font_stats)
+		draw_row.ellipse(
+			((LEADERBOARD_WIDTH - radius) // 2, (row_height - radius) // 2, (LEADERBOARD_WIDTH + radius) // 2,
+			 (row_height + radius) // 2),
+			fill=(209, 222, 241, 255))
+		draw_row.ellipse(
+			((LEADERBOARD_WIDTH - 5 * SPACING - radius) // 2, (row_height - radius) // 2,
+			 (LEADERBOARD_WIDTH - 5 * SPACING + radius) // 2, (row_height + radius) // 2),
+			fill=(209, 222, 241, 255))
+		draw_row.ellipse(
+			((LEADERBOARD_WIDTH + 5 * SPACING - radius) // 2, (row_height - radius) // 2,
+			 (LEADERBOARD_WIDTH + 5 * SPACING + radius) // 2, (row_height + radius) // 2),
+			fill=(209, 222, 241, 255))
 
 		additional_rows.append(image_row)
+		additional_rows.append((await render_row(target_player_info, position + 1)).image)
 
 	image_base = Image.new('RGBA',
-						   (LEADERBOARD_WIDTH, LEADERBOARD_HEIGHT + SPACING + (100 + SPACING) * len(additional_rows)),
+						   (LEADERBOARD_WIDTH,
+							LEADERBOARD_HEIGHT + sum(row.height + SPACING for row in additional_rows)),
 						   color=(0, 0, 0, 0))
 	image_base.paste(image_highlight)
 
-	for i in range(len(additional_rows)):
-		image_base.paste(additional_rows[i], (0, LEADERBOARD_HEIGHT + SPACING + (100 + SPACING) * i))
+	height = 0
+	for row in additional_rows:
+		image_base.paste(row, (0, LEADERBOARD_HEIGHT + SPACING + height))
+		height += row.height + SPACING
 
 	return Render(image_base)
 
 
 async def main():
-	(await render_leaderboard(LeaderboardType.Rank)).image.show()
-	# (await render_card('vive202000', type=CardType.Prison)).image.show()
-	# skin_data = await get_skin('1e3cb08c-e29d-478b-a0b9-3b2cacd899bd')
-	# image_skin = await gen_render(skin_data['skin'], skin_data['slim'], 6)
-	# image_skin.show()
+	(await render_leaderboard(type=LeaderboardType.Deaths, username='keyute')).image.show()
+
+
+# (await render_card('vive202000', type=CardType.Prison)).image.show()
+# skin_data = await get_skin('1e3cb08c-e29d-478b-a0b9-3b2cacd899bd')
+# image_skin = await gen_render(skin_data['skin'], skin_data['slim'], 6)
+# image_skin.show()
 
 
 if __name__ == '__main__':

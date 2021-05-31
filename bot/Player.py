@@ -19,22 +19,25 @@ class Player(commands.Cog):
 	@commands.command(aliases=['prison'])
 	async def rank(self, ctx, username: str = None):
 		"""Displays player Prison stats"""
-		render = await (card.render_card(username=username, type=CardType.Prison) if username else card.render_card(
-			discord_user=ctx.author, type=CardType.Prison))
+		render = await (
+			card.render_card(username=username, type=CardType.Prison) if username else
+			card.render_card(discord_user=ctx.author, type=CardType.Prison))
 		await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
 	@commands.command(aliases=['arena'])
 	async def infamy(self, ctx, username: str = None):
 		"""Displays player Arena stats"""
-		render = await (card.render_card(username=username, type=CardType.Infamy) if username else card.render_card(
-			discord_user=ctx.author, type=CardType.Infamy))
+		render = await (
+			card.render_card(username=username, type=CardType.Infamy) if username else
+			card.render_card(discord_user=ctx.author, type=CardType.Infamy))
 		await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
 	@commands.command(aliases=['kda'])
 	async def kills(self, ctx, username: str = None):
 		"""Displays player Arena kill stats"""
-		render = await (card.render_card(username=username, type=CardType.Kills) if username else card.render_card(
-			discord_user=ctx.author, type=CardType.Kills))
+		render = await (
+			card.render_card(username=username, type=CardType.Kills) if username else
+			card.render_card(discord_user=ctx.author, type=CardType.Kills))
 		await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
 	@rank.error
@@ -42,9 +45,9 @@ class Player(commands.Cog):
 	@kills.error
 	async def on_command_error(self, ctx, error):
 		if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, card.UsernameError):
-			await ctx.send(error.original.args[0]['message'])
-		else:
-			await self.handle_command_error(ctx, error)
+			return await ctx.send(error.original.args[0]['message'])
+
+		await self.handle_command_error(ctx, error)
 
 	@commands.command(aliases=['luthor'])
 	async def peddler(self, ctx):
@@ -81,54 +84,60 @@ class Player(commands.Cog):
 	async def leaderboard_rank(self, ctx):
 		"""Displays the current leaderboard in terms of prison ranks"""
 		async with ctx.typing():
-			render = await card.render_leaderboard(card.LeaderboardType.Rank)
+			render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Rank)
 		await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
 	@leaderboard.command(name='blocks')
 	async def leaderboard_blocks(self, ctx):
 		"""Displays the current leaderboard in terms of blocks mined"""
 		async with ctx.typing():
-			render = await card.render_leaderboard(card.LeaderboardType.Blocks)
+			render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Blocks)
 		await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
 	@leaderboard.command(name='infamy')
 	async def leaderboard_infamy(self, ctx):
 		"""Displays the current leaderboard in terms of arena Infamy"""
 		async with ctx.typing():
-			render = await card.render_leaderboard(card.LeaderboardType.Infamy)
+			render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Infamy)
 		await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
 	@leaderboard.command(name='kda')
 	async def leaderboard_kda(self, ctx):
 		"""Displays the current leaderboard in terms of arena KDA"""
 		async with ctx.typing():
-			render = await card.render_leaderboard(card.LeaderboardType.Kda)
+			render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Kda)
 		await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
 	@leaderboard.command(name='kills')
 	async def leaderboard_kills(self, ctx):
 		"""Displays the current leaderboard in terms of arena kills"""
 		async with ctx.typing():
-			render = await card.render_leaderboard(card.LeaderboardType.Kills)
+			render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Kills)
 		await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
 	@leaderboard.command(name='deaths')
 	async def leaderboard_deaths(self, ctx):
 		"""Displays the current leaderboard in terms of arena deaths"""
 		async with ctx.typing():
-			render = await card.render_leaderboard(card.LeaderboardType.Deaths)
+			render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Deaths)
 		await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
 	@leaderboard.error
 	@leaderboard_rank.error
+	@leaderboard_blocks.error
+	@leaderboard_infamy.error
 	@leaderboard_kda.error
 	@leaderboard_kills.error
 	@leaderboard_deaths.error
 	async def on_command_error(self, ctx, error):
-		if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, card.NotEnoughDataError):
-			await ctx.send(f'There isn’t enough data to display the leaderboard at the moment. Please try again later!')
-		else:
-			await self.handle_command_error(ctx, error)
+		if isinstance(error, commands.CommandInvokeError):
+			if isinstance(error.original, card.UsernameError):
+				return await ctx.send(error.original.args[0]['message'])
+
+			if isinstance(error.original, card.NotEnoughDataError):
+				return await ctx.send(f'There isn’t enough data to display the leaderboard at the moment. Please try again later!')
+
+		await self.handle_command_error(ctx, error)
 
 	async def handle_command_error(self, ctx, error):
 		await ctx.send('Sorry, an error has occured. Please try again at a later time. ')
