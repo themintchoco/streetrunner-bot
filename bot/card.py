@@ -440,7 +440,7 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
 		draw_row.text((6 * SPACING + position_length + image_avatar.width, (image_row.height - bounds_name[3]) // 2),
 					  player_info.username,
 					  (212, 175, 55, 255) if player_info.username == target_player_info.username else (
-					  255, 255, 255, 255), font_stats)
+						  255, 255, 255, 255), font_stats)
 
 		bounds_stats = draw_row.textbbox((0, 0), get_stats(player_info), font_stats)
 		draw_row.text((image_row.width - 2 * SPACING - bounds_stats[2], (image_row.height - bounds_stats[3]) // 2),
@@ -517,18 +517,21 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
 
 	length_highlight_big = draw_highlight.textlength(leaderboard_highlight[0].username, font_highlight_big)
 	draw_highlight.text((270 - length_highlight_big // 2, 270), leaderboard_highlight[0].username,
-						(212, 175, 55, 255) if position != -1 and leaderboard_highlight[0].username == target_player_info.username else (
-						255, 255, 255, 255), font_highlight_big)
+						(212, 175, 55, 255) if position != -1 and leaderboard_highlight[
+							0].username == target_player_info.username else (
+							255, 255, 255, 255), font_highlight_big)
 
 	length_highlight_two = draw_highlight.textlength(leaderboard_highlight[1].username, font_highlight_med)
 	draw_highlight.text((93 - length_highlight_two // 2, 298), leaderboard_highlight[1].username,
-						(212, 175, 55, 255) if position != -1 and leaderboard_highlight[1].username == target_player_info.username else (
-						255, 255, 255, 255), font_highlight_med)
+						(212, 175, 55, 255) if position != -1 and leaderboard_highlight[
+							1].username == target_player_info.username else (
+							255, 255, 255, 255), font_highlight_med)
 
 	length_highlight_three = draw_highlight.textlength(leaderboard_highlight[2].username, font_highlight_med)
 	draw_highlight.text((449 - length_highlight_three // 2, 308), leaderboard_highlight[2].username,
-						(212, 175, 55, 255) if position != -1 and leaderboard_highlight[2].username == target_player_info.username else (
-						255, 255, 255, 255), font_highlight_med)
+						(212, 175, 55, 255) if position != -1 and leaderboard_highlight[
+							2].username == target_player_info.username else (
+							255, 255, 255, 255), font_highlight_med)
 
 	draw_highlight.polygon([(210, LEADERBOARD_HEIGHT + SPACING),
 							(163, 392),

@@ -1,11 +1,13 @@
 import os
+
 import discord
-from discord.ext import commands
-from bot.Player import Player
-from bot.Admin import Admin
-from bot.WebServer import WebServer
-from pretty_help import PrettyHelp
 import sentry_sdk
+from discord.ext import commands
+from pretty_help import PrettyHelp
+
+from bot.Admin import Admin
+from bot.Player import Player
+from bot.WebServer import WebServer
 
 sentry_sdk.init(
 	'https://7b74da9447304a35b6f8c49da4fd09f1@o737869.ingest.sentry.io/5785215',

@@ -135,7 +135,8 @@ class Player(commands.Cog):
 				return await ctx.send(error.original.args[0]['message'])
 
 			if isinstance(error.original, card.NotEnoughDataError):
-				return await ctx.send(f'There isn’t enough data to display the leaderboard at the moment. Please try again later!')
+				return await ctx.send(
+					f'There isn’t enough data to display the leaderboard at the moment. Please try again later!')
 
 		await self.handle_command_error(ctx, error)
 

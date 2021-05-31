@@ -1,9 +1,9 @@
 import json
 import os
 
+import discord
 from aiohttp import web
 from aiohttp_basicauth import BasicAuthMiddleware
-import discord
 from discord.ext import commands, tasks
 
 
