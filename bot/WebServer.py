@@ -1,8 +1,9 @@
-import discord
-from discord.ext import commands, tasks
+import json
+import os
+
 from aiohttp import web
 from aiohttp_basicauth import BasicAuthMiddleware
-import os
+from discord.ext import commands, tasks
 
 
 class WebServer(commands.Cog):
@@ -47,7 +48,13 @@ class WebServer(commands.Cog):
 			channel = self.bot.get_channel(int(request.match_info['id']))
 			if not channel:
 				raise web.HTTPNotFound()
-			await channel.send(await request.text())
+
+			msg = await request.text()
+			try:
+				await channel.send(embed=Discord.Embed.from_dict(json.loads(msg)))
+			except:
+				await channel.send(msg)
+
 			return web.Response()
 
 		@self.routes.get('/user/{id}')
@@ -70,7 +77,13 @@ class WebServer(commands.Cog):
 			user = self.bot.get_user(int(request.match_info['id']))
 			if not user:
 				raise web.HTTPNotFound()
-			await user.send(await request.text())
+
+			msg = await request.text()
+			try:
+				await user.send(embed=Discord.Embed.from_dict(json.loads(msg)))
+			except:
+				await user.send(msg)
+
 			return web.Response()
 
 		@self.routes.get('/user/{name}/{discrim}')
@@ -99,7 +112,13 @@ class WebServer(commands.Cog):
 			member = guild.get_member_named(request.match_info['name'] + '#' + request.match_info['discrim'])
 			if not member:
 				raise web.HTTPNotFound()
-			await member.send(await request.text())
+
+			msg = await request.text()
+			try:
+				await member.send(embed=Discord.Embed.from_dict(json.loads(msg)))
+			except:
+				await member.send(msg)
+
 			return web.Response()
 
 		self.webserver_port = os.environ.get('PORT', 5000)
