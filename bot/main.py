@@ -15,7 +15,10 @@ sentry_sdk.init(
 intents = discord.Intents.default()
 intents.members = True
 
-bot = commands.Bot(command_prefix='!', intents=intents, help_command=PrettyHelp(no_category='Other'))
+bot = commands.Bot(command_prefix='!',
+				   intents=intents,
+				   help_command=PrettyHelp(no_category='Other'),
+				   activity=discord.Game('mc.streetrunner.dev | !help'))
 
 bot.add_cog(Player(bot))
 bot.add_cog(Admin(bot))
