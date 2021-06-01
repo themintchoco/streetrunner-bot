@@ -142,13 +142,16 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
 		async with s.get(
 				f'https://streetrunner.dev/api/player?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}{f"&type={type.name.lower()}" if type else ""}',
 				headers={'Authorization': os.environ['API_KEY']}) as r:
-			if r.status != 200:
+			if r.status == 404:
 				if username:
 					raise UsernameError({'message': f'The username provided is invalid', 'username': username})
 				else:
 					raise DiscordNotLinkedError({
 						'message': f'You have not linked your Discord account to your Minecraft account. Please link your account using the /discord command in-game. ',
 						'discord_id': discord_user})
+			elif r.status != 200:
+				raise
+
 			player_data = await r.json()
 
 	player_stats_prison = None
@@ -194,10 +197,10 @@ async def get_position(*, username: str = None, discord_user: discord.User = Non
 		async with s.get(
 				f'https://streetrunner.dev/api/position/?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}&type={type.name.lower()}',
 				headers={'Authorization': os.environ['API_KEY']}) as r:
-			if r.status == 400:
-				raise DiscordNotLinkedError()
+			if r.status == 404:
+				raise UsernameError({'message': f'The username provided is invalid', 'username': username}) if username else DiscordNotLinkedError()
 			elif r.status != 200:
-				raise UsernameError({'message': f'The username provided is invalid', 'username': username})
+				raise
 			return (await r.json())[type.name.lower()]
 
 
