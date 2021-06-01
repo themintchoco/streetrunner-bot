@@ -198,7 +198,8 @@ async def get_position(*, username: str = None, discord_user: discord.User = Non
 				f'https://streetrunner.dev/api/position/?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}&type={type.name.lower()}',
 				headers={'Authorization': os.environ['API_KEY']}) as r:
 			if r.status == 404:
-				raise UsernameError({'message': f'The username provided is invalid', 'username': username}) if username else DiscordNotLinkedError()
+				raise UsernameError({'message': f'The username provided is invalid',
+									 'username': username}) if username else DiscordNotLinkedError()
 			elif r.status != 200:
 				raise
 			return (await r.json())[type.name.lower()]
@@ -442,7 +443,8 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
 		bounds_name = draw_row.textbbox((0, 0), player_info.username, font_stats)
 		draw_row.text((6 * SPACING + position_length + image_avatar.width, (image_row.height - bounds_name[3]) // 2),
 					  player_info.username,
-					  (212, 175, 55, 255) if player_info.username == target_player_info.username else (
+					  (212, 175, 55,
+					   255) if target_position != -1 and player_info.username == target_player_info.username else (
 						  255, 255, 255, 255), font_stats)
 
 		bounds_stats = draw_row.textbbox((0, 0), get_stats(player_info), font_stats)
@@ -468,10 +470,10 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
 
 	leaderboard = get_leaderboard(type)
 
-	position = -1
+	target_position = -1
 	if username or discord_user:
 		try:
-			position = await (
+			target_position = await (
 				get_position(username=username, type=type) if username else get_position(discord_user=discord_user,
 																						 type=type))
 			target_player_info = await (
@@ -520,19 +522,19 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
 
 	length_highlight_big = draw_highlight.textlength(leaderboard_highlight[0].username, font_highlight_big)
 	draw_highlight.text((270 - length_highlight_big // 2, 270), leaderboard_highlight[0].username,
-						(212, 175, 55, 255) if position != -1 and leaderboard_highlight[
+						(212, 175, 55, 255) if target_position != -1 and leaderboard_highlight[
 							0].username == target_player_info.username else (
 							255, 255, 255, 255), font_highlight_big)
 
 	length_highlight_two = draw_highlight.textlength(leaderboard_highlight[1].username, font_highlight_med)
 	draw_highlight.text((93 - length_highlight_two // 2, 298), leaderboard_highlight[1].username,
-						(212, 175, 55, 255) if position != -1 and leaderboard_highlight[
+						(212, 175, 55, 255) if target_position != -1 and leaderboard_highlight[
 							1].username == target_player_info.username else (
 							255, 255, 255, 255), font_highlight_med)
 
 	length_highlight_three = draw_highlight.textlength(leaderboard_highlight[2].username, font_highlight_med)
 	draw_highlight.text((449 - length_highlight_three // 2, 308), leaderboard_highlight[2].username,
-						(212, 175, 55, 255) if position != -1 and leaderboard_highlight[
+						(212, 175, 55, 255) if target_position != -1 and leaderboard_highlight[
 							2].username == target_player_info.username else (
 							255, 255, 255, 255), font_highlight_med)
 
@@ -569,12 +571,12 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
 	font_position = ImageFont.truetype(FONT_BLACK, 24)
 	font_stats = ImageFont.truetype(FONT_BOLD, 18)
 
-	position_length = max(round(draw_highlight.textlength(f'#{position}', font_position)), 4 * SPACING)
+	position_length = max(round(draw_highlight.textlength(f'#{target_position}', font_position)), 4 * SPACING)
 
-	async for i, player_info in a.enumerate(a.islice(leaderboard, 5 if position < 8 else 4)):
+	async for i, player_info in a.enumerate(a.islice(leaderboard, 5 if target_position < 8 else 4)):
 		additional_rows.append((await render_row(player_info, i + 4)).image)
 
-	if position >= 8:
+	if target_position >= 8:
 		row_height = 30
 		radius = 10
 
@@ -594,7 +596,7 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
 			fill=(209, 222, 241, 255))
 
 		additional_rows.append(image_row)
-		additional_rows.append((await render_row(target_player_info, position + 1)).image)
+		additional_rows.append((await render_row(target_player_info, target_position + 1)).image)
 
 	image_base = Image.new('RGBA',
 						   (LEADERBOARD_WIDTH,
