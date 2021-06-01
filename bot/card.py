@@ -15,7 +15,8 @@ from PIL import Image, ImageDraw, ImageFont
 from asyncache import cached
 from cachetools import TTLCache
 
-from bot.RedisClient import RedisClient
+from bot.exceptions import UsernameError, DiscordNotLinkedError, NotEnoughDataError
+from store.RedisClient import RedisClient
 
 CARD_WIDTH = 640
 CARD_HEIGHT = 220
@@ -29,18 +30,6 @@ FONT_BLACK = 'fonts/Roboto-Black.ttf'
 FONT_BOLD = 'fonts/Roboto-Bold.ttf'
 FONT_REGULAR = 'fonts/Roboto-Regular.ttf'
 FONT_LIGHT = 'fonts/Roboto-Light.ttf'
-
-
-class UsernameError(ValueError):
-	pass
-
-
-class DiscordNotLinkedError(UsernameError):
-	pass
-
-
-class NotEnoughDataError(RuntimeError):
-	pass
 
 
 class CardType(Enum):
@@ -102,9 +91,8 @@ class Render:
 
 @cached(cache=TTLCache(maxsize=1024, ttl=86400))
 async def get_skin(uuid: str) -> dict:
-	client = RedisClient()
-
-	if cached := client.conn.hgetall(f'skins:{uuid}'):
+	conn = RedisClient().conn
+	if cached := conn.hgetall(f'skins:{uuid}'):
 		return {
 			'skin': BytesIO(base64.b64decode(cached[b'skin'])),
 			'slim': cached[b'slim'] == b'1'
@@ -122,12 +110,12 @@ async def get_skin(uuid: str) -> dict:
 							raise
 						skin = await r.read()
 
-					client.conn.hset(f'skins:{uuid}', mapping={
+					conn.hset(f'skins:{uuid}', mapping={
 						'skin': base64.b64encode(skin).decode(),
 						'slim': 1 if skin_data.get('metadata', {}).get('model', '') == 'slim' else 0
 					})
 
-					client.conn.expire(f'skins:{uuid}', datetime.timedelta(days=1))
+					conn.expire(f'skins:{uuid}', datetime.timedelta(days=1))
 
 					return {
 						'skin': BytesIO(skin),

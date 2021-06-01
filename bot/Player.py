@@ -5,6 +5,8 @@ from discord.ext import commands
 
 from bot import card
 from bot.card import CardType
+from bot.exceptions import UsernameError, NotEnoughDataError
+
 
 PEDDLER_NAME = 'Luthor'
 PEDDLER_AVATAR = 'images/peddler_avatar.png'
@@ -44,7 +46,7 @@ class Player(commands.Cog):
 	@infamy.error
 	@kills.error
 	async def on_command_error(self, ctx, error):
-		if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, card.UsernameError):
+		if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, UsernameError):
 			return await ctx.send(error.original.args[0]['message'])
 
 		await self.handle_command_error(ctx, error)
@@ -131,10 +133,10 @@ class Player(commands.Cog):
 	@leaderboard_deaths.error
 	async def on_command_error(self, ctx, error):
 		if isinstance(error, commands.CommandInvokeError):
-			if isinstance(error.original, card.UsernameError):
+			if isinstance(error.original, UsernameError):
 				return await ctx.send(error.original.args[0]['message'])
 
-			if isinstance(error.original, card.NotEnoughDataError):
+			if isinstance(error.original, NotEnoughDataError):
 				return await ctx.send(
 					f'There isn’t enough data to display the leaderboard at the moment. Please try again later!')
 
