@@ -57,10 +57,10 @@ class XP(commands.Cog):
 							xp_refreshed=datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc))
 				session.add(user)
 
-			refresh_time = datetime.datetime.now(datetime.timezone.utc).timestamp()
+			refresh_time = datetime.datetime.now(datetime.timezone.utc)
 
 			query = {'start': int(user.xp_refreshed.timestamp()),
-					 'end': int(refresh_time),
+					 'end': int(refresh_time.timestamp()),
 					 'cooldown': 8,
 					 'discord_id': ctx.author.id}
 
@@ -82,7 +82,7 @@ class XP(commands.Cog):
 				except DiscordNotLinkedError:
 					pass
 
-		await ctx.send(f'xp: {user.xp}')
+			await ctx.send(f'xp: {user.xp}')
 
 	@xp.error
 	async def on_command_error(self, ctx, error):
