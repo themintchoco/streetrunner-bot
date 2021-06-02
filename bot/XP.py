@@ -4,9 +4,11 @@ import os
 import urllib.parse
 
 import aiohttp
+import discord
 from discord.ext import commands
 from sqlalchemy import select
 
+from bot import card
 from bot.exceptions import DiscordNotLinkedError
 from store.PostgresClient import PostgresClient
 from store.User import User
@@ -43,7 +45,7 @@ class XP(commands.Cog):
 		await asyncio.sleep(8)
 		cls.xp_cooldown.pop(message.author.id, None)
 
-	@commands.command(hidden=True)
+	@commands.command()
 	async def xp(self, ctx):
 		with PostgresClient().session() as session:
 			user = session.execute(
@@ -82,7 +84,13 @@ class XP(commands.Cog):
 				except DiscordNotLinkedError:
 					pass
 
-			await ctx.send(f'xp: {user.xp}')
+			render = await card.render_xp_card(discord_user=ctx.author, xp=user.xp)
+			if render.additional_images:
+				await ctx.send(file=discord.File(render.file(
+					format='GIF', save_all=True, append_images=render.additional_images, loop=0),
+					'xp.gif'))
+			else:
+				await ctx.send(file=discord.File(render.file(format='PNG'), 'xp.png'))
 
 	@xp.error
 	async def on_command_error(self, ctx, error):

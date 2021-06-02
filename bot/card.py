@@ -6,12 +6,12 @@ import os
 import urllib
 from enum import Enum
 from io import BytesIO
-from typing import AsyncGenerator
+from typing import AsyncGenerator, List
 
 import aiohttp
 import asyncstdlib as a
 import discord
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageSequence
 from asyncache import cached
 from cachetools import TTLCache
 
@@ -78,12 +78,13 @@ class PlayerInfo:
 
 
 class Render:
-	def __init__(self, image: Image):
+	def __init__(self, image: Image.Image, additional_images: List[Image.Image] = None):
 		self.image = image
+		self.additional_images = additional_images
 
-	def file(self, format: str = None) -> BytesIO:
+	def file(self, *args, **kwargs) -> BytesIO:
 		fp = BytesIO()
-		self.image.save(fp, format)
+		self.image.save(fp, *args, **kwargs)
 		fp.seek(0)
 
 		return fp
@@ -344,7 +345,7 @@ async def render_model(skin, slim: bool, scale: int) -> Render:
 	return Render(image_render)
 
 
-async def render_card(*, username: str = None, discord_user: discord.User = None, type: CardType) -> Render:
+async def render_player_card(*, username: str = None, discord_user: discord.User = None, type: CardType) -> Render:
 	player_info = await (get_player_info(username=username) if username else get_player_info(discord_user=discord_user))
 	skin_data = await get_skin(player_info.uuid)
 	image_skin = (await render_model(skin_data['skin'], skin_data['slim'], 6)).image
@@ -400,11 +401,11 @@ async def render_card(*, username: str = None, discord_user: discord.User = None
 	draw_base.text((10 * SPACING + image_skin.width, 8 * SPACING), stats[0][0], (192, 192, 192), font_stats_header)
 	draw_base.text((10 * SPACING + image_skin.width, 10 * SPACING), stats[0][1], (77, 189, 138), font_stats)
 
-	length_stats_rank = draw_base.textlength(player_info.stats_prison.rank, font_stats)
+	length_stats_left = draw_base.textlength(stats[0][1], font_stats)
 
-	draw_base.text((14 * SPACING + image_skin.width + max(length_stats_rank, 80), 8 * SPACING), stats[1][0],
+	draw_base.text((14 * SPACING + image_skin.width + max(length_stats_left, 80), 8 * SPACING), stats[1][0],
 				   (192, 192, 192), font_stats_header)
-	draw_base.text((14 * SPACING + image_skin.width + max(length_stats_rank, 80), 10 * SPACING), stats[1][1],
+	draw_base.text((14 * SPACING + image_skin.width + max(length_stats_left, 80), 10 * SPACING), stats[1][1],
 				   (77, 189, 138), font_stats)
 
 	return Render(image_base)
@@ -600,14 +601,70 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
 	return Render(image_base)
 
 
+async def render_xp_card(discord_user: discord.User, xp: int) -> Render:
+	def get_level_from_xp(xp: int) -> int:
+		i = 0
+		while True:
+			if 20 * i ** 2 + 35 > xp:
+				return i
+			i += 1
+
+	image_base = Image.new('RGBA', (CARD_WIDTH, CARD_HEIGHT), color=(0, 0, 0, 0))
+	draw_base = ImageDraw.Draw(image_base)
+	draw_base.rounded_rectangle((SPACING, SPACING, CARD_WIDTH - SPACING, CARD_HEIGHT - SPACING),
+								fill=(32, 34, 37, 255), radius=15)
+
+	font_name = ImageFont.truetype(FONT_BOLD, 36)
+	font_discrim = ImageFont.truetype(FONT_LIGHT, 27)
+
+	bounds_name = draw_base.textbbox((0, 0), discord_user.name, font_name)
+	draw_base.text((10 * SPACING + 100, 8 * SPACING), discord_user.name, (255, 255, 255, 255), font_name, anchor='ls')
+
+	draw_base.text((11 * SPACING + 100 + bounds_name[2], 8 * SPACING),
+				   '#' + discord_user.discriminator, (192, 192, 192, 255), font_discrim, anchor='ls')
+
+	font_stats_header = ImageFont.truetype(FONT_LIGHT, 18)
+	font_stats = ImageFont.truetype(FONT_BLACK, 54)
+
+	length_stats_header_left = draw_base.textlength('XP', font_stats_header)
+	draw_base.text((10 * SPACING + 100, 7 * SPACING + bounds_name[3]), 'XP', (192, 192, 192, 255), font_stats_header)
+
+	length_stats_left = draw_base.textlength(str(xp), font_stats)
+	draw_base.text((11 * SPACING + 100 + length_stats_header_left, 6 * SPACING + bounds_name[3]),
+				   str(xp), (77, 189, 138, 255), font_stats)
+
+	length_stats_header_right = draw_base.textlength('LEVEL', font_stats_header)
+	draw_base.text((16 * SPACING + 100 + length_stats_left, 7 * SPACING + bounds_name[3]),
+				   'LEVEL', (192, 192, 192, 255), font_stats_header)
+
+	length_stats_right = draw_base.textlength(str(get_level_from_xp(xp)), font_stats)
+	draw_base.text((17 * SPACING + 100 + length_stats_left + length_stats_header_right, 6 * SPACING + bounds_name[3]),
+				   str(get_level_from_xp(xp)), (77, 189, 138, 255), font_stats)
+
+	image_mask = Image.new('RGBA', (100, 100), (0, 0, 0, 0))
+	draw_mask = ImageDraw.Draw(image_mask)
+	draw_mask.ellipse((0, 0, 100, 100), fill=(255, 255, 255, 255))
+
+	try:
+		image_avatar = Image.open(BytesIO(await discord_user.avatar_url_as(format='gif').read()))
+		image_background = Image.new('RGBA', image_base.size, (54, 57, 63, 255))
+
+		frames = []
+		for frame in ImageSequence.Iterator(image_avatar):
+			image_frame = Image.alpha_composite(image_background, image_base)
+			image_frame.paste(frame.resize((100, 100)), (5 * SPACING, (CARD_HEIGHT - 100) // 2), mask=image_mask)
+			frames.append(image_frame)
+
+		return Render(frames[0], additional_images=frames[1:])
+	except discord.InvalidArgument:
+		image_avatar = Image.open(BytesIO(await discord_user.avatar_url_as(format='png').read()))
+		image_base.paste(image_avatar.resize((100, 100)), (5 * SPACING, (CARD_HEIGHT - 100) // 2), mask=image_mask)
+
+		return Render(image_base)
+
+
 async def main():
-	(await render_leaderboard(type=LeaderboardType.Deaths, username='keyute')).image.show()
-
-
-# (await render_card('vive202000', type=CardType.Prison)).image.show()
-# skin_data = await get_skin('1e3cb08c-e29d-478b-a0b9-3b2cacd899bd')
-# image_skin = await gen_render(skin_data['skin'], skin_data['slim'], 6)
-# image_skin.show()
+	pass
 
 
 if __name__ == '__main__':

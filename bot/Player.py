@@ -22,24 +22,24 @@ class Player(commands.Cog):
 	async def rank(self, ctx, username: str = None):
 		"""Displays player Prison stats"""
 		render = await (
-			card.render_card(username=username, type=CardType.Prison) if username else
-			card.render_card(discord_user=ctx.author, type=CardType.Prison))
+			card.render_player_card(username=username, type=CardType.Prison) if username else
+			card.render_player_card(discord_user=ctx.author, type=CardType.Prison))
 		await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
 	@commands.command(aliases=['arena'])
 	async def infamy(self, ctx, username: str = None):
 		"""Displays player Arena stats"""
 		render = await (
-			card.render_card(username=username, type=CardType.Infamy) if username else
-			card.render_card(discord_user=ctx.author, type=CardType.Infamy))
+			card.render_player_card(username=username, type=CardType.Infamy) if username else
+			card.render_player_card(discord_user=ctx.author, type=CardType.Infamy))
 		await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
 	@commands.command(aliases=['kda'])
 	async def kills(self, ctx, username: str = None):
 		"""Displays player Arena kill stats"""
 		render = await (
-			card.render_card(username=username, type=CardType.Kills) if username else
-			card.render_card(discord_user=ctx.author, type=CardType.Kills))
+			card.render_player_card(username=username, type=CardType.Kills) if username else
+			card.render_player_card(discord_user=ctx.author, type=CardType.Kills))
 		await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
 	@rank.error
