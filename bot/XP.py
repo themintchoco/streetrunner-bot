@@ -45,16 +45,16 @@ class XP(commands.Cog):
 		await asyncio.sleep(8)
 		cls.xp_cooldown.pop(message.author.id, None)
 
-	@commands.command()
-	async def xp(self, ctx):
+	@staticmethod
+	async def get_xp(discord_user: discord.User):
 		with PostgresClient().session() as session:
 			user = session.execute(
 				select(User)
-					.where(User.discord_id == ctx.author.id)
+					.where(User.discord_id == discord_user.id)
 			).scalar()
 
 			if not user:
-				user = User(discord_id=ctx.author.id,
+				user = User(discord_id=discord_user.id,
 							xp=0,
 							xp_refreshed=datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc))
 				session.add(user)
@@ -64,7 +64,7 @@ class XP(commands.Cog):
 			query = {'start': int(user.xp_refreshed.timestamp()),
 					 'end': int(refresh_time.timestamp()),
 					 'cooldown': 8,
-					 'discord_id': ctx.author.id}
+					 'discord_id': discord_user.id}
 
 			async with aiohttp.ClientSession() as s:
 				try:
@@ -84,13 +84,18 @@ class XP(commands.Cog):
 				except DiscordNotLinkedError:
 					pass
 
-			render = await card.render_xp_card(discord_user=ctx.author, xp=user.xp)
-			if render.additional_images:
-				await ctx.send(file=discord.File(render.file(
-					format='GIF', save_all=True, append_images=render.additional_images, loop=0),
-					'xp.gif'))
-			else:
-				await ctx.send(file=discord.File(render.file(format='PNG'), 'xp.png'))
+			return user.xp
+
+	@commands.command()
+	async def xp(self, ctx):
+		async with ctx.typing():
+			xp = await self.get_xp(ctx.author)
+			render = await card.render_xp_card(discord_user=ctx.author, xp=xp)
+
+		if render.multi_frame:
+			await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'xp.gif'))
+		else:
+			await ctx.send(file=discord.File(render.file(format='PNG'), 'xp.png'))
 
 	@xp.error
 	async def on_command_error(self, ctx, error):

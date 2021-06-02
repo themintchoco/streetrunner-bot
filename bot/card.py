@@ -18,11 +18,14 @@ from cachetools import TTLCache
 from bot.exceptions import UsernameError, DiscordNotLinkedError, NotEnoughDataError
 from store.RedisClient import RedisClient
 
-CARD_WIDTH = 640
-CARD_HEIGHT = 220
+PLAYER_CARD_WIDTH = 640
+PLAYER_CARD_HEIGHT = 220
 
 LEADERBOARD_WIDTH = 540
 LEADERBOARD_HEIGHT = 500
+
+XP_CARD_WIDTH = 640
+XP_CARD_HEIGHT = 220
 
 SPACING = 12
 
@@ -78,13 +81,27 @@ class PlayerInfo:
 
 
 class Render:
-	def __init__(self, image: Image.Image, additional_images: List[Image.Image] = None):
-		self.image = image
-		self.additional_images = additional_images
+	def __init__(self, *images: Image.Image):
+		self._images = images
+
+	@property
+	def image(self) -> Image.Image:
+		return self._images[0]
+
+	@property
+	def multi_frame(self) -> bool:
+		return len(self._images) > 1
 
 	def file(self, *args, **kwargs) -> BytesIO:
 		fp = BytesIO()
 		self.image.save(fp, *args, **kwargs)
+		fp.seek(0)
+
+		return fp
+
+	def file_animated(self, *args, **kwargs) -> BytesIO:
+		fp = BytesIO()
+		self.image.save(fp, save_all=True, append_images=self._images[1:], *args, **kwargs)
 		fp.seek(0)
 
 		return fp
@@ -350,7 +367,7 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
 	skin_data = await get_skin(player_info.uuid)
 	image_skin = (await render_model(skin_data['skin'], skin_data['slim'], 6)).image
 
-	image_base = Image.new('RGBA', (CARD_WIDTH, CARD_HEIGHT), color=(0, 0, 0, 0))
+	image_base = Image.new('RGBA', (PLAYER_CARD_WIDTH, PLAYER_CARD_HEIGHT), color=(0, 0, 0, 0))
 	draw_base = ImageDraw.Draw(image_base)
 
 	if type == CardType.Prison:
@@ -366,29 +383,29 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
 	else:
 		raise
 
-	if image_background.width != CARD_WIDTH or image_background.height != CARD_HEIGHT:
-		image_background = image_background.resize((CARD_WIDTH, CARD_HEIGHT))
+	if image_background.width != PLAYER_CARD_WIDTH or image_background.height != PLAYER_CARD_HEIGHT:
+		image_background = image_background.resize((PLAYER_CARD_WIDTH, PLAYER_CARD_HEIGHT))
 
 	image_mask = image_base.copy()
 	draw_mask = ImageDraw.Draw(image_mask)
 	draw_mask.ellipse(
-		(-CARD_HEIGHT // 2 - 8 * SPACING, -8 * SPACING, CARD_HEIGHT // 2 + 8 * SPACING, CARD_HEIGHT + 8 * SPACING),
+		(-PLAYER_CARD_HEIGHT // 2 - 8 * SPACING, -8 * SPACING, PLAYER_CARD_HEIGHT // 2 + 8 * SPACING, PLAYER_CARD_HEIGHT + 8 * SPACING),
 		fill=(255, 255, 255, 255))
 
 	image_mask.paste(image_background, mask=image_mask)
 
 	image_card = image_base.copy()
 	draw_card = ImageDraw.Draw(image_card)
-	draw_card.rounded_rectangle((SPACING, SPACING, CARD_WIDTH - SPACING, CARD_HEIGHT - SPACING),
+	draw_card.rounded_rectangle((SPACING, SPACING, PLAYER_CARD_WIDTH - SPACING, PLAYER_CARD_HEIGHT - SPACING),
 								fill=(255, 255, 255, 255), radius=15)
 
 	image_card.paste(image_mask, mask=image_card)
 
-	draw_base.rounded_rectangle((SPACING, SPACING, CARD_WIDTH - SPACING, CARD_HEIGHT - SPACING),
+	draw_base.rounded_rectangle((SPACING, SPACING, PLAYER_CARD_WIDTH - SPACING, PLAYER_CARD_HEIGHT - SPACING),
 								fill=(32, 34, 37, 255), radius=15)
 	image_base.paste(image_card, mask=image_card)
 
-	image_skin = image_skin.crop((0, 0, image_skin.width, CARD_HEIGHT - 3 * SPACING))
+	image_skin = image_skin.crop((0, 0, image_skin.width, PLAYER_CARD_HEIGHT - 3 * SPACING))
 
 	image_base.paste(image_skin, (5 * SPACING, 2 * SPACING), mask=image_skin)
 
@@ -603,15 +620,18 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
 
 async def render_xp_card(discord_user: discord.User, xp: int) -> Render:
 	def get_level_from_xp(xp: int) -> int:
-		i = 0
+		i = 1
 		while True:
-			if 20 * i ** 2 + 35 > xp:
-				return i
+			if get_min_xp_for_level(i) > xp:
+				return i - 1
 			i += 1
 
-	image_base = Image.new('RGBA', (CARD_WIDTH, CARD_HEIGHT), color=(0, 0, 0, 0))
+	def get_min_xp_for_level(level: int) -> int:
+		return 20 * (level - 1) ** 2 + 35
+
+	image_base = Image.new('RGBA', (XP_CARD_WIDTH, XP_CARD_HEIGHT), color=(0, 0, 0, 0))
 	draw_base = ImageDraw.Draw(image_base)
-	draw_base.rounded_rectangle((SPACING, SPACING, CARD_WIDTH - SPACING, CARD_HEIGHT - SPACING),
+	draw_base.rounded_rectangle((SPACING, SPACING, XP_CARD_WIDTH - SPACING, XP_CARD_HEIGHT - SPACING),
 								fill=(32, 34, 37, 255), radius=15)
 
 	font_name = ImageFont.truetype(FONT_BOLD, 36)
@@ -629,17 +649,32 @@ async def render_xp_card(discord_user: discord.User, xp: int) -> Render:
 	length_stats_header_left = draw_base.textlength('XP', font_stats_header)
 	draw_base.text((10 * SPACING + 100, 7 * SPACING + bounds_name[3]), 'XP', (192, 192, 192, 255), font_stats_header)
 
-	length_stats_left = draw_base.textlength(str(xp), font_stats)
+	length_stats_left = draw_base.textlength(get_number_representation(xp), font_stats)
 	draw_base.text((11 * SPACING + 100 + length_stats_header_left, 6 * SPACING + bounds_name[3]),
 				   str(xp), (77, 189, 138, 255), font_stats)
 
-	length_stats_header_right = draw_base.textlength('LEVEL', font_stats_header)
-	draw_base.text((16 * SPACING + 100 + length_stats_left, 7 * SPACING + bounds_name[3]),
+	length_stats_header_mid = draw_base.textlength('LEVEL', font_stats_header)
+	draw_base.text((16 * SPACING + 100 + length_stats_header_left + length_stats_left, 7 * SPACING + bounds_name[3]),
 				   'LEVEL', (192, 192, 192, 255), font_stats_header)
 
-	length_stats_right = draw_base.textlength(str(get_level_from_xp(xp)), font_stats)
-	draw_base.text((17 * SPACING + 100 + length_stats_left + length_stats_header_right, 6 * SPACING + bounds_name[3]),
+	length_stats_mid = draw_base.textlength(str(get_level_from_xp(xp)), font_stats)
+	draw_base.text((17 * SPACING + 100 + length_stats_header_left + length_stats_left + length_stats_header_mid, 6 * SPACING + bounds_name[3]),
 				   str(get_level_from_xp(xp)), (77, 189, 138, 255), font_stats)
+
+	# length_stats_header_right = draw_base.textlength('RANK', font_stats_header)
+	# draw_base.text((22 * SPACING + 100 + length_stats_header_left + length_stats_left + length_stats_header_mid + length_stats_mid, 7 * SPACING + bounds_name[3]),
+	# 			   'RANK', (192, 192, 192, 255), font_stats_header)
+	#
+	# draw_base.text((23 * SPACING + 100 + length_stats_header_left + length_stats_left + length_stats_header_mid + length_stats_mid + length_stats_header_right, 6 * SPACING + bounds_name[3]),
+	# 			   '#33', (77, 189, 138, 255), font_stats)
+
+	draw_base.ellipse((5 * SPACING - 5, (PLAYER_CARD_HEIGHT - 110) // 2,
+						5 * SPACING + 105, (PLAYER_CARD_HEIGHT + 110) // 2),
+					   fill=(26, 26, 26, 255))
+	draw_base.pieslice((5 * SPACING - 5, (PLAYER_CARD_HEIGHT - 110) // 2,
+						5 * SPACING + 105, (PLAYER_CARD_HEIGHT + 110) // 2),
+					   start=270, end=270 + (xp - get_min_xp_for_level(get_level_from_xp(xp))) / (get_min_xp_for_level(get_level_from_xp(xp) + 1) - get_min_xp_for_level(get_level_from_xp(xp))) * 360,
+					   fill=(77, 189, 138, 255))
 
 	image_mask = Image.new('RGBA', (100, 100), (0, 0, 0, 0))
 	draw_mask = ImageDraw.Draw(image_mask)
@@ -652,13 +687,13 @@ async def render_xp_card(discord_user: discord.User, xp: int) -> Render:
 		frames = []
 		for frame in ImageSequence.Iterator(image_avatar):
 			image_frame = Image.alpha_composite(image_background, image_base)
-			image_frame.paste(frame.resize((100, 100)), (5 * SPACING, (CARD_HEIGHT - 100) // 2), mask=image_mask)
+			image_frame.paste(frame.resize((100, 100)), (5 * SPACING, (PLAYER_CARD_HEIGHT - 100) // 2), mask=image_mask)
 			frames.append(image_frame)
 
-		return Render(frames[0], additional_images=frames[1:])
+		return Render(*frames)
 	except discord.InvalidArgument:
 		image_avatar = Image.open(BytesIO(await discord_user.avatar_url_as(format='png').read()))
-		image_base.paste(image_avatar.resize((100, 100)), (5 * SPACING, (CARD_HEIGHT - 100) // 2), mask=image_mask)
+		image_base.paste(image_avatar.resize((100, 100)), (5 * SPACING, (PLAYER_CARD_HEIGHT - 100) // 2), mask=image_mask)
 
 		return Render(image_base)
 
