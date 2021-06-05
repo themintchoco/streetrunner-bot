@@ -1,9 +1,6 @@
 import asyncio
 import datetime
-import os
-from typing import List, Tuple
 
-import aiohttp
 import discord
 from discord.ext import commands
 from sqlalchemy import select
@@ -11,25 +8,6 @@ from sqlalchemy import select
 from bot import card
 from store.PostgresClient import PostgresClient
 from store.User import User
-
-
-async def get_chat_xp(discord_id: List[int], timerange: List[Tuple[datetime.datetime, datetime.datetime]]) -> List[int]:
-    query = {'data': [{
-        'discord_id': str(discord_id[i]),
-        'start': int(timerange[i][0].timestamp()),
-        'end': int(timerange[i][1].timestamp())
-    } for i in range(len(discord_id))],
-        'cooldown': 8}
-
-    async with aiohttp.ClientSession() as s:
-        async with s.post(
-                f'https://streetrunner.dev/api/chat/', json=query,
-                headers={'Authorization': os.environ['API_KEY']}) as r:
-            if r.status != 200:
-                print(await r.text())
-                raise
-
-            return await r.json()
 
 
 class XP(commands.Cog):

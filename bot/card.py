@@ -278,6 +278,24 @@ async def get_all_xp():
         return users
 
 
+async def get_chat_xp(discord_id: List[int], timerange: List[Tuple[datetime.datetime, datetime.datetime]]) -> List[int]:
+    query = {'data': [{
+        'discord_id': str(discord_id[i]),
+        'start': int(timerange[i][0].timestamp()),
+        'end': int(timerange[i][1].timestamp())
+    } for i in range(len(discord_id))],
+        'cooldown': 8}
+
+    async with aiohttp.ClientSession() as s:
+        async with s.post(
+                f'https://streetrunner.dev/api/chat/', json=query,
+                headers={'Authorization': os.environ['API_KEY']}) as r:
+            if r.status != 200:
+                raise
+
+            return await r.json()
+
+
 async def render_avatar(skin, scale: int) -> Render:
     image_skin = Image.open(skin)
 
