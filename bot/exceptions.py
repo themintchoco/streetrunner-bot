@@ -1,10 +1,10 @@
 class UsernameError(ValueError):
-	pass
+    pass
 
 
 class DiscordNotLinkedError(UsernameError):
-	pass
+    pass
 
 
 class NotEnoughDataError(RuntimeError):
-	pass
+    pass

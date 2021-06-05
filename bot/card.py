@@ -6,7 +6,7 @@ import os
 import urllib
 from enum import Enum
 from io import BytesIO
-from typing import AsyncGenerator, List
+from typing import AsyncGenerator
 
 import aiohttp
 import asyncstdlib as a
@@ -16,8 +16,8 @@ from asyncache import cached
 from cachetools import TTLCache
 
 import bot.utilities
-from bot.exceptions import UsernameError, DiscordNotLinkedError, NotEnoughDataError
 from bot.XP import XP
+from bot.exceptions import UsernameError, DiscordNotLinkedError, NotEnoughDataError
 from store.RedisClient import RedisClient
 
 PLAYER_CARD_WIDTH = 640
@@ -678,8 +678,8 @@ async def render_xp_card(discord_user: discord.User) -> Render:
     draw_base.pieslice((5 * SPACING - 5, (PLAYER_CARD_HEIGHT - 110) // 2,
                         5 * SPACING + 105, (PLAYER_CARD_HEIGHT + 110) // 2),
                        start=270, end=270 + (xp - XP.get_min_xp_for_level(XP.get_level_from_xp(xp))) / (
-                    XP.get_min_xp_for_level(XP.get_level_from_xp(xp) + 1) - XP.get_min_xp_for_level(
-                XP.get_level_from_xp(xp))) * 360,
+                XP.get_min_xp_for_level(XP.get_level_from_xp(xp) + 1) - XP.get_min_xp_for_level(
+            XP.get_level_from_xp(xp))) * 360,
                        fill=(77, 189, 138, 255))
 
     image_mask = Image.new('RGBA', (100, 100), (0, 0, 0, 0))
@@ -714,8 +714,8 @@ async def render_xp_leaderboard(discord_user: discord.User) -> Render:
                          fill=(26, 26, 26, 255))
         draw_row.pieslice((3 * SPACING - 5, 0, 3 * SPACING + 70, 75),
                           start=270, end=270 + (xp - XP.get_min_xp_for_level(XP.get_level_from_xp(xp))) / (
-                        XP.get_min_xp_for_level(XP.get_level_from_xp(xp) + 1) - XP.get_min_xp_for_level(
-                    XP.get_level_from_xp(xp))) * 360,
+                    XP.get_min_xp_for_level(XP.get_level_from_xp(xp) + 1) - XP.get_min_xp_for_level(
+                XP.get_level_from_xp(xp))) * 360,
                           fill=(77, 189, 138, 255))
 
         image_mask = Image.new('RGBA', (65, 65), (0, 0, 0, 0))
