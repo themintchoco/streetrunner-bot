@@ -16,7 +16,6 @@ from asyncache import cached
 from cachetools import TTLCache
 
 import bot.utilities
-from bot.XP import XP
 from bot.exceptions import UsernameError, DiscordNotLinkedError, NotEnoughDataError
 from store.RedisClient import RedisClient
 
@@ -42,11 +41,11 @@ class CardType(Enum):
 
 
 class CosmeticTitle(Enum):
-    FIERY = ("FIERY", False)
-    FIERY_BOLD = ("FIERY", True)
-    UNDEFEATED = ("UNDEFEATED", True)
-    SUPREME = ("SUPREME", True)
-    DRAKE = ("DRAKE", False)
+    FIERY = ('FIERY', False)
+    FIERY_BOLD = ('FIERY', True)
+    UNDEFEATED = ('UNDEFEATED', True)
+    SUPREME = ('SUPREME', True)
+    DRAKE = ('DRAKE', False)
 
 
 class PlayerStatsType(Enum):
@@ -224,6 +223,59 @@ async def get_position(*, username: str = None, discord_user: discord.User = Non
 def get_number_representation(number: int) -> str:
     magnitude = (len(str(number)) - 1) // 3
     return f'{(number / (10 ** (magnitude * 3))):.3g}{" KMGTPEZY"[magnitude] if magnitude > 0 else ""}'
+
+
+def get_level_from_xp(xp: int) -> int:
+    i = 1
+    while True:
+        if get_min_xp_for_level(i) > xp:
+            return i - 1
+        i += 1
+
+
+def get_min_xp_for_level(level: int) -> int:
+    if level > 0:
+        return 20 * (level - 1) ** 2 + 35
+    return 0
+
+
+async def get_xp(discord_user: discord.User):
+    async with PostgresClient().session() as session:
+        user = (await session.execute(
+            select(User)
+                .where(User.discord_id == discord_user.id)
+        )).scalar()
+
+        if not user:
+            user = User(discord_id=discord_user.id,
+                        xp=0,
+                        xp_refreshed=datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc))
+            session.add(user)
+
+        refresh_time = datetime.datetime.now(datetime.timezone.utc)
+
+        xp_delta = (await get_chat_xp([user.discord_id], [(user.xp_refreshed, refresh_time)]))[0]
+        if xp_delta is not None:
+            user.xp += xp_delta
+            user.xp_refreshed = refresh_time
+            await session.commit()
+
+        return user.xp
+
+
+async def get_all_xp():
+    async with PostgresClient().session() as session:
+        users = (await session.execute(select(User))).scalars().all()
+
+        refresh_time = datetime.datetime.now(datetime.timezone.utc)
+        for i, xp_delta in enumerate(await get_chat_xp([user.discord_id for user in users],
+                                                       [(user.xp_refreshed, refresh_time) for user in users])):
+            if xp_delta is not None:
+                users[i].xp += xp_delta
+                users[i].xp_refreshed = refresh_time
+
+        await session.commit()
+        return users
 
 
 async def render_avatar(skin, scale: int) -> Render:
@@ -630,7 +682,7 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
 
 
 async def render_xp_card(discord_user: discord.User) -> Render:
-    xp = await XP.get_xp(discord_user)
+    xp = await get_xp(discord_user)
 
     image_base = Image.new('RGBA', (XP_CARD_WIDTH, XP_CARD_HEIGHT), color=(0, 0, 0, 0))
     draw_base = ImageDraw.Draw(image_base)
@@ -660,10 +712,10 @@ async def render_xp_card(discord_user: discord.User) -> Render:
     draw_base.text((16 * SPACING + 100 + length_stats_header_left + length_stats_left, 7 * SPACING + bounds_name[3]),
                    'LEVEL', (192, 192, 192, 255), font_stats_header)
 
-    length_stats_mid = draw_base.textlength(get_number_representation(XP.get_level_from_xp(xp)), font_stats)
+    length_stats_mid = draw_base.textlength(get_number_representation(get_level_from_xp(xp)), font_stats)
     draw_base.text((17 * SPACING + 100 + length_stats_header_left + length_stats_left + length_stats_header_mid,
                     6 * SPACING + bounds_name[3]),
-                   get_number_representation(XP.get_level_from_xp(xp)), (77, 189, 138, 255), font_stats)
+                   get_number_representation(get_level_from_xp(xp)), (77, 189, 138, 255), font_stats)
 
     # length_stats_header_right = draw_base.textlength('RANK', font_stats_header)
     # draw_base.text((22 * SPACING + 100 + length_stats_header_left + length_stats_left + length_stats_header_mid + length_stats_mid, 7 * SPACING + bounds_name[3]),
@@ -677,9 +729,9 @@ async def render_xp_card(discord_user: discord.User) -> Render:
                       fill=(26, 26, 26, 255))
     draw_base.pieslice((5 * SPACING - 5, (PLAYER_CARD_HEIGHT - 110) // 2,
                         5 * SPACING + 105, (PLAYER_CARD_HEIGHT + 110) // 2),
-                       start=270, end=270 + (xp - XP.get_min_xp_for_level(XP.get_level_from_xp(xp))) / (
-                XP.get_min_xp_for_level(XP.get_level_from_xp(xp) + 1) - XP.get_min_xp_for_level(
-            XP.get_level_from_xp(xp))) * 360,
+                       start=270, end=270 + (xp - get_min_xp_for_level(get_level_from_xp(xp))) / (
+                get_min_xp_for_level(get_level_from_xp(xp) + 1) - get_min_xp_for_level(
+            get_level_from_xp(xp))) * 360,
                        fill=(77, 189, 138, 255))
 
     image_mask = Image.new('RGBA', (100, 100), (0, 0, 0, 0))
@@ -713,9 +765,9 @@ async def render_xp_leaderboard(discord_user: discord.User) -> Render:
         draw_row.ellipse((3 * SPACING - 5, 0, 3 * SPACING + 70, 75),
                          fill=(26, 26, 26, 255))
         draw_row.pieslice((3 * SPACING - 5, 0, 3 * SPACING + 70, 75),
-                          start=270, end=270 + (xp - XP.get_min_xp_for_level(XP.get_level_from_xp(xp))) / (
-                    XP.get_min_xp_for_level(XP.get_level_from_xp(xp) + 1) - XP.get_min_xp_for_level(
-                XP.get_level_from_xp(xp))) * 360,
+                          start=270, end=270 + (xp - get_min_xp_for_level(get_level_from_xp(xp))) / (
+                    get_min_xp_for_level(get_level_from_xp(xp) + 1) - get_min_xp_for_level(
+                get_level_from_xp(xp))) * 360,
                           fill=(77, 189, 138, 255))
 
         image_mask = Image.new('RGBA', (65, 65), (0, 0, 0, 0))
@@ -743,7 +795,7 @@ async def render_xp_leaderboard(discord_user: discord.User) -> Render:
 
         return Render(image_row)
 
-    users = sorted(await XP.get_all_xp(), key=lambda user: user.xp, reverse=True)[:5]
+    users = sorted(await get_all_xp(), key=lambda user: user.xp, reverse=True)[:5]
 
     user_in_leaderboard = False
     for user in users:
@@ -762,7 +814,7 @@ async def render_xp_leaderboard(discord_user: discord.User) -> Render:
         draw_base.rounded_rectangle((0, 12 * SPACING + 4 * 75 + 30, LEADERBOARD_WIDTH, 16 * SPACING + 5 * 75 + 30),
                                     fill=(32, 34, 37, 255), radius=15)
 
-        image_row = (await render_row(discord_user, await XP.get_xp(discord_user))).image
+        image_row = (await render_row(discord_user, await get_xp(discord_user))).image
         image_base.paste(image_row, (0, 14 * SPACING + 4 * 75 + 30), mask=image_row)
 
         image_dots = Image.new('RGBA', (LEADERBOARD_WIDTH, 30), color=(0, 0, 0, 0))
