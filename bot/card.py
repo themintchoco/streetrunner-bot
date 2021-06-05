@@ -18,8 +18,8 @@ from sqlalchemy import select
 
 import bot.utilities
 from bot.exceptions import UsernameError, DiscordNotLinkedError, NotEnoughDataError
-from store.RedisClient import RedisClient
 from store.PostgresClient import PostgresClient
+from store.RedisClient import RedisClient
 from store.User import User
 
 PLAYER_CARD_WIDTH = 640
@@ -335,8 +335,7 @@ async def get_all_xp():
         return users
 
 
-async def get_chat_xp(discord_id: List[int], timerange: List[Tuple[datetime.datetime, datetime.datetime]]) -> List[
-    int]:
+async def get_chat_xp(discord_id: List[int], timerange: List[Tuple[datetime.datetime, datetime.datetime]]) -> List[int]:
     query = {'data': [{
         'discord_id': str(discord_id[i]),
         'start': int(timerange[i][0].timestamp()),
@@ -375,10 +374,9 @@ async def render_model(skin, slim: bool, scale: int) -> Render:
     head_front = image_skin.crop((8, 8, 16, 16)).resize((8 * scale, 8 * scale), Image.NEAREST)
     head_right = image_skin.crop((0, 8, 8, 16)).resize((8 * scale, 8 * scale), Image.NEAREST)
 
-    arm_right_top = image_skin.crop((44, 16, 44 + arm_width, 20)).resize((arm_width * scale, 4 * scale),
-                                                                         Image.NEAREST)
-    arm_right_front = image_skin.crop((44, 20, 44 + arm_width, 32)).resize((arm_width * scale, 12 * scale),
-                                                                           Image.NEAREST)
+    arm_right_top = image_skin.crop((44, 16, 44 + arm_width, 20)).resize((arm_width * scale, 4 * scale), Image.NEAREST)
+    arm_right_front = image_skin.crop((44, 20, 44 + arm_width, 32)).resize(
+        (arm_width * scale, 12 * scale), Image.NEAREST)
     arm_right_side = image_skin.crop((40, 20, 44, 32)).resize((4 * scale, 12 * scale), Image.NEAREST)
 
     arm_left_top = arm_right_top.transpose(method=Image.FLIP_LEFT_RIGHT) if skin_is_old else image_skin.crop(
@@ -408,8 +406,7 @@ async def render_model(skin, slim: bool, scale: int) -> Render:
             arm_right_top.alpha_composite(
                 image_skin.crop((44, 32, 44 + arm_width, 36)).resize((arm_width * scale, 4 * scale), Image.NEAREST))
             arm_right_front.alpha_composite(
-                image_skin.crop((44, 36, 44 + arm_width, 48)).resize((arm_width * scale, 12 * scale),
-                                                                     Image.NEAREST))
+                image_skin.crop((44, 36, 44 + arm_width, 48)).resize((arm_width * scale, 12 * scale), Image.NEAREST))
             arm_right_side.alpha_composite(
                 image_skin.crop((40, 36, 44, 48)).resize((4 * scale, 12 * scale), Image.NEAREST))
 
@@ -417,8 +414,7 @@ async def render_model(skin, slim: bool, scale: int) -> Render:
             arm_left_top.alpha_composite(
                 image_skin.crop((52, 48, 52 + arm_width, 52)).resize((arm_width * scale, 4 * scale), Image.NEAREST))
             arm_left_front.alpha_composite(
-                image_skin.crop((52, 52, 52 + arm_width, 64)).resize((arm_width * scale, 12 * scale),
-                                                                     Image.NEAREST))
+                image_skin.crop((52, 52, 52 + arm_width, 64)).resize((arm_width * scale, 12 * scale), Image.NEAREST))
 
         if image_skin.crop((0, 32, 16, 48)).getextrema()[3][0] < 255:
             leg_right_front.alpha_composite(
@@ -557,8 +553,7 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
     image_base.paste(image_skin, (5 * SPACING, 2 * SPACING), mask=image_skin)
 
     font_username = ImageFont.truetype(FONT_BOLD, 36)
-    draw_base.text((10 * SPACING + image_skin.width, 3 * SPACING), player_info.username, (235, 235, 235),
-                   font_username)
+    draw_base.text((10 * SPACING + image_skin.width, 3 * SPACING), player_info.username, (235, 235, 235), font_username)
 
     font_stats_header = ImageFont.truetype(FONT_LIGHT, 18)
     font_stats = ImageFont.truetype(FONT_BLACK, 54)
@@ -612,8 +607,7 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
         draw_row.text(
             (6 * SPACING + position_length + image_avatar.width, (image_row.height - bounds_name[3]) // 2),
             player_info.username,
-            (212, 175, 55,
-             255) if target_position != -1 and player_info.username == target_player_info.username else (
+            (212, 175, 55, 255) if target_position != -1 and player_info.username == target_player_info.username else (
                 255, 255, 255, 255), font_stats)
 
         bounds_stats = draw_row.textbbox((0, 0), get_stats(player_info), font_stats)
@@ -642,11 +636,8 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
     target_position = -1
     if username or discord_user:
         try:
-            target_position = await (
-                get_position(username=username, type=type) if username else get_position(discord_user=discord_user,
-                                                                                         type=type))
-            target_player_info = await (
-                get_player_info(username=username) if username else get_player_info(discord_user=discord_user))
+            target_position = await get_position(username=username, discord_user=discord_user, type=type)
+            target_player_info = await get_player_info(username=username, discord_user=discord_user, type=type)
         except DiscordNotLinkedError:
             pass
 
@@ -658,19 +649,18 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
     image_highlight = Image.new('RGBA', (LEADERBOARD_WIDTH, LEADERBOARD_HEIGHT + SPACING), color=(0, 0, 0, 0))
     draw_highlight = ImageDraw.Draw(image_highlight)
 
-    draw_highlight.rounded_rectangle((0, 0, LEADERBOARD_WIDTH, LEADERBOARD_HEIGHT), fill=(32, 34, 37, 255),
-                                     radius=15)
+    draw_highlight.rounded_rectangle((0, 0, LEADERBOARD_WIDTH, LEADERBOARD_HEIGHT), fill=(32, 34, 37, 255), radius=15)
 
     font_title = ImageFont.truetype(FONT_BOLD, 36)
     font_subtitle = ImageFont.truetype(FONT_BOLD, 18)
 
     bounds_title = draw_highlight.textbbox((0, 56), type.name.upper(), font_title)
-    draw_highlight.text(((LEADERBOARD_WIDTH - bounds_title[2]) // 2, 56), type.name.upper(), (255, 255, 255, 255),
-                        font_title)
+    draw_highlight.text(((LEADERBOARD_WIDTH - bounds_title[2]) // 2, 56),
+                        type.name.upper(), (255, 255, 255, 255), font_title)
 
     length_subtitle = draw_highlight.textlength('LEADERBOARD', font_subtitle)
-    draw_highlight.text(((LEADERBOARD_WIDTH - length_subtitle) // 2, bounds_title[3] + SPACING), 'LEADERBOARD',
-                        (255, 255, 255, 255), font_subtitle)
+    draw_highlight.text(((LEADERBOARD_WIDTH - length_subtitle) // 2, bounds_title[3] + SPACING),
+                        'LEADERBOARD', (255, 255, 255, 255), font_subtitle)
 
     skin_data_big = await get_skin(leaderboard_highlight[0].uuid)
     image_avatar_big = (await render_avatar(skin_data_big['skin'], 10)).image
@@ -725,17 +715,16 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
     font_stats_med = ImageFont.truetype(FONT_BLACK, 36)
 
     length_stats_big = draw_highlight.textlength(get_stats(leaderboard_highlight[0]), font_stats_big)
-    draw_highlight.text((270 - length_stats_big // 2, 368), get_stats(leaderboard_highlight[0]), (14, 14, 38, 255),
-                        font_stats_big)
+    draw_highlight.text((270 - length_stats_big // 2, 368),
+                        get_stats(leaderboard_highlight[0]), (14, 14, 38, 255), font_stats_big)
 
     length_stats_two = draw_highlight.textlength(get_stats(leaderboard_highlight[1]), font_stats_med)
-    draw_highlight.text((117 - length_stats_two // 2, 400), get_stats(leaderboard_highlight[1]), (14, 14, 38, 255),
-                        font_stats_med)
+    draw_highlight.text((117 - length_stats_two // 2, 400),
+                        get_stats(leaderboard_highlight[1]), (14, 14, 38, 255), font_stats_med)
 
     length_stats_three = draw_highlight.textlength(get_stats(leaderboard_highlight[2]), font_stats_med)
-    draw_highlight.text((424 - length_stats_three // 2, 415), get_stats(leaderboard_highlight[2]),
-                        (14, 14, 38, 255),
-                        font_stats_med)
+    draw_highlight.text((424 - length_stats_three // 2, 415),
+                        get_stats(leaderboard_highlight[2]), (14, 14, 38, 255), font_stats_med)
 
     additional_rows = []
 
@@ -754,24 +743,20 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
         image_row = Image.new('RGBA', (LEADERBOARD_WIDTH, row_height), color=(0, 0, 0, 0))
         draw_row = ImageDraw.Draw(image_row)
         draw_row.ellipse(
-            ((LEADERBOARD_WIDTH - radius) // 2, (row_height - radius) // 2, (LEADERBOARD_WIDTH + radius) // 2,
-             (row_height + radius) // 2),
-            fill=(209, 222, 241, 255))
+            ((LEADERBOARD_WIDTH - radius) // 2, (row_height - radius) // 2,
+             (LEADERBOARD_WIDTH + radius) // 2, (row_height + radius) // 2), fill=(209, 222, 241, 255))
         draw_row.ellipse(
             ((LEADERBOARD_WIDTH - 5 * SPACING - radius) // 2, (row_height - radius) // 2,
-             (LEADERBOARD_WIDTH - 5 * SPACING + radius) // 2, (row_height + radius) // 2),
-            fill=(209, 222, 241, 255))
+             (LEADERBOARD_WIDTH - 5 * SPACING + radius) // 2, (row_height + radius) // 2), fill=(209, 222, 241, 255))
         draw_row.ellipse(
             ((LEADERBOARD_WIDTH + 5 * SPACING - radius) // 2, (row_height - radius) // 2,
-             (LEADERBOARD_WIDTH + 5 * SPACING + radius) // 2, (row_height + radius) // 2),
-            fill=(209, 222, 241, 255))
+             (LEADERBOARD_WIDTH + 5 * SPACING + radius) // 2, (row_height + radius) // 2), fill=(209, 222, 241, 255))
 
         additional_rows.append(image_row)
         additional_rows.append((await render_row(target_player_info, target_position + 1)).image)
 
-    image_base = Image.new('RGBA',
-                           (LEADERBOARD_WIDTH,
-                            LEADERBOARD_HEIGHT + sum(row.height + SPACING for row in additional_rows)),
+    image_base = Image.new('RGBA', (LEADERBOARD_WIDTH,
+                                    LEADERBOARD_HEIGHT + sum(row.height + SPACING for row in additional_rows)),
                            color=(0, 0, 0, 0))
     image_base.paste(image_highlight)
 
@@ -795,8 +780,8 @@ async def render_xp_card(discord_user: discord.User) -> Render:
     font_discrim = ImageFont.truetype(FONT_LIGHT, 27)
 
     bounds_name = draw_base.textbbox((0, 0), discord_user.name, font_name)
-    draw_base.text((10 * SPACING + 100, 8 * SPACING), discord_user.name, (255, 255, 255, 255), font_name,
-                   anchor='ls')
+    draw_base.text((10 * SPACING + 100, 8 * SPACING),
+                   discord_user.name, (255, 255, 255, 255), font_name, anchor='ls')
 
     draw_base.text((11 * SPACING + 100 + bounds_name[2], 8 * SPACING),
                    '#' + discord_user.discriminator, (192, 192, 192, 255), font_discrim, anchor='ls')
@@ -805,8 +790,8 @@ async def render_xp_card(discord_user: discord.User) -> Render:
     font_stats = ImageFont.truetype(FONT_BLACK, 54)
 
     length_stats_header_left = draw_base.textlength('XP', font_stats_header)
-    draw_base.text((10 * SPACING + 100, 7 * SPACING + bounds_name[3]), 'XP', (192, 192, 192, 255),
-                   font_stats_header)
+    draw_base.text((10 * SPACING + 100, 7 * SPACING + bounds_name[3]),
+                   'XP', (192, 192, 192, 255), font_stats_header)
 
     length_stats_left = draw_base.textlength(get_number_representation(xp), font_stats)
     draw_base.text((11 * SPACING + 100 + length_stats_header_left, 6 * SPACING + bounds_name[3]),
@@ -876,8 +861,8 @@ async def render_xp_leaderboard(discord_user: discord.User) -> Render:
                          fill=(26, 26, 26, 255))
         draw_row.pieslice((4 * SPACING + position_length - 5, 0, 4 * SPACING + position_length + 70, 75), start=270,
                           end=270 + (xp - get_min_xp_for_level(get_level_from_xp(xp))) / (
-                                      get_min_xp_for_level(get_level_from_xp(xp) + 1) - get_min_xp_for_level(
-                                  get_level_from_xp(xp))) * 360, fill=(77, 189, 138, 255))
+                                  get_min_xp_for_level(get_level_from_xp(xp) + 1) - get_min_xp_for_level(
+                              get_level_from_xp(xp))) * 360, fill=(77, 189, 138, 255))
 
         image_mask = Image.new('RGBA', (65, 65), (0, 0, 0, 0))
         draw_mask = ImageDraw.Draw(image_mask)
@@ -922,16 +907,16 @@ async def render_xp_leaderboard(discord_user: discord.User) -> Render:
 
         position_length = max(round(draw_base.textlength(f'#{target_position}', font_position)), 4 * SPACING)
 
-        draw_base.rounded_rectangle((0, 0, XP_LEADERBOARD_WIDTH, 14 * SPACING + 5 * 75), fill=(32, 34, 37, 255),
-                                    radius=15)
+        draw_base.rounded_rectangle((0, 0, XP_LEADERBOARD_WIDTH, 14 * SPACING + 5 * 75),
+                                    fill=(32, 34, 37, 255), radius=15)
     else:
         image_base = Image.new('RGBA', (XP_LEADERBOARD_WIDTH, 16 * SPACING + 5 * 75 + 30), color=(0, 0, 0, 0))
         draw_base = ImageDraw.Draw(image_base)
 
         position_length = max(round(draw_base.textlength(f'#{target_position}', font_position)), 4 * SPACING)
 
-        draw_base.rounded_rectangle((0, 0, XP_LEADERBOARD_WIDTH, 12 * SPACING + 4 * 75), fill=(32, 34, 37, 255),
-                                    radius=15)
+        draw_base.rounded_rectangle((0, 0, XP_LEADERBOARD_WIDTH, 12 * SPACING + 4 * 75),
+                                    fill=(32, 34, 37, 255), radius=15)
         draw_base.rounded_rectangle((0, 12 * SPACING + 4 * 75 + 30, XP_LEADERBOARD_WIDTH, 16 * SPACING + 5 * 75 + 30),
                                     fill=(32, 34, 37, 255), radius=15)
 
@@ -962,8 +947,7 @@ async def render_xp_leaderboard(discord_user: discord.User) -> Render:
 
     for i in range(min(5 if target_position < 5 else 4, len(users))):
         image_row = (await render_row(bot.utilities.resolve_id(users[i].discord_id), users[i].xp, i + 1)).image
-        image_base.paste(image_row, (0, 2 * SPACING) if i == 0 else (0, (4 + 2 * i) * SPACING + i * 75),
-                         mask=image_row)
+        image_base.paste(image_row, (0, 2 * SPACING) if i == 0 else (0, (4 + 2 * i) * SPACING + i * 75), mask=image_row)
 
     return Render(image_base)
 
