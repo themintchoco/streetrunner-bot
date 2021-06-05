@@ -1,3 +1,5 @@
+from bot.config import bot
+
 class Singleton(type):
 	_instances = {}
 
@@ -7,3 +9,5 @@ class Singleton(type):
 		return cls._instances[cls]
 
 
+def resolve_id(discord_id: int):
+	return bot.get_user(discord_id)

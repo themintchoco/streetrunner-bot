@@ -1,7 +1,7 @@
 import os
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 from bot.utilities import Singleton
 
@@ -9,8 +9,10 @@ from bot.utilities import Singleton
 class PostgresClient(metaclass=Singleton):
 	def __init__(self):
 		uri = os.environ.get('DATABASE_URL')
-		if uri.startswith('postgres://'):
-			uri = uri.replace('postgres://', 'postgresql://', 1)
+		index_protocol = uri.index('://')
 
-		session_factory = sessionmaker(bind=create_engine(uri, future=True), future=True)
-		self.session = scoped_session(session_factory)
+		self._uri = 'postgresql+asyncpg://' + uri[index_protocol + 3:]
+
+	@property
+	def session(self):
+		return sessionmaker(bind=create_async_engine(self._uri, future=True), expire_on_commit=False, class_=AsyncSession, future=True)

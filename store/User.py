@@ -5,7 +5,7 @@ from sqlalchemy.orm import declarative_base, relationship
 class User(declarative_base()):
 	__tablename__ = 'discord_user'
 
-	id = Column(BigInteger, primary_key=True)
-	discord_id = Column(Integer)
+	id = Column(Integer, primary_key=True)
+	discord_id = Column(BigInteger)
 	xp = Column(Integer)
-	xp_refreshed = Column(DateTime)
+	xp_refreshed = Column(DateTime(timezone=True))
