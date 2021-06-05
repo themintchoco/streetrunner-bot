@@ -373,7 +373,7 @@ async def render_card(*, username: str = None, discord_user: discord.User = None
 		stats = [('INFAMY', str(player_info.stats_arena.infamy)), ('KDA', str(player_info.stats_arena.kda))]
 	elif type == CardType.Kills:
 		image_background = Image.open('images/arena.png')
-		stats = [('KILLS', str(player_info.stats_arena.kills)), ('KDA', str(player_info.stats_arena.kda))]
+		stats = [('KILLS', str(player_info.stats_arena.kills)), ('ASSISTS', str(player_info.stats_arena.assists))]
 	else:
 		raise
 
