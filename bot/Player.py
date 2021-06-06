@@ -41,9 +41,18 @@ class Player(commands.Cog):
             card.render_player_card(discord_user=ctx.author, type=CardType.Kills))
         await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
+    @commands.command()
+    async def deaths(self, ctx, username: str = None):
+        """Displays player Arena death stats"""
+        render = await (
+            card.render_player_card(username=username, type=CardType.Deaths) if username else
+            card.render_player_card(discord_user=ctx.author, type=CardType.Deaths))
+        await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+
     @rank.error
     @infamy.error
     @kills.error
+    @deaths.error
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, UsernameError):
             return await ctx.send(error.original.args[0]['message'])
