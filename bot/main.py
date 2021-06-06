@@ -27,7 +27,9 @@ async def on_message(message):
 
     await bot.process_commands(message)
     if not message.author.bot:
-        await XP.process_message(message)
+        level_before, level_after = await XP.process_message(message)
+        if level_after > level_before:
+            await message.channel.send(f'Levelled up to Level {level_after}!')
 
 
 @bot.event
