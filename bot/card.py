@@ -70,7 +70,8 @@ class CosmeticsTitle(Cosmetics):
     def from_known_string(cls, string: str):
         return cls(**{'FIERY': {'string': 'FIERY', 'attributes': {'bold': False, 'color': (252, 84, 84, 255)}},
                       'FIERY_BOLD': {'string': 'FIERY', 'attributes': {'bold': True, 'color': (252, 84, 84, 255)}},
-                      'UNDEFEATED': {'string': 'UNDEFEATED', 'attributes': {'bold': True, 'color': (252, 84, 252, 255)}},
+                      'UNDEFEATED': {'string': 'UNDEFEATED',
+                                     'attributes': {'bold': True, 'color': (252, 84, 252, 255)}},
                       'SUPREME': {'string': 'SUPREME', 'attributes': {'bold': True, 'color': (252, 168, 0, 255)}},
                       'DRAKE': {'string': 'DRAKE', 'attributes': {'bold': False, 'color': (168, 0, 0, 255)}},
                       }[string])
@@ -829,7 +830,7 @@ async def render_xp_card(discord_user: discord.User) -> Render:
                        avatar_origin[0] + 55, avatar_origin[1] + 55),
                       fill=(26, 26, 26, 255))
     draw_base.pieslice((avatar_origin[0] - 55, avatar_origin[1] - 55,
-                       avatar_origin[0] + 55, avatar_origin[1] + 55),
+                        avatar_origin[0] + 55, avatar_origin[1] + 55),
                        start=270, end=270 + (xp - get_min_xp_for_level(get_level_from_xp(xp))) / (
                 get_min_xp_for_level(get_level_from_xp(xp) + 1) - get_min_xp_for_level(
             get_level_from_xp(xp))) * 360,
@@ -887,7 +888,9 @@ async def render_xp_leaderboard(discord_user: discord.User) -> Render:
 
         length_name = draw_base.textlength(discord_user.name, font_name)
         draw_row.text((7 * SPACING + position_length + 65, (image_row.height + bounds_position[3]) // 2),
-                      discord_user.name, (255, 255, 255, 255), font_name, anchor='ls')
+                      discord_user.name,
+                      (212, 175, 55, 255) if target_user and target_user.discord_id == discord_user.id else (
+                      255, 255, 255, 255), font_name, anchor='ls')
 
         draw_row.text((8 * SPACING + position_length + 65 + length_name, (image_row.height + bounds_position[3]) // 2),
                       '#' + discord_user.discriminator, (192, 192, 192, 255), font_discrim, anchor='ls')
@@ -1012,10 +1015,10 @@ async def render_xp_levelup(discord_user: discord.User, level_before: int, level
 
     length_name = draw_base.textlength(discord_user.name, font_name)
     draw_base.text((5 * SPACING + 65, (image_base.height + SPACING) // 2),
-                  discord_user.name, (255, 255, 255, 255), font_name, anchor='ls')
+                   discord_user.name, (255, 255, 255, 255), font_name, anchor='ls')
 
     draw_base.text((6 * SPACING + 65 + length_name, (image_base.height + SPACING) // 2),
-                  '#' + discord_user.discriminator, (192, 192, 192, 255), font_discrim, anchor='ls')
+                   '#' + discord_user.discriminator, (192, 192, 192, 255), font_discrim, anchor='ls')
 
     image_arrow = Image.new('RGBA', (30, 30), (0, 0, 0, 0))
     draw_arrow = ImageDraw.Draw(image_arrow)
@@ -1029,7 +1032,7 @@ async def render_xp_levelup(discord_user: discord.User, level_before: int, level
     bounds_level = draw_base.textbbox((0, 0), str(level_after), font_level)
 
     draw_base.text((image_base.width - 2 * SPACING - max(bounds_level[2], image_arrow.width), image_base.height // 2),
-                  'LEVEL ', (77, 189, 138, 255), font_level, anchor='rm')
+                   'LEVEL ', (77, 189, 138, 255), font_level, anchor='rm')
 
     frames = []
     for t in range(31):
@@ -1041,8 +1044,9 @@ async def render_xp_levelup(discord_user: discord.User, level_before: int, level
                         (2 * SPACING, (image_base.height - 65) // 2), mask=image_mask)
 
         frame.paste(image_arrow,
-                    (image_base.width - 2 * SPACING - (max(bounds_level[2], image_arrow.width) + image_arrow.width) // 2,
-                     int(get_arrow_position(t) * -(image_arrow.height + image_base.height) + image_base.height)),
+                    (
+                    image_base.width - 2 * SPACING - (max(bounds_level[2], image_arrow.width) + image_arrow.width) // 2,
+                    int(get_arrow_position(t) * -(image_arrow.height + image_base.height) + image_base.height)),
                     mask=image_arrow)
         draw_frame.text(
             (image_base.width - 2 * SPACING - max(bounds_level[2], image_arrow.width) // 2,

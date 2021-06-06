@@ -12,6 +12,8 @@ from store.User import User
 
 
 class XP(commands.Cog):
+    """xp"""
+
     xp_cooldown = {}
 
     def __init__(self, bot):
@@ -53,6 +55,7 @@ class XP(commands.Cog):
 
     @commands.group()
     async def xp(self, ctx):
+        """Displays your current XP and level"""
         if ctx.invoked_subcommand is None:
             async with ctx.typing():
                 render = await card.render_xp_card(discord_user=ctx.author)
@@ -64,9 +67,9 @@ class XP(commands.Cog):
 
     @xp.command(name='leaderboard')
     async def xp_leaderboard(self, ctx):
+        """Displays the current leaderboard in terms of discord XP"""
         async with ctx.typing():
             render = await card.render_xp_leaderboard(discord_user=ctx.author)
-
         await ctx.send(file=discord.File(render.file(format='PNG'), 'xp_leaderboard.png'))
 
     @xp.error

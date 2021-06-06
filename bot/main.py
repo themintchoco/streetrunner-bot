@@ -6,6 +6,7 @@ import sentry_sdk
 from bot import card
 from bot.Admin import Admin
 from bot.Player import Player
+from bot.Leaderboard import Leaderboard
 from bot.WebServer import WebServer
 from bot.XP import XP
 from bot.config import bot
@@ -17,6 +18,7 @@ sentry_sdk.init(
 
 bot.add_cog(Player(bot))
 bot.add_cog(XP(bot))
+bot.add_cog(Leaderboard(bot))
 bot.add_cog(Admin(bot))
 bot.add_cog(WebServer(bot))
 
@@ -29,13 +31,18 @@ async def process_xp(message):
             await message.channel.send(file=discord.File(render.file_animated(format='GIF'), 'xp_levelup.gif'))
 
 
+def is_xp_command(message):
+    return message.startswith(f'{bot.command_prefix}xp') or (
+        message.startswith(f'{bot.command_prefix}leaderboard') and message.endswith('xp'))
+
+
 @bot.event
 async def on_message(message):
     if message.guild and (message.guild.id == 846060357901615115) ^ (os.environ.get('DEV', False) == 'DEV'):
         # prevent production bot from replying to dev server and vice versa
         return
 
-    if message.content.startswith(f'{bot.command_prefix}xp'):
+    if is_xp_command(message.content.strip()):
         # exception for xp-related commands -- process xp before the command
         await process_xp(message)
         await bot.process_commands(message)
