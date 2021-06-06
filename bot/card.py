@@ -42,7 +42,7 @@ FONT_LIGHT = 'fonts/Roboto-Light.ttf'
 
 
 class CardType(Enum):
-    Prison, Infamy, Kills = range(3)
+    Prison, Infamy, Kills, Deaths = range(3)
 
 
 class PlayerStatsType(Enum):
@@ -522,6 +522,9 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
     elif type == CardType.Kills:
         image_background = Image.open('images/arena.png')
         stats = [('KILLS', str(player_info.stats_arena.kills)), ('ASSISTS', str(player_info.stats_arena.assists))]
+    elif type == CardType.Deaths:
+        image_background = Image.open('images/arena.png')
+        stats = [('DEATHS', str(player_info.stats_arena.deaths)), ('KDA', str(player_info.stats_arena.kda))]
     else:
         raise
 
