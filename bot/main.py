@@ -1,7 +1,9 @@
 import os
 
+import discord
 import sentry_sdk
 
+from bot import card
 from bot.Admin import Admin
 from bot.Player import Player
 from bot.WebServer import WebServer
@@ -29,7 +31,8 @@ async def on_message(message):
     if not message.author.bot:
         level_before, level_after = await XP.process_message(message)
         if level_after > level_before:
-            await message.channel.send(f'Levelled up to Level {level_after}!')
+            render = await card.render_xp_levelup(message.author, level_before, level_after)
+            await message.channel.send(file=discord.File(render.file_animated(format='GIF'), 'xp_levelup.gif'))
 
 
 @bot.event

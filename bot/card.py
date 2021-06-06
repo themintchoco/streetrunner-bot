@@ -28,8 +28,8 @@ PLAYER_CARD_HEIGHT = 220
 LEADERBOARD_WIDTH = 540
 LEADERBOARD_HEIGHT = 500
 
-XP_CARD_WIDTH = 640
-XP_CARD_HEIGHT = 220
+XP_CARD_WIDTH = 335
+XP_CARD_HEIGHT = 400
 
 XP_LEADERBOARD_WIDTH = 580
 
@@ -774,52 +774,62 @@ async def render_xp_card(discord_user: discord.User) -> Render:
 
     image_base = Image.new('RGBA', (XP_CARD_WIDTH, XP_CARD_HEIGHT), color=(0, 0, 0, 0))
     draw_base = ImageDraw.Draw(image_base)
-    draw_base.rounded_rectangle((SPACING, SPACING, XP_CARD_WIDTH - SPACING, XP_CARD_HEIGHT - SPACING),
+    draw_base.rounded_rectangle((0, 0, XP_CARD_WIDTH, XP_CARD_HEIGHT),
                                 fill=(32, 34, 37, 255), radius=15)
 
     font_name = ImageFont.truetype(FONT_BOLD, 36)
     font_discrim = ImageFont.truetype(FONT_LIGHT, 27)
 
     bounds_name = draw_base.textbbox((0, 0), discord_user.name, font_name)
-    draw_base.text((10 * SPACING + 100, 8 * SPACING),
+    bounds_discrim = draw_base.textbbox((0, 0), '#' + discord_user.discriminator, font_discrim)
+
+    draw_base.text(((XP_CARD_WIDTH - bounds_name[2] - bounds_discrim[2] - SPACING // 2) // 2, 11 * SPACING + 100),
                    discord_user.name, (255, 255, 255, 255), font_name, anchor='ls')
 
-    draw_base.text((11 * SPACING + 100 + bounds_name[2], 8 * SPACING),
+    draw_base.text(((XP_CARD_WIDTH + bounds_name[2] - bounds_discrim[2] + SPACING // 2) // 2, 11 * SPACING + 100),
                    '#' + discord_user.discriminator, (192, 192, 192, 255), font_discrim, anchor='ls')
 
     font_stats_header = ImageFont.truetype(FONT_LIGHT, 18)
     font_stats = ImageFont.truetype(FONT_BLACK, 54)
 
-    length_stats_header_left = draw_base.textlength('XP', font_stats_header)
-    draw_base.text((10 * SPACING + 100, 7 * SPACING + bounds_name[3]),
-                   'XP', (192, 192, 192, 255), font_stats_header)
+    bounds_stats_header_left = draw_base.textbbox((0, 0), 'LEVEL', font_stats_header)
+    bounds_stats_header_right = draw_base.textbbox((0, 0), 'XP', font_stats_header)
 
-    length_stats_left = draw_base.textlength(get_number_representation(xp), font_stats)
-    draw_base.text((11 * SPACING + 100 + length_stats_header_left, 6 * SPACING + bounds_name[3]),
-                   get_number_representation(xp), (77, 189, 138, 255), font_stats)
+    length_stats_left = draw_base.textlength(get_number_representation(get_level_from_xp(xp)), font_stats)
+    length_stats_right = draw_base.textlength(get_number_representation(xp), font_stats)
 
-    length_stats_header_mid = draw_base.textlength('LEVEL', font_stats_header)
-    draw_base.text(
-        (16 * SPACING + 100 + length_stats_header_left + length_stats_left, 7 * SPACING + bounds_name[3]),
-        'LEVEL', (192, 192, 192, 255), font_stats_header)
+    draw_base.text(((XP_CARD_WIDTH
+                     # - max(bounds_stats_header_left[2], length_stats_left)
+                     - max(bounds_stats_header_right[2], length_stats_right)
+                     - 4 * SPACING) // 2
+                    , 12 * SPACING + 100 + bounds_name[3]),
+                   'LEVEL', (192, 192, 192, 255), font_stats_header, anchor='mt')
+    draw_base.text(((XP_CARD_WIDTH
+                     + max(bounds_stats_header_left[2], length_stats_left)
+                     # - max(bounds_stats_header_right[2], length_stats_right)
+                     + 4 * SPACING) // 2
+                    , 12 * SPACING + 100 + bounds_name[3]),
+                   'XP', (192, 192, 192, 255), font_stats_header, anchor='mt')
 
-    length_stats_mid = draw_base.textlength(get_number_representation(get_level_from_xp(xp)), font_stats)
-    draw_base.text((17 * SPACING + 100 + length_stats_header_left + length_stats_left + length_stats_header_mid,
-                    6 * SPACING + bounds_name[3]),
-                   get_number_representation(get_level_from_xp(xp)), (77, 189, 138, 255), font_stats)
+    draw_base.text(((XP_CARD_WIDTH
+                     # - max(bounds_stats_header_left[2], length_stats_left)
+                     - max(bounds_stats_header_right[2], length_stats_right)
+                     - 4 * SPACING) // 2
+                    , 13 * SPACING + 100 + bounds_name[3] + bounds_stats_header_left[3]),
+                   get_number_representation(get_level_from_xp(xp)), (77, 189, 138, 255), font_stats, anchor='mt')
+    draw_base.text(((XP_CARD_WIDTH
+                     + max(bounds_stats_header_left[2], length_stats_left)
+                     # - max(bounds_stats_header_right[2], length_stats_right)
+                     + 4 * SPACING) // 2
+                    , 13 * SPACING + 100 + bounds_name[3] + bounds_stats_header_right[3]),
+                   get_number_representation(xp), (77, 189, 138, 255), font_stats, anchor='mt')
 
-    # length_stats_header_right = draw_base.textlength('RANK', font_stats_header)
-    # draw_base.text((22 * SPACING + 100 + length_stats_header_left + length_stats_left + length_stats_header_mid + length_stats_mid, 7 * SPACING + bounds_name[3]),
-    # 			   'RANK', (192, 192, 192, 255), font_stats_header)
-    #
-    # draw_base.text((23 * SPACING + 100 + length_stats_header_left + length_stats_left + length_stats_header_mid + length_stats_mid + length_stats_header_right, 6 * SPACING + bounds_name[3]),
-    # 			   '#33', (77, 189, 138, 255), font_stats)
-
-    draw_base.ellipse((5 * SPACING - 5, (PLAYER_CARD_HEIGHT - 110) // 2,
-                       5 * SPACING + 105, (PLAYER_CARD_HEIGHT + 110) // 2),
+    avatar_origin = (XP_CARD_WIDTH // 2, 5 * SPACING + 50)
+    draw_base.ellipse((avatar_origin[0] - 55, avatar_origin[1] - 55,
+                       avatar_origin[0] + 55, avatar_origin[1] + 55),
                       fill=(26, 26, 26, 255))
-    draw_base.pieslice((5 * SPACING - 5, (PLAYER_CARD_HEIGHT - 110) // 2,
-                        5 * SPACING + 105, (PLAYER_CARD_HEIGHT + 110) // 2),
+    draw_base.pieslice((avatar_origin[0] - 55, avatar_origin[1] - 55,
+                       avatar_origin[0] + 55, avatar_origin[1] + 55),
                        start=270, end=270 + (xp - get_min_xp_for_level(get_level_from_xp(xp))) / (
                 get_min_xp_for_level(get_level_from_xp(xp) + 1) - get_min_xp_for_level(
             get_level_from_xp(xp))) * 360,
@@ -836,14 +846,14 @@ async def render_xp_card(discord_user: discord.User) -> Render:
         frames = []
         for frame in ImageSequence.Iterator(image_avatar):
             image_frame = Image.alpha_composite(image_background, image_base)
-            image_frame.paste(frame.resize((100, 100)), (5 * SPACING, (PLAYER_CARD_HEIGHT - 100) // 2),
+            image_frame.paste(frame.resize((100, 100)), (avatar_origin[0] - 50, avatar_origin[1] - 50),
                               mask=image_mask)
             frames.append(image_frame)
 
         return Render(*frames)
     except discord.InvalidArgument:
         image_avatar = Image.open(BytesIO(await discord_user.avatar_url_as(format='png').read()))
-        image_base.paste(image_avatar.resize((100, 100)), (5 * SPACING, (PLAYER_CARD_HEIGHT - 100) // 2),
+        image_base.paste(image_avatar.resize((100, 100)), (avatar_origin[0] - 50, avatar_origin[1] - 50),
                          mask=image_mask)
 
         return Render(image_base)
@@ -953,8 +963,102 @@ async def render_xp_leaderboard(discord_user: discord.User) -> Render:
     return Render(image_base)
 
 
+async def render_xp_levelup(discord_user: discord.User, level_before: int, level_after: int) -> Render:
+    def get_arrow_position(t):
+        if t < 10:
+            return get_from_linear_eqn(0, 10, 0, 0.45, t)
+        elif t < 20:
+            return get_from_linear_eqn(10, 20, 0.45, 0.55, t)
+        else:
+            return get_from_linear_eqn(20, 30, 0.55, 1, t)
+
+    def get_old_level_position(t):
+        return get_from_linear_eqn(0, 10, 0.5, 1, t)
+
+    def get_new_level_position(t):
+        return get_from_linear_eqn(20, 30, 0, 0.5, t)
+
+    def get_from_linear_eqn(x1, x2, y1, y2, x):
+        return (y1 - y2) / (x1 - x2) * (x - x1) + y1
+
+    def get_animated_avatar_frames(avatar):
+        reset = False
+        while True:
+            try:
+                avatar.seek(0 if reset else avatar.tell() + 1)
+            except EOFError:
+                avatar.seek(0)
+            reset = yield avatar
+
+    image_base = Image.new('RGBA', (XP_LEADERBOARD_WIDTH, 100), color=(54, 57, 63, 255))
+    draw_base = ImageDraw.Draw(image_base)
+    draw_base.rounded_rectangle((0, 0, XP_LEADERBOARD_WIDTH, 100), fill=(32, 34, 37, 255), radius=15)
+
+    image_mask = Image.new('RGBA', (65, 65), (0, 0, 0, 0))
+    draw_mask = ImageDraw.Draw(image_mask)
+    draw_mask.ellipse((0, 0, 65, 65), fill=(255, 255, 255, 255))
+
+    try:
+        image_avatar = Image.open(BytesIO(await discord_user.avatar_url_as(format='gif').read()))
+        avatar_frames = get_animated_avatar_frames(image_avatar)
+        animated_avatar = True
+    except discord.InvalidArgument:
+        image_avatar = Image.open(BytesIO(await discord_user.avatar_url_as(format='png').read()))
+        image_base.paste(image_avatar.resize((65, 65)), (2 * SPACING, (image_base.height - 65) // 2), mask=image_mask)
+        animated_avatar = False
+
+    font_name = ImageFont.truetype(FONT_BOLD, 27)
+    font_discrim = ImageFont.truetype(FONT_LIGHT, 22)
+
+    length_name = draw_base.textlength(discord_user.name, font_name)
+    draw_base.text((5 * SPACING + 65, (image_base.height + SPACING) // 2),
+                  discord_user.name, (255, 255, 255, 255), font_name, anchor='ls')
+
+    draw_base.text((6 * SPACING + 65 + length_name, (image_base.height + SPACING) // 2),
+                  '#' + discord_user.discriminator, (192, 192, 192, 255), font_discrim, anchor='ls')
+
+    image_arrow = Image.new('RGBA', (30, 30), (0, 0, 0, 0))
+    draw_arrow = ImageDraw.Draw(image_arrow)
+
+    draw_arrow.polygon([(0, 20), (15, 0), (30, 20)], fill=(77, 189, 138, 255))
+    draw_arrow.rectangle((10, 20, 20, 30), fill=(77, 189, 138, 255))
+
+    font_level = ImageFont.truetype(FONT_BLACK, 24)
+
+    bounds_level_label = draw_base.textbbox((0, 0), 'LEVEL ', font_level)
+    bounds_level = draw_base.textbbox((0, 0), str(level_after), font_level)
+
+    draw_base.text((image_base.width - 2 * SPACING - max(bounds_level[2], image_arrow.width), image_base.height // 2),
+                  'LEVEL ', (77, 189, 138, 255), font_level, anchor='rm')
+
+    frames = []
+    for t in range(31):
+        frame = image_base.copy()
+        draw_frame = ImageDraw.Draw(frame)
+
+        if animated_avatar:
+            frame.paste((next(avatar_frames) if t < 30 else avatar_frames.send(True)).resize((65, 65)),
+                        (2 * SPACING, (image_base.height - 65) // 2), mask=image_mask)
+
+        frame.paste(image_arrow,
+                    (image_base.width - 2 * SPACING - (max(bounds_level[2], image_arrow.width) + image_arrow.width) // 2,
+                     int(get_arrow_position(t) * -(image_arrow.height + image_base.height) + image_base.height)),
+                    mask=image_arrow)
+        draw_frame.text(
+            (image_base.width - 2 * SPACING - max(bounds_level[2], image_arrow.width) // 2,
+             int((1 - get_old_level_position(t)) * image_base.height)),
+            str(level_before), (77, 189, 138, 255), font_level, anchor='mm')
+        draw_frame.text((image_base.width - 2 * SPACING - max(bounds_level[2], image_arrow.width) // 2,
+                         int((1 - get_new_level_position(t)) * image_base.height)),
+                        str(level_after), (77, 189, 138, 255), font_level, anchor='mm')
+
+        frames.append(frame)
+
+    return Render(*frames)
+
+
 async def main():
-    (await render_player_card(username='keyutedev', type=CardType.Prison)).image.show()
+    pass
 
 
 if __name__ == '__main__':
