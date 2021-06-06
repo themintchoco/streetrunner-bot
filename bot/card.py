@@ -70,11 +70,11 @@ class CosmeticsTitle(Cosmetics):
 
     @classmethod
     def from_known_string(cls, string: str):
-        return cls(**{'FIERY': {'string': 'FIERY', 'attributes': {'bold': False}},
-                      'FIERY_BOLD': {'string': 'FIERY', 'attributes': {'bold': True}},
-                      'UNDEFEATED': {'string': 'UNDEFEATED', 'attributes': {'bold': True}},
-                      'SUPREME': {'string': 'SUPREME', 'attributes': {'bold': True}},
-                      'DRAKE': {'string': 'DRAKE', 'attributes': {'bold': False}},
+        return cls(**{'FIERY': {'string': 'FIERY', 'attributes': {'bold': False, 'color': (252, 84, 84, 255)}},
+                      'FIERY_BOLD': {'string': 'FIERY', 'attributes': {'bold': True, 'color': (252, 84, 84, 255)}},
+                      'UNDEFEATED': {'string': 'UNDEFEATED', 'attributes': {'bold': True, 'color': (252, 84, 252, 255)}},
+                      'SUPREME': {'string': 'SUPREME', 'attributes': {'bold': True, 'color': (252, 168, 0, 255)}},
+                      'DRAKE': {'string': 'DRAKE', 'attributes': {'bold': False, 'color': (168, 0, 0, 255)}},
                       }[string])
 
 
@@ -570,7 +570,7 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
 
     for cosmetic in player_cosmetics:
         if cosmetic.type == CosmeticsType.Title:
-            image_ribbon = Image.new('RGBA', (215, 35), color=(255, 122, 101, 255))
+            image_ribbon = Image.new('RGBA', (215, 35), color=cosmetic.attributes.get('color', (255, 122, 101, 255)))
             draw_ribbon = ImageDraw.Draw(image_ribbon)
 
             font_ribbon = ImageFont.truetype(FONT_BLACK if cosmetic.attributes.get('bold', None) else FONT_REGULAR, 18)
