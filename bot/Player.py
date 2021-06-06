@@ -43,7 +43,7 @@ class Player(commands.Cog):
 
     @commands.command()
     async def deaths(self, ctx, username: str = None):
-        """Displays player Arena kill stats"""
+        """Displays player Arena death stats"""
         render = await (
             card.render_player_card(username=username, type=CardType.Deaths) if username else
             card.render_player_card(discord_user=ctx.author, type=CardType.Deaths))
