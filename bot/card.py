@@ -92,7 +92,7 @@ class PlayerStatsPrison(PlayerStats):
     def __init__(self, **kwargs):
         super().__init__(type=PlayerStatsType.Prison)
         self.rank = kwargs['rank']
-        self.blocks = kwargs['blocks']
+        self.blocks = kwargs['amount']
 
 
 class PlayerStatsArena(PlayerStats):
