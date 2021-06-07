@@ -183,7 +183,7 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
                           type: PlayerStatsType = None) -> PlayerInfo:
     async with aiohttp.ClientSession() as s:
         async with s.get(
-                f'https://streetrunner.dev/api/player?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}{f"&type={type.name.lower()}" if type else ""}',
+                f'https://streetrunner.dev/api/player/?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}{f"&type={type.name.lower()}" if type else ""}',
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status == 404:
                 if username:
@@ -214,7 +214,7 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
 async def get_player_cosmetics(*, username: str = None, discord_user: discord.User = None) -> List[Cosmetics]:
     async with aiohttp.ClientSession() as s:
         async with s.get(
-                f'https://streetrunner.dev/api/cosmetic?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}',
+                f'https://streetrunner.dev/api/cosmetic/?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}',
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status == 404:
                 if username:
@@ -242,7 +242,7 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
 async def get_leaderboard(type: LeaderboardType) -> AsyncGenerator[PlayerInfo, None]:
     async with aiohttp.ClientSession() as s:
         async with s.get(
-                f'https://streetrunner.dev/api/leaderboard?type={type.name.lower()}',
+                f'https://streetrunner.dev/api/leaderboard/?type={type.name.lower()}',
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status != 200:
                 raise
