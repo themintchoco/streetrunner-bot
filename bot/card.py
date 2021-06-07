@@ -639,7 +639,7 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
     if username or discord_user:
         try:
             target_position = await get_position(username=username, discord_user=discord_user, type=type)
-            target_player_info = await get_player_info(username=username, discord_user=discord_user, type=type)
+            target_player_info = await get_player_info(username=username, discord_user=discord_user)
         except DiscordNotLinkedError:
             pass
 
