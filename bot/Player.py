@@ -73,7 +73,7 @@ class Player(commands.Cog):
         td = (datetime.datetime.min - dt) % datetime.timedelta(hours=8)
         td = (td // datetime.timedelta(minutes=5) + 1) * datetime.timedelta(minutes=5)
 
-        if td <= datetime.timedelta(minutes=5):
+        if td == datetime.timedelta(hours=8):
             await webhook.send('I will be taking my leave soon')
         else:
             hours, minutes = td.seconds // 3600, (td.seconds // 60) % 60
