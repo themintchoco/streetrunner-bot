@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 
-from bot import card
+from bot import card, event
 from bot.exceptions import UsernameError, NotEnoughDataError
 
 
@@ -67,6 +67,14 @@ class Leaderboard(commands.Cog):
             render = await card.render_xp_leaderboard(discord_user=ctx.author)
         await ctx.send(file=discord.File(render.file(format='PNG'), 'xp_leaderboard.png'))
 
+    @leaderboard.command(name='tournament')
+    async def leaderboard_tournament(self, ctx):
+        """Displays the current tournament leaderboard! Fame and rewards await the top 10 players! """
+        async with ctx.typing():
+            render = await event.render_event_leaderboard(discord_user=ctx.author)
+        await ctx.send(file=discord.File(render.file(format='PNG'), 'tournament.png'))
+        await ctx.send('View the full leaderboard LIVE at https://streetrunner.dev/tournament/')
+
     @leaderboard.error
     @leaderboard_rank.error
     @leaderboard_blocks.error
@@ -75,6 +83,7 @@ class Leaderboard(commands.Cog):
     @leaderboard_kills.error
     @leaderboard_deaths.error
     @leaderboard_xp.error
+    @leaderboard_tournament.error
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError):
             if isinstance(error.original, UsernameError):
