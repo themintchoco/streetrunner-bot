@@ -70,10 +70,17 @@ class Leaderboard(commands.Cog):
     @leaderboard.command(name='tournament')
     async def leaderboard_tournament(self, ctx):
         """Displays the current tournament leaderboard! Fame and rewards await the top 10 players! """
+        username = None
         async with ctx.typing():
             render = await event.render_event_leaderboard(discord_user=ctx.author)
+            try:
+                username = (await card.get_player_info(discord_user=ctx.author)).username
+            except:
+                pass
+
         await ctx.send(file=discord.File(render.file(format='PNG'), 'tournament.png'))
-        await ctx.send('View the full leaderboard LIVE at https://streetrunner.dev/tournament/')
+        await ctx.send('View the full leaderboard LIVE at https://streetrunner.dev/tournament/'
+                       + (f'?username={username}' if username else ''))
 
     @leaderboard.error
     @leaderboard_rank.error
