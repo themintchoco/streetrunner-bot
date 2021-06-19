@@ -40,7 +40,7 @@ FONT_BOLD = 'fonts/Roboto-Bold.ttf'
 FONT_REGULAR = 'fonts/Roboto-Regular.ttf'
 FONT_LIGHT = 'fonts/Roboto-Light.ttf'
 
-CardType = Enum("CardType", 'Prison Infamy Kills Deaths')
+CardType = Enum("CardType", 'Prison Infamy Kills Deaths Kda')
 
 
 class PlayerStatsType(Enum):
@@ -521,6 +521,9 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
     elif type == CardType.Kills:
         image_background = Image.open('images/arena.png')
         stats = [('KILLS', str(player_info.stats_arena.kills)), ('ASSISTS', str(player_info.stats_arena.assists))]
+    elif type == CardType.Kda:
+        image_background = Image.open('images/arena.png')
+        stats = [('KILLS', str(player_info.stats_arena.kills)), ('KDA', str(player_info.stats_arena.kda))]
     elif type == CardType.Deaths:
         image_background = Image.open('images/arena.png')
         stats = [('DEATHS', str(player_info.stats_arena.deaths)), ('KDA', str(player_info.stats_arena.kda))]
