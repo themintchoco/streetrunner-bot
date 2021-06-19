@@ -10,3 +10,4 @@ asyncache~=0.1.0
 asyncstdlib~=3.9.0
 sqlalchemy~=1.4.0
 asyncpg~=0.23.0
+aiohttp_apispec~=2.2.0
