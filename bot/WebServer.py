@@ -122,6 +122,38 @@ class WebServer(commands.Cog):
 
             return web.Response()
 
+        @self.routes.get('/message/{channel_id}/{message_id}')
+        @auth.required
+        async def info_message(request):
+            channel = self.bot.get_channel(int(request.match_info['channel_id']))
+            if not channel:
+                raise web.HTTPNotFound()
+
+            try:
+                message = await channel.fetch_message(int(request.match_info['message_id']))
+            except discord.NotFound:
+                raise web.HTTPNotFound()
+            except:
+                raise web.HTTPInternalServerError()
+
+            response = {
+                'author': message.author.id,
+                'content': message.content
+            }
+
+            if 'embeds' in request.query:
+                response['embeds'] = [embed.to_dict() for embed in message.embeds]
+
+            if 'reactions' in request.query:
+                response['reactions'] = []
+                for reaction in message.reactions:
+                    response['reactions'].append({
+                    'reaction': reaction.emoji if isinstance(reaction.emoji, str) else reaction.emoji.name,
+                    'users': [user.id async for user in reaction.users()]
+                })
+
+            return web.json_response(response)
+
         self.webserver_port = os.environ.get('PORT', 5000)
         self.app.add_routes(self.routes)
 
