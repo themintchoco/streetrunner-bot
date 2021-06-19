@@ -24,6 +24,7 @@ class WebServer(commands.Cog):
         self.routes = web.RouteTableDef()
 
         @self.routes.get('/')
+        @auth.required
         async def index(request):
             return web.FileResponse('docs/index.html')
 
