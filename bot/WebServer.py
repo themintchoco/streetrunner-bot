@@ -32,8 +32,8 @@ class WebServer(commands.Cog):
             summary='Get channels',
             description='Retrieves a list of Discord text channels',
         )
+        @response_schema(ChannelSchema(many=True), 200)
         @self.routes.get('/channels', allow_head=False)
-        @response_schema(ChannelSchema(), 200)
         @auth.required
         async def list_channels(request):
             guild = self.bot.get_guild(int(os.environ['GUILD_ID']))
