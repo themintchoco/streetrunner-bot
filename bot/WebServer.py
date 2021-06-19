@@ -5,7 +5,7 @@ import os
 import discord
 from aiohttp import web
 from aiohttp_apispec import docs, response_schema, querystring_schema, setup_aiohttp_apispec
-from aiohttp_remotes import BasicAuth, Secure, setup
+from aiohttp_remotes import BasicAuth, Secure, XForwardedRelaxed, setup
 from discord.ext import commands, tasks
 
 from docs.schema import *
@@ -17,7 +17,7 @@ class WebServer(commands.Cog):
         self.web_server.start()
 
         self.app = web.Application()
-        asyncio.run(setup(self.app, Secure(), BasicAuth(os.environ['BASIC_USER'], os.environ['BASIC_PASS'], 'realm')))
+        asyncio.run(setup(self.app, XForwardedRelaxed(), Secure(), BasicAuth(os.environ['BASIC_USER'], os.environ['BASIC_PASS'], 'realm')))
 
         self.routes = web.RouteTableDef()
 
