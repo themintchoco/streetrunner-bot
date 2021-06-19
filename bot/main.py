@@ -11,6 +11,8 @@ from bot.WebServer import WebServer
 from bot.XP import XP
 from bot.config import bot
 
+BLACKLISTED_CHANNELS = [797035821630095393]
+
 sentry_sdk.init(
     'https://7b74da9447304a35b6f8c49da4fd09f1@o737869.ingest.sentry.io/5785215',
     traces_sample_rate=1.0
@@ -40,6 +42,9 @@ def is_xp_command(message):
 async def on_message(message):
     if message.guild and (message.guild.id == 846060357901615115) ^ (os.environ.get('DEV', False) == 'DEV'):
         # prevent production bot from replying to dev server and vice versa
+        return
+
+    if message.channel.id in BLACKLISTED_CHANNELS:
         return
 
     if is_xp_command(message.content.strip()):
