@@ -33,12 +33,20 @@ class Player(commands.Cog):
             card.render_player_card(discord_user=ctx.author, type=CardType.Infamy))
         await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
-    @commands.command(aliases=['kda'])
+    @commands.command()
     async def kills(self, ctx, username: str = None):
         """Displays player Arena kill stats"""
         render = await (
             card.render_player_card(username=username, type=CardType.Kills) if username else
             card.render_player_card(discord_user=ctx.author, type=CardType.Kills))
+        await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+
+    @commands.command()
+    async def kda(self, ctx, username: str = None):
+        """Displays player Arena kda stats"""
+        render = await (
+            card.render_player_card(username=username, type=CardType.Kda) if username else
+            card.render_player_card(discord_user=ctx.author, type=CardType.Kda))
         await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
     @commands.command()
