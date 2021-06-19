@@ -9,6 +9,13 @@ from discord.ext import commands, tasks
 from docs.schema import *
 
 
+@web.middleware
+async def forceHTTPS(request, handler):
+    if not request.secure:
+        raise web.HTTPFound(str(request.clone(scheme='https').url))
+    return await handler(request)
+
+
 class WebServer(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -20,7 +27,7 @@ class WebServer(commands.Cog):
             force=False
         )
 
-        self.app = web.Application(middlewares=[auth])
+        self.app = web.Application(middlewares=[forceHTTPS, auth])
         self.routes = web.RouteTableDef()
 
         @self.routes.get('/')
