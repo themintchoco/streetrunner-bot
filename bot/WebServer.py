@@ -1,19 +1,14 @@
+import asyncio
 import json
 import os
 
 import discord
 from aiohttp import web
-from aiohttp_basicauth import BasicAuthMiddleware
-from aiohttp_apispec import docs, request_schema, response_schema, querystring_schema, setup_aiohttp_apispec
+from aiohttp_apispec import docs, response_schema, querystring_schema, setup_aiohttp_apispec
+from aiohttp_remotes import BasicAuth, Secure, setup
 from discord.ext import commands, tasks
+
 from docs.schema import *
-
-
-@web.middleware
-async def forceHTTPS(request, handler):
-    if not request.secure:
-        raise web.HTTPFound(str(request.clone(scheme='https').url))
-    return await handler(request)
 
 
 class WebServer(commands.Cog):
@@ -21,17 +16,12 @@ class WebServer(commands.Cog):
         self.bot = bot
         self.web_server.start()
 
-        auth = BasicAuthMiddleware(
-            username=os.environ['BASIC_USER'],
-            password=os.environ['BASIC_PASS'],
-            force=False
-        )
+        self.app = web.Application()
+        asyncio.run(setup(self.app, Secure(), BasicAuth(os.environ['BASIC_USER'], os.environ['BASIC_PASS'], 'realm')))
 
-        self.app = web.Application(middlewares=[forceHTTPS, auth])
         self.routes = web.RouteTableDef()
 
         @self.routes.get('/')
-        @auth.required
         async def index(request):
             return web.FileResponse('docs/index.html')
 
@@ -42,7 +32,6 @@ class WebServer(commands.Cog):
         )
         @response_schema(ChannelSchema(many=True), 200)
         @self.routes.get('/channels', allow_head=False)
-        @auth.required
         async def list_channels(request):
             guild = self.bot.get_guild(int(os.environ['GUILD_ID']))
             if not guild:
@@ -69,7 +58,6 @@ class WebServer(commands.Cog):
             },
         )
         @self.routes.post('/channel/{id}/send')
-        @auth.required
         async def send_channel(request):
             channel = self.bot.get_channel(int(request.match_info['id']))
             if not channel:
@@ -90,7 +78,6 @@ class WebServer(commands.Cog):
         )
         @response_schema(UserSchema(), 200)
         @self.routes.get('/user/{id}', allow_head=False)
-        @auth.required
         async def info_user(request):
             user = self.bot.get_user(int(request.match_info['id']))
             if not user:
@@ -113,7 +100,6 @@ class WebServer(commands.Cog):
             },
         )
         @self.routes.post('/user/{id}/send')
-        @auth.required
         async def send_user(request):
             user = self.bot.get_user(int(request.match_info['id']))
             if not user:
@@ -134,7 +120,6 @@ class WebServer(commands.Cog):
         )
         @response_schema(UserSchema(), 200)
         @self.routes.get('/user/{name}/{discrim}', allow_head=False)
-        @auth.required
         async def info_member(request):
             guild = self.bot.get_guild(int(os.environ['GUILD_ID']))
             if not guild:
@@ -160,7 +145,6 @@ class WebServer(commands.Cog):
             },
         )
         @self.routes.post('/user/{name}/{discrim}/send')
-        @auth.required
         async def send_member(request):
             guild = self.bot.get_guild(int(os.environ['GUILD_ID']))
             if not guild:
@@ -185,7 +169,6 @@ class WebServer(commands.Cog):
         @querystring_schema(MessageQuerySchema)
         @response_schema(MessageSchema(), 200)
         @self.routes.get('/message/{channel_id}/{message_id}', allow_head=False)
-        @auth.required
         async def info_message(request):
             channel = self.bot.get_channel(int(request.match_info['channel_id']))
             if not channel:
@@ -210,9 +193,9 @@ class WebServer(commands.Cog):
                 response['reactions'] = []
                 for reaction in message.reactions:
                     response['reactions'].append({
-                    'reaction': reaction.emoji if isinstance(reaction.emoji, str) else reaction.emoji.name,
-                    'users': [user.id async for user in reaction.users()]
-                })
+                        'reaction': reaction.emoji if isinstance(reaction.emoji, str) else reaction.emoji.name,
+                        'users': [user.id async for user in reaction.users()]
+                    })
 
             return web.json_response(response)
 
