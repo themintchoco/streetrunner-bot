@@ -4,7 +4,9 @@ import os
 import discord
 from aiohttp import web
 from aiohttp_basicauth import BasicAuthMiddleware
+from aiohttp_apispec import docs, request_schema, response_schema, querystring_schema, setup_aiohttp_apispec
 from discord.ext import commands, tasks
+from docs.schema import *
 
 
 class WebServer(commands.Cog):
@@ -23,9 +25,15 @@ class WebServer(commands.Cog):
 
         @self.routes.get('/')
         async def index(request):
-            raise web.HTTPFound('https://streetrunner.dev')
+            return web.FileResponse('docs/index.html')
 
-        @self.routes.get('/channels')
+        @docs(
+            tags=['channel'],
+            summary='Get channels',
+            description='Retrieves a list of Discord text channels',
+        )
+        @self.routes.get('/channels', allow_head=False)
+        @response_schema(ChannelSchema(), 200)
         @auth.required
         async def list_channels(request):
             guild = self.bot.get_guild(int(os.environ['GUILD_ID']))
@@ -43,6 +51,15 @@ class WebServer(commands.Cog):
 
             return web.json_response(response)
 
+        @docs(
+            tags=['channel'],
+            summary='Send a message',
+            description='Sends a message to the specified Discord channel',
+            responses={
+                200: {'description': 'OK'},
+                404: {'description': 'Channel was not found'},
+            },
+        )
         @self.routes.post('/channel/{id}/send')
         @auth.required
         async def send_channel(request):
@@ -58,7 +75,13 @@ class WebServer(commands.Cog):
 
             return web.Response()
 
-        @self.routes.get('/user/{id}')
+        @docs(
+            tags=['user'],
+            summary='Get user information',
+            description='Retrieves information of a user',
+        )
+        @response_schema(UserSchema(), 200)
+        @self.routes.get('/user/{id}', allow_head=False)
         @auth.required
         async def info_user(request):
             user = self.bot.get_user(int(request.match_info['id']))
@@ -72,6 +95,15 @@ class WebServer(commands.Cog):
                 'avatar': str(user.avatar_url)
             })
 
+        @docs(
+            tags=['user'],
+            summary='Send a message',
+            description='Sends a message to the specified user',
+            responses={
+                200: {'description': 'OK'},
+                404: {'description': 'User was not found'},
+            },
+        )
         @self.routes.post('/user/{id}/send')
         @auth.required
         async def send_user(request):
@@ -87,7 +119,13 @@ class WebServer(commands.Cog):
 
             return web.Response()
 
-        @self.routes.get('/user/{name}/{discrim}')
+        @docs(
+            tags=['user'],
+            summary='Get user information',
+            description='Retrieves information of a user',
+        )
+        @response_schema(UserSchema(), 200)
+        @self.routes.get('/user/{name}/{discrim}', allow_head=False)
         @auth.required
         async def info_member(request):
             guild = self.bot.get_guild(int(os.environ['GUILD_ID']))
@@ -104,6 +142,15 @@ class WebServer(commands.Cog):
                 'avatar': str(member.avatar_url)
             })
 
+        @docs(
+            tags=['user'],
+            summary='Send a message',
+            description='Sends a message to the specified user',
+            responses={
+                200: {'description': 'OK'},
+                404: {'description': 'User was not found'},
+            },
+        )
         @self.routes.post('/user/{name}/{discrim}/send')
         @auth.required
         async def send_member(request):
@@ -122,7 +169,14 @@ class WebServer(commands.Cog):
 
             return web.Response()
 
-        @self.routes.get('/message/{channel_id}/{message_id}')
+        @docs(
+            tags=['message'],
+            summary='Get message information',
+            description='Retrieves information about a message',
+        )
+        @querystring_schema(MessageQuerySchema)
+        @response_schema(MessageSchema(), 200)
+        @self.routes.get('/message/{channel_id}/{message_id}', allow_head=False)
         @auth.required
         async def info_message(request):
             channel = self.bot.get_channel(int(request.match_info['channel_id']))
@@ -156,6 +210,17 @@ class WebServer(commands.Cog):
 
         self.webserver_port = os.environ.get('PORT', 5000)
         self.app.add_routes(self.routes)
+
+        setup_aiohttp_apispec(
+            app=self.app,
+            title='StreetRunner Bot API',
+            info={'description': 'A simple REST API to interface with StreetRunner Bot'},
+            securityDefinitions={
+                'BasicAuth': {'type': 'basic', 'name': 'Authorization', 'in': 'header'}
+            },
+            version='v1.3.0',
+            url='/swagger.json',
+        )
 
     @tasks.loop()
     async def web_server(self):
