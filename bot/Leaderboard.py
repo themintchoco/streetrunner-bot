@@ -90,7 +90,6 @@ class Leaderboard(commands.Cog):
     @leaderboard_kills.error
     @leaderboard_deaths.error
     @leaderboard_xp.error
-    @leaderboard_tournament.error
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError):
             if isinstance(error.original, UsernameError):
