@@ -23,7 +23,11 @@ class Player(commands.Cog):
         render = await (
             card.render_player_card(username=username, type=CardType.Prison) if username else
             card.render_player_card(discord_user=ctx.author, type=CardType.Prison))
-        await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+
+        if render.multi_frame:
+            await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
+        else:
+            await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
     @commands.command(aliases=['arena'])
     async def infamy(self, ctx, username: str = None):
@@ -31,7 +35,11 @@ class Player(commands.Cog):
         render = await (
             card.render_player_card(username=username, type=CardType.Infamy) if username else
             card.render_player_card(discord_user=ctx.author, type=CardType.Infamy))
-        await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+
+        if render.multi_frame:
+            await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
+        else:
+            await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
     @commands.command()
     async def kills(self, ctx, username: str = None):
@@ -39,7 +47,11 @@ class Player(commands.Cog):
         render = await (
             card.render_player_card(username=username, type=CardType.Kills) if username else
             card.render_player_card(discord_user=ctx.author, type=CardType.Kills))
-        await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+
+        if render.multi_frame:
+            await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
+        else:
+            await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
     @commands.command()
     async def kda(self, ctx, username: str = None):
@@ -47,7 +59,11 @@ class Player(commands.Cog):
         render = await (
             card.render_player_card(username=username, type=CardType.Kda) if username else
             card.render_player_card(discord_user=ctx.author, type=CardType.Kda))
-        await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+
+        if render.multi_frame:
+            await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
+        else:
+            await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
     @commands.command()
     async def deaths(self, ctx, username: str = None):
@@ -55,11 +71,16 @@ class Player(commands.Cog):
         render = await (
             card.render_player_card(username=username, type=CardType.Deaths) if username else
             card.render_player_card(discord_user=ctx.author, type=CardType.Deaths))
-        await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+
+        if render.multi_frame:
+            await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
+        else:
+            await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
     @rank.error
     @infamy.error
     @kills.error
+    @kda.error
     @deaths.error
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, UsernameError):

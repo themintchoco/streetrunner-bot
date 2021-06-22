@@ -2,6 +2,7 @@ import asyncio
 import base64
 import datetime
 import json
+import math
 import os
 import urllib
 from enum import Enum
@@ -14,6 +15,7 @@ import discord
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 from asyncache import cached
 from cachetools import TTLCache
+from colour import Color
 from sqlalchemy import select
 
 import bot.utilities
@@ -68,12 +70,12 @@ class CosmeticsTitle(Cosmetics):
 
     @classmethod
     def from_known_string(cls, string: str):
-        return cls(**{'FIERY': {'string': 'FIERY', 'attributes': {'bold': False, 'color': (252, 84, 84, 255)}},
-                      'FIERY_BOLD': {'string': 'FIERY', 'attributes': {'bold': True, 'color': (252, 84, 84, 255)}},
-                      'UNDEFEATED': {'string': 'UNDEFEATED',
-                                     'attributes': {'bold': True, 'color': (252, 84, 252, 255)}},
-                      'SUPREME': {'string': 'SUPREME', 'attributes': {'bold': True, 'color': (252, 168, 0, 255)}},
-                      'DRAKE': {'string': 'DRAKE', 'attributes': {'bold': False, 'color': (168, 0, 0, 255)}},
+        return cls(**{'FIERY': {'string': 'FIERY', 'attributes': {'bold': False, 'color': Color('#fc5454')}},
+                      'FIERY_BOLD': {'string': 'FIERY', 'attributes': {'bold': True, 'color': Color('#fc5454')}},
+                      'UNDEFEATED': {'string': 'UNDEFEATED', 'attributes': {'bold': True, 'color': Color('#fc54fc')}},
+                      'SUPREME': {'string': 'SUPREME', 'attributes': {'bold': True, 'color': Color('#fca800')}},
+                      'DRAKE': {'string': 'DRAKE', 'attributes': {'bold': False, 'color': Color('#a80000')}},
+                      'CHAMPION': {'string': 'CHAMPION', 'attributes': {'bold': True, 'breathe': Color('#fc8e74'), 'color': Color('#fc5454')}},
                       }[string])
 
 
@@ -573,17 +575,43 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
     draw_base.text((14 * SPACING + image_skin.width + max(length_stats_left, 80), 10 * SPACING), stats[1][1],
                    (77, 189, 138), font_stats)
 
+    animated = False
+    frames = []
     for cosmetic in player_cosmetics:
         if cosmetic.type == CosmeticsType.Title:
-            image_ribbon = Image.new('RGBA', (215, 35), color=cosmetic.attributes.get('color', (255, 122, 101, 255)))
-            draw_ribbon = ImageDraw.Draw(image_ribbon)
+            def render_ribbon(string, bold, color):
+                image_ribbon = Image.new('RGBA', (215, 35), color=tuple(int(i * 255) for i in color.rgb))
+                draw_ribbon = ImageDraw.Draw(image_ribbon)
 
-            font_ribbon = ImageFont.truetype(FONT_BLACK if cosmetic.attributes.get('bold', None) else FONT_REGULAR, 18)
-            draw_ribbon.text((image_ribbon.width // 2, image_ribbon.height // 2),
-                             cosmetic.string, (255, 255, 255, 255), font_ribbon, anchor='mm')
+                font_ribbon = ImageFont.truetype(FONT_BLACK if bold else FONT_REGULAR, 18)
+                draw_ribbon.text((image_ribbon.width // 2, image_ribbon.height // 2),
+                                 string, (255, 255, 255, 255), font_ribbon, anchor='mm')
 
-            image_ribbon = image_ribbon.rotate(-35, expand=True).crop((0, 30, 164, PLAYER_CARD_HEIGHT))
-            image_base.paste(image_ribbon, (PLAYER_CARD_WIDTH - 175, SPACING), mask=image_ribbon)
+                return image_ribbon.rotate(-35, expand=True).crop((0, 30, 164, PLAYER_CARD_HEIGHT))
+
+            def breathe(c1, c2, n):
+                colors = list(c1.range_to(c2, n + 1))
+
+                for i in range(n):
+                    yield colors[int((math.sin(math.pi * (i / n) + math.pi) + 1) * n)]
+
+            color = cosmetic.attributes.get('color', Color('#ff7a65'))
+            if breathe_color := cosmetic.attributes.get('breathe', None):
+                animated = True
+
+                for color in breathe(color, breathe_color, 45):
+                    frame = Image.new('RGBA', image_base.size, color=(54, 57, 63))
+                    frame.alpha_composite(image_base)
+
+                    image_ribbon = render_ribbon(cosmetic.string, cosmetic.attributes.get('bold', False), color)
+                    frame.paste(image_ribbon, (PLAYER_CARD_WIDTH - 175, SPACING), mask=image_ribbon)
+                    frames.append(frame)
+            else:
+                image_ribbon = render_ribbon(cosmetic.string, cosmetic.attributes.get('bold', False), color)
+                image_base.paste(image_ribbon, (PLAYER_CARD_WIDTH - 175, SPACING), mask=image_ribbon)
+
+    if animated:
+        return Render(*frames)
 
     return Render(image_base)
 
@@ -1065,7 +1093,7 @@ async def render_xp_levelup(discord_user: discord.User, level_before: int, level
 
 
 async def main():
-    pass
+    (await render_player_card(username='u6mc', type=CardType.Prison)).image.show()
 
 
 if __name__ == '__main__':
