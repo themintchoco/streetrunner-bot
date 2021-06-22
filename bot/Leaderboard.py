@@ -16,7 +16,7 @@ class Leaderboard(commands.Cog):
         """Displays the current leaderboard!"""
         if ctx.invoked_subcommand is None:
             await ctx.send(
-                f'usage: {self.bot.command_prefix}{ctx.invoked_with} <rank|blocks|infamy|kda|kills|deaths|xp|tournament>')
+                f'usage: {self.bot.command_prefix}{ctx.invoked_with} <rank|blocks|infamy|kda|kills|deaths|xp>')
 
     @leaderboard.command(name='rank')
     async def leaderboard_rank(self, ctx):
@@ -67,20 +67,20 @@ class Leaderboard(commands.Cog):
             render = await card.render_xp_leaderboard(discord_user=ctx.author)
         await ctx.send(file=discord.File(render.file(format='PNG'), 'xp_leaderboard.png'))
 
-    @leaderboard.command(name='tournament')
-    async def leaderboard_tournament(self, ctx):
-        """Displays the current tournament leaderboard! Fame and rewards await the top 10 players! """
-        username = None
-        async with ctx.typing():
-            render = await event.render_event_leaderboard(discord_user=ctx.author)
-            try:
-                username = (await card.get_player_info(discord_user=ctx.author)).username
-            except:
-                pass
-
-        await ctx.send(file=discord.File(render.file(format='PNG'), 'tournament.png'))
-        await ctx.send('View the full leaderboard LIVE at https://streetrunner.dev/tournament/'
-                       + (f'?username={username}' if username else ''))
+    # @leaderboard.command(name='tournament')
+    # async def leaderboard_tournament(self, ctx):
+    #     """Displays the current tournament leaderboard! Fame and rewards await the top 10 players! """
+    #     username = None
+    #     async with ctx.typing():
+    #         render = await event.render_event_leaderboard(discord_user=ctx.author)
+    #         try:
+    #             username = (await card.get_player_info(discord_user=ctx.author)).username
+    #         except:
+    #             pass
+    #
+    #     await ctx.send(file=discord.File(render.file(format='PNG'), 'tournament.png'))
+    #     await ctx.send('View the full leaderboard LIVE at https://streetrunner.dev/tournament/'
+    #                    + (f'?username={username}' if username else ''))
 
     @leaderboard.error
     @leaderboard_rank.error
@@ -90,7 +90,6 @@ class Leaderboard(commands.Cog):
     @leaderboard_kills.error
     @leaderboard_deaths.error
     @leaderboard_xp.error
-    @leaderboard_tournament.error
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError):
             if isinstance(error.original, UsernameError):
