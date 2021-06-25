@@ -142,7 +142,7 @@ class Render:
 
     def file_animated(self, **kwargs) -> BytesIO:
         fp = imageio.mimwrite(BytesIO(), [numpy.fromstring(i.tobytes(), dtype=numpy.uint8) for i in self._images],
-                             format='GIF', fps=30, **kwargs)
+                              fps=30, **kwargs)
         fp.seek(0)
         return fp
 
