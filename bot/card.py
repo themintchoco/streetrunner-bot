@@ -141,7 +141,7 @@ class Render:
         return fp
 
     def file_animated(self, **kwargs) -> BytesIO:
-        fp = imageio.mimwrite(BytesIO(), [numpy.fromstring(i.tobytes(), dtype=numpy.uint8) for i in self._images],
+        fp = imageio.mimwrite(BytesIO(), [numpy.fromstring(i.convert("RGBA").tobytes(), dtype=numpy.uint8) for i in self._images],
                               fps=30, **kwargs)
         fp.seek(0)
         return fp
