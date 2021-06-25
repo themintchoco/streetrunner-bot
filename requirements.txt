@@ -12,3 +12,4 @@ asyncpg~=0.23.0
 aiohttp_apispec~=2.2.0
 aiohttp_remotes~=1.0.0
 colour~=0.1.0
+imageio~=2.9.0

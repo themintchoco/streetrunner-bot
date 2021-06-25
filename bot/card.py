@@ -12,6 +12,8 @@ from typing import AsyncGenerator, List, Tuple
 import aiohttp
 import asyncstdlib as a
 import discord
+import imageio
+import numpy
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 from asyncache import cached
 from cachetools import TTLCache
@@ -137,11 +139,9 @@ class Render:
 
         return fp
 
-    def file_animated(self, *args, **kwargs) -> BytesIO:
-        fp = BytesIO()
-        self.image.save(fp, save_all=True, append_images=self._images[1:], *args, **kwargs)
+    def file_animated(self) -> BytesIO:
+        fp = imageio.mimsave(BytesIO(), [numpy.array(i) for i in self._images], format='GIF', fps=30)
         fp.seek(0)
-
         return fp
 
 
