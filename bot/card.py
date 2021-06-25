@@ -77,7 +77,8 @@ class CosmeticsTitle(Cosmetics):
                       'UNDEFEATED': {'string': 'UNDEFEATED', 'attributes': {'bold': True, 'color': Color('#fc54fc')}},
                       'SUPREME': {'string': 'SUPREME', 'attributes': {'bold': True, 'color': Color('#fca800')}},
                       'DRAKE': {'string': 'DRAKE', 'attributes': {'bold': False, 'color': Color('#a80000')}},
-                      'CHAMPION': {'string': 'CHAMPION', 'attributes': {'bold': True, 'breathe': Color('#fc8e74'), 'color': Color('#fc5454')}},
+                      'CHAMPION': {'string': 'CHAMPION', 'attributes': {'bold': True, 'breathe': Color('#fc8e74'),
+                                                                        'color': Color('#fc5454')}},
                       }[string])
 
 
@@ -139,8 +140,9 @@ class Render:
 
         return fp
 
-    def file_animated(self) -> BytesIO:
-        fp = imageio.mimsave(BytesIO(), [numpy.fromstring(i.tobytes(), dtype=numpy.uint8) for i in self._images], format='GIF', fps=30)
+    def file_animated(self, **kwargs) -> BytesIO:
+        fp = imageio.mimwrite(BytesIO(), [numpy.fromstring(i.tobytes(), dtype=numpy.uint8) for i in self._images],
+                             format='GIF', fps=30, **kwargs)
         fp.seek(0)
         return fp
 
@@ -921,7 +923,7 @@ async def render_xp_leaderboard(discord_user: discord.User) -> Render:
         draw_row.text((7 * SPACING + position_length + 65, (image_row.height + bounds_position[3]) // 2),
                       discord_user.name,
                       (212, 175, 55, 255) if target_user and target_user.discord_id == discord_user.id else (
-                      255, 255, 255, 255), font_name, anchor='ls')
+                          255, 255, 255, 255), font_name, anchor='ls')
 
         draw_row.text((8 * SPACING + position_length + 65 + length_name, (image_row.height + bounds_position[3]) // 2),
                       '#' + discord_user.discriminator, (192, 192, 192, 255), font_discrim, anchor='ls')
@@ -1074,10 +1076,9 @@ async def render_xp_levelup(discord_user: discord.User, level_before: int, level
             frame.paste((next(avatar_frames) if t < 30 else avatar_frames.send(True)).resize((65, 65)),
                         (2 * SPACING, (image_base.height - 65) // 2), mask=image_mask)
 
-        frame.paste(image_arrow,
-                    (
-                    image_base.width - 2 * SPACING - (max(bounds_level[2], image_arrow.width) + image_arrow.width) // 2,
-                    int(get_arrow_position(t) * -(image_arrow.height + image_base.height) + image_base.height)),
+        frame.paste(image_arrow, (
+            image_base.width - 2 * SPACING - (max(bounds_level[2], image_arrow.width) + image_arrow.width) // 2,
+            int(get_arrow_position(t) * -(image_arrow.height + image_base.height) + image_base.height)),
                     mask=image_arrow)
         draw_frame.text(
             (image_base.width - 2 * SPACING - max(bounds_level[2], image_arrow.width) // 2,
