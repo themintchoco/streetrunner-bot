@@ -140,7 +140,7 @@ class Render:
         return fp
 
     def file_animated(self) -> BytesIO:
-        fp = imageio.mimsave(BytesIO(), [numpy.array(i) for i in self._images], format='GIF', fps=30)
+        fp = imageio.mimsave(BytesIO(), [numpy.fromstring(i.tobytes(), dtype=numpy.uint8) for i in self._images], format='GIF', fps=30)
         fp.seek(0)
         return fp
 
