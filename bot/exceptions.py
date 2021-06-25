@@ -8,3 +8,7 @@ class DiscordNotLinkedError(UsernameError):
 
 class NotEnoughDataError(RuntimeError):
     pass
+
+
+class APIError(RuntimeError):
+    pass

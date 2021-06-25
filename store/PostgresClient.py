@@ -3,7 +3,7 @@ import os
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
-from bot.utilities import Singleton
+from helpers.utilities import Singleton
 
 
 class PostgresClient(metaclass=Singleton):

@@ -2,7 +2,7 @@ import os
 
 import redis
 
-from bot.utilities import Singleton
+from helpers.utilities import Singleton
 
 
 class RedisClient(metaclass=Singleton):

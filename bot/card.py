@@ -1,6 +1,8 @@
 import asyncio
 import base64
 import datetime
+import functools
+import itertools
 import json
 import math
 import os
@@ -18,8 +20,9 @@ from cachetools import TTLCache
 from colour import Color
 from sqlalchemy import select
 
-import bot.utilities
-from bot.exceptions import UsernameError, DiscordNotLinkedError, NotEnoughDataError
+import helpers.utilities
+from bot.exceptions import *
+from helpers.pil_transparent_gifs import save_transparent_gif
 from store.PostgresClient import PostgresClient
 from store.RedisClient import RedisClient
 from store.User import User
@@ -70,13 +73,82 @@ class CosmeticsTitle(Cosmetics):
 
     @classmethod
     def from_known_string(cls, string: str):
-        return cls(**{'FIERY': {'string': 'FIERY', 'attributes': {'bold': False, 'color': Color('#fc5454')}},
-                      'FIERY_BOLD': {'string': 'FIERY', 'attributes': {'bold': True, 'color': Color('#fc5454')}},
-                      'UNDEFEATED': {'string': 'UNDEFEATED', 'attributes': {'bold': True, 'color': Color('#fc54fc')}},
-                      'SUPREME': {'string': 'SUPREME', 'attributes': {'bold': True, 'color': Color('#fca800')}},
-                      'DRAKE': {'string': 'DRAKE', 'attributes': {'bold': False, 'color': Color('#a80000')}},
-                      'CHAMPION': {'string': 'CHAMPION', 'attributes': {'bold': True, 'breathe': Color('#fc8e74'), 'color': Color('#fc5454')}},
+        return cls(**{'FIERY': {'string': 'FIERY', 'attributes': {'bold': False, 'color': ColorEffect('#fc5454')}},
+                      'FIERY_BOLD': {'string': 'FIERY', 'attributes': {'bold': True, 'color': ColorEffect('#fc5454')}},
+                      'UNDEFEATED': {'string': 'UNDEFEATED', 'attributes': {'bold': True, 'color': ColorEffect('#fc54fc')}},
+                      'SUPREME': {'string': 'SUPREME', 'attributes': {'bold': True, 'color': ColorEffect('#fca800')}},
+                      'DRAKE': {'string': 'DRAKE', 'attributes': {'bold': False, 'color': ColorEffect('#a80000')}},
+                      'CHAMPION': {'string': 'CHAMPION', 'attributes': {'bold': True,
+                                                                        'color': ColorEffectBreathe(Color('#fc5454'),
+                                                                                                    Color('#fc8e74'),
+                                                                                                    inhale_rate=1.8,
+                                                                                                    exhale_rate=1.2,
+                                                                                                    duration=60)}},
+                      'RGB': {'string': 'RGB', 'attributes': {'bold': True,
+                                                              'color': ColorEffectUnicorn(Color('red'),
+                                                                                          Color('violet'),
+                                                                                          Color('red'),
+                                                                                          duration=300)}},
                       }[string])
+
+class ColorEffect:
+    def __init__(self, *color, duration=1, **kwargs):
+        self.type = 'static'
+        self.duration = duration
+
+        if isinstance(color[0], Color):
+            self.color = color
+        else:
+            self.color = (Color(*color, **kwargs),)
+
+    def __getitem__(self, t):
+        return self.color[0]
+
+    def __iter__(self):
+        for i in range(self.duration):
+            yield self[i]
+
+
+class ColorEffectBlink(ColorEffect):
+    def __init__(self, *color, **kwargs):
+        super().__init__(*color, **kwargs)
+        self.type = 'blink'
+
+    def __getitem__(self, t):
+        return self.color[round(self.time_function(t) // (1 / len(self.color)))]
+
+    def time_function(self, t):
+        return t / self.duration
+
+
+class ColorEffectUnicorn(ColorEffect):
+    def __init__(self, *color, **kwargs):
+        super().__init__(*color, **kwargs)
+        self.type = 'unicorn'
+
+    def __getitem__(self, t):
+        return self.spectrum[round(min(self.time_function(t) * 100 * len(self.color), len(self.spectrum) - 1))]
+
+    @functools.cached_property
+    def spectrum(self):
+        return list(itertools.chain(*(self.color[i].range_to(self.color[i + 1], 100)
+                                      for i in range(len(self.color) - 1)))) if len(self.color) > 1 else [self.color[0]]
+
+    def time_function(self, t):
+        return t / self.duration
+
+
+class ColorEffectBreathe(ColorEffectUnicorn):
+    def __init__(self, *color, inhale_rate=1.4, exhale_rate=1.4, **kwargs):
+        super().__init__(*color, **kwargs)
+        self.type = 'breathe'
+        self.inhale_rate = inhale_rate
+        self.exhale_rate = exhale_rate
+
+    def time_function(self, t):
+        return min(math.e ** (self.inhale_rate * t / self.duration) - 1,
+                   math.e ** (-self.exhale_rate * (t / self.duration - 1)) - 1,
+                   1)
 
 
 class CosmeticsPet(Cosmetics):
@@ -139,7 +211,8 @@ class Render:
 
     def file_animated(self, *args, **kwargs) -> BytesIO:
         fp = BytesIO()
-        self.image.save(fp, save_all=True, append_images=self._images[1:], *args, **kwargs)
+        save_transparent_gif(self._images, 1, fp)
+        # self.image.save(fp, save_all=True, append_images=self._images[1:], *args, **kwargs)
         fp.seek(0)
 
         return fp
@@ -158,13 +231,13 @@ async def get_skin(uuid: str) -> dict:
         async with s.get(
                 f'https://sessionserver.mojang.com/session/minecraft/profile/{urllib.parse.quote(uuid)}') as r:
             if r.status != 200:
-                raise
+                raise APIError(r)
             for prop in (await r.json())['properties']:
                 if prop['name'] == 'textures':
                     skin_data = json.loads(base64.b64decode(prop['value']))['textures']['SKIN']
                     async with s.get(skin_data['url']) as r:
                         if r.status != 200:
-                            raise
+                            raise APIError(r)
                         skin = await r.read()
 
                     conn.hset(f'skins:{uuid}', mapping={
@@ -195,7 +268,7 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
                         'message': f'You have not linked your Discord account to your Minecraft account. Please link your account using the /discord command in-game. ',
                         'discord_id': discord_user})
             elif r.status != 200:
-                raise
+                raise APIError(r)
 
             player_data = await r.json()
 
@@ -226,7 +299,7 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
                         'message': f'You have not linked your Discord account to your Minecraft account. Please link your account using the /discord command in-game. ',
                         'discord_id': discord_user})
             elif r.status != 200:
-                raise
+                raise APIError(r)
 
             cosmetics_data = await r.json()
 
@@ -247,7 +320,7 @@ async def get_leaderboard(type: LeaderboardType) -> AsyncGenerator[PlayerInfo, N
                 f'https://streetrunner.dev/api/leaderboard/?type={type.name.lower()}',
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status != 200:
-                raise
+                raise APIError(r)
             leaderboard_data = await r.json()
 
     for player_data in leaderboard_data[type.name.lower()]:
@@ -274,7 +347,7 @@ async def get_position(*, username: str = None, discord_user: discord.User = Non
                 raise UsernameError({'message': f'The username provided is invalid',
                                      'username': username}) if username else DiscordNotLinkedError()
             elif r.status != 200:
-                raise
+                raise APIError(r)
             return (await r.json())[type.name.lower()]
 
 
@@ -349,7 +422,7 @@ async def get_chat_xp(discord_id: List[int], timerange: List[Tuple[datetime.date
                 f'https://streetrunner.dev/api/chat/', json=query,
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status != 200:
-                raise
+                raise APIError(r)
 
             return await r.json()
 
@@ -575,6 +648,9 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
     draw_base.text((14 * SPACING + image_skin.width + max(length_stats_left, 80), 10 * SPACING), stats[1][1],
                    (77, 189, 138), font_stats)
 
+    if player_info.username == 'threeleaves':
+        player_cosmetics = list(player_cosmetics) + [CosmeticsTitle.from_known_string('RGB')]
+
     animated = False
     frames = []
     for cosmetic in player_cosmetics:
@@ -589,25 +665,18 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
 
                 return image_ribbon.rotate(-35, expand=True).crop((0, 30, 164, PLAYER_CARD_HEIGHT))
 
-            def breathe(c1, c2, n):
-                colors = list(c1.range_to(c2, n + 1))
+            effect = cosmetic.attributes.get('color', ColorEffect('#ff7a65'))
+            animated = effect.type != 'static'
 
-                for i in range(n):
-                    yield colors[int((math.sin(math.pi * (i / n) + math.pi) + 1) * n)]
-
-            color = cosmetic.attributes.get('color', Color('#ff7a65'))
-            if breathe_color := cosmetic.attributes.get('breathe', None):
-                animated = True
-
-                for color in breathe(color, breathe_color, 45):
-                    frame = Image.new('RGBA', image_base.size, color=(54, 57, 63))
-                    frame.alpha_composite(image_base)
+            if animated:
+                for color in effect:
+                    frame = image_base.copy()
 
                     image_ribbon = render_ribbon(cosmetic.string, cosmetic.attributes.get('bold', False), color)
                     frame.paste(image_ribbon, (PLAYER_CARD_WIDTH - 175, SPACING), mask=image_ribbon)
                     frames.append(frame)
             else:
-                image_ribbon = render_ribbon(cosmetic.string, cosmetic.attributes.get('bold', False), color)
+                image_ribbon = render_ribbon(cosmetic.string, cosmetic.attributes.get('bold', False), effect[0])
                 image_base.paste(image_ribbon, (PLAYER_CARD_WIDTH - 175, SPACING), mask=image_ribbon)
 
     if animated:
@@ -877,7 +946,7 @@ async def render_xp_card(discord_user: discord.User) -> Render:
 
         frames = []
         for frame in ImageSequence.Iterator(image_avatar):
-            image_frame = Image.alpha_composite(image_background, image_base)
+            image_frame = image_base.copy()
             image_frame.paste(frame.resize((100, 100)), (avatar_origin[0] - 50, avatar_origin[1] - 50),
                               mask=image_mask)
             frames.append(image_frame)
@@ -991,7 +1060,7 @@ async def render_xp_leaderboard(discord_user: discord.User) -> Render:
     image_base.paste(image_highlight, mask=image_base.crop((0, 0, image_highlight.width, image_highlight.height)))
 
     for i in range(min(5 if target_position < 5 else 4, len(users))):
-        image_row = (await render_row(bot.utilities.resolve_id(users[i].discord_id), users[i].xp, i + 1)).image
+        image_row = (await render_row(helpers.utilities.resolve_id(users[i].discord_id), users[i].xp, i + 1)).image
         image_base.paste(image_row, (0, 2 * SPACING) if i == 0 else (0, (4 + 2 * i) * SPACING + i * 75), mask=image_row)
 
     return Render(image_base)
@@ -1024,7 +1093,7 @@ async def render_xp_levelup(discord_user: discord.User, level_before: int, level
                 avatar.seek(0)
             reset = yield avatar
 
-    image_base = Image.new('RGBA', (XP_LEADERBOARD_WIDTH, 100), color=(54, 57, 63, 255))
+    image_base = Image.new('RGBA', (XP_LEADERBOARD_WIDTH, 100), color=(0, 0, 0, 0))
     draw_base = ImageDraw.Draw(image_base)
     draw_base.rounded_rectangle((0, 0, XP_LEADERBOARD_WIDTH, 100), fill=(32, 34, 37, 255), radius=15)
 
