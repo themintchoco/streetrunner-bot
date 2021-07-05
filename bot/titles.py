@@ -27,7 +27,7 @@ class Title(Cosmetics, ABC):
 
 
 def from_known_string(string: str) -> Title:
-    return next(x for x in inspect.getmembers(sys.modules['titles'], inspect.isclass) if lambda y: y.id == string)[1]
+    return next(x for x in Title.__subclasses__() if lambda y: y.id == string)()
 
 
 class Fiery(Title):
