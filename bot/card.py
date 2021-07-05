@@ -18,7 +18,9 @@ from sqlalchemy import select
 
 import helpers.utilities
 from bot.cosmetics import titles
+from bot.cosmetics.cosmetics import Cosmetics, CosmeticsType
 from bot.cosmetics.titles import Title
+from bot.cosmetics.pets import Pet
 from bot.exceptions import *
 from helpers.pil_transparent_gifs import save_transparent_gif
 from store.PostgresClient import PostgresClient
@@ -206,7 +208,7 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
         cosmetics.append(titles.from_known_string(title))
 
     if pet := cosmetics_data.get('PET', None):
-        cosmetics.append(CosmeticsPet(pet_type=pet))
+        cosmetics.append(Pet(pet_type=pet))
 
     return cosmetics
 
@@ -548,7 +550,7 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
     animated = False
     frames = []
     for cosmetic in player_cosmetics:
-        if isinstance(cosmetic, Title):
+        if cosmetic.type == CosmeticsType.Title:
             def render_ribbon(string, bold, color):
                 image_ribbon = Image.new('RGBA', (215, 35), color=tuple(int(i * 255) for i in color.rgb))
                 draw_ribbon = ImageDraw.Draw(image_ribbon)
