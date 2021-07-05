@@ -33,7 +33,6 @@ class Fiery(Title):
 
 
 class FieryBold(Title):
-    @property
     def __str__(self) -> str:
         return 'FIERY'
 
