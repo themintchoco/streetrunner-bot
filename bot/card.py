@@ -2,10 +2,12 @@ import asyncio
 import base64
 import datetime
 import functools
+import inspect
 import itertools
 import json
 import math
 import os
+import sys
 import urllib
 from enum import Enum
 from io import BytesIO
@@ -21,7 +23,9 @@ from colour import Color
 from sqlalchemy import select
 
 import helpers.utilities
+from bot import titles
 from bot.exceptions import *
+from bot.titles import Title
 from helpers.pil_transparent_gifs import save_transparent_gif
 from store.PostgresClient import PostgresClient
 from store.RedisClient import RedisClient
@@ -64,32 +68,6 @@ class Cosmetics:
     def __init__(self, **kwargs):
         self.type = kwargs['type']
 
-
-class CosmeticsTitle(Cosmetics):
-    def __init__(self, **kwargs):
-        super().__init__(type=CosmeticsType.Title)
-        self.string = kwargs['string']
-        self.attributes = kwargs['attributes']
-
-    @classmethod
-    def from_known_string(cls, string: str):
-        return cls(**{'FIERY': {'string': 'FIERY', 'attributes': {'bold': False, 'color': ColorEffect('#fc5454')}},
-                      'FIERY_BOLD': {'string': 'FIERY', 'attributes': {'bold': True, 'color': ColorEffect('#fc5454')}},
-                      'UNDEFEATED': {'string': 'UNDEFEATED', 'attributes': {'bold': True, 'color': ColorEffect('#fc54fc')}},
-                      'SUPREME': {'string': 'SUPREME', 'attributes': {'bold': True, 'color': ColorEffect('#fca800')}},
-                      'DRAKE': {'string': 'DRAKE', 'attributes': {'bold': False, 'color': ColorEffect('#a80000')}},
-                      'CHAMPION': {'string': 'CHAMPION', 'attributes': {'bold': True,
-                                                                        'color': ColorEffectBreathe(Color('#fc5454'),
-                                                                                                    Color('#fc8e74'),
-                                                                                                    inhale_rate=1.8,
-                                                                                                    exhale_rate=1.2,
-                                                                                                    duration=60)}},
-                      'RGB': {'string': 'RGB', 'attributes': {'bold': True,
-                                                              'color': ColorEffectUnicorn(Color('red'),
-                                                                                          Color('violet'),
-                                                                                          Color('red'),
-                                                                                          duration=300)}},
-                      }[string])
 
 class ColorEffect:
     def __init__(self, *color, duration=1, **kwargs):
@@ -306,7 +284,7 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
     cosmetics = []
 
     if title := cosmetics_data.get('TITLE', None):
-        cosmetics.append(CosmeticsTitle.from_known_string(title))
+        cosmetics.append(titles.from_known_string(title))
 
     if pet := cosmetics_data.get('PET', None):
         cosmetics.append(CosmeticsPet(pet_type=pet))
@@ -648,13 +626,10 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
     draw_base.text((14 * SPACING + image_skin.width + max(length_stats_left, 80), 10 * SPACING), stats[1][1],
                    (77, 189, 138), font_stats)
 
-    if player_info.username == 'threeleaves':
-        player_cosmetics = list(player_cosmetics) + [CosmeticsTitle.from_known_string('RGB')]
-
     animated = False
     frames = []
     for cosmetic in player_cosmetics:
-        if cosmetic.type == CosmeticsType.Title:
+        if isinstance(cosmetic, Title):
             def render_ribbon(string, bold, color):
                 image_ribbon = Image.new('RGBA', (215, 35), color=tuple(int(i * 255) for i in color.rgb))
                 draw_ribbon = ImageDraw.Draw(image_ribbon)
@@ -665,18 +640,18 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
 
                 return image_ribbon.rotate(-35, expand=True).crop((0, 30, 164, PLAYER_CARD_HEIGHT))
 
-            effect = cosmetic.attributes.get('color', ColorEffect('#ff7a65'))
+            effect = cosmetic.color
             animated = effect.type != 'static'
 
             if animated:
                 for color in effect:
                     frame = image_base.copy()
 
-                    image_ribbon = render_ribbon(cosmetic.string, cosmetic.attributes.get('bold', False), color)
+                    image_ribbon = render_ribbon(str(cosmetic), cosmetic.bold, color)
                     frame.paste(image_ribbon, (PLAYER_CARD_WIDTH - 175, SPACING), mask=image_ribbon)
                     frames.append(frame)
             else:
-                image_ribbon = render_ribbon(cosmetic.string, cosmetic.attributes.get('bold', False), effect[0])
+                image_ribbon = render_ribbon(str(cosmetic), cosmetic.bold, effect[0])
                 image_base.paste(image_ribbon, (PLAYER_CARD_WIDTH - 175, SPACING), mask=image_ribbon)
 
     if animated:
