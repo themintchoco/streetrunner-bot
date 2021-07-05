@@ -12,7 +12,7 @@ class Title(Cosmetics, ABC):
 
     @property
     def __str__(self) -> str:
-        raise NotImplementedError
+        return self.id
 
     @property
     def bold(self) -> bool:
@@ -24,15 +24,10 @@ class Title(Cosmetics, ABC):
 
     @property
     def id(self) -> str:
-        # return self.__str__  # singleton object alternative
         raise NotImplementedError
 
 
 class Fiery(Title):
-    @property
-    def __str__(self) -> str:
-        return 'FIERY'
-
     bold = False
     color = ColorEffect('#fc5454')
     id = 'FIERY'
@@ -49,40 +44,24 @@ class FieryBold(Title):
 
 
 class Undefeated(Title):
-    @property
-    def __str__(self) -> str:
-        return 'UNDEFEATED'
-
     bold = True
     color = ColorEffect('#fc54fc')
     id = 'UNDEFEATED'
 
 
 class Supreme(Title):
-    @property
-    def __str__(self) -> str:
-        return 'SUPREME'
-
     bold = True
     color = ColorEffect('#fca800')
     id = 'SUPREME'
 
 
 class Drake(Title):
-    @property
-    def __str__(self) -> str:
-        return 'DRAKE'
-
     bold = False
     color = ColorEffect('#a80000')
     id = 'DRAKE'
 
 
 class Champion(Title):
-    @property
-    def __str__(self) -> str:
-        return 'CHAMPION'
-
     bold = True
     color = ColorEffectBreathe(Color('#fc5454'), Color('#fc8e74'), inhale_rate=1.8, exhale_rate=1.2, duration=60)
     id = 'CHAMPION'
