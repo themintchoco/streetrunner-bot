@@ -24,11 +24,7 @@ class Title(Cosmetics, ABC):
 
     @property
     def id(self) -> str:
-        return self.__str__
-
-
-def from_known_string(string: str) -> Title:
-    return next(x for x in Title.__subclasses__() if lambda y: y.id == string)()
+        raise NotImplementedError
 
 
 class Fiery(Title):
