@@ -10,7 +10,6 @@ class Title(Cosmetics, ABC):
     def __init__(self, **kwargs):
         super().__init__(type=CosmeticsType.Title)
 
-    @property
     def __str__(self) -> str:
         return self.id
 
