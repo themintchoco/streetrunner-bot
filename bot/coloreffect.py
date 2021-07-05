@@ -1,4 +1,7 @@
 import functools
+import itertools
+import math
+
 from colour import Color
 
 class ColorEffect:
