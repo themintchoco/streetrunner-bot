@@ -1,10 +1,7 @@
 import asyncio
 import base64
 import datetime
-import functools
-import itertools
 import json
-import math
 import os
 import urllib
 from enum import Enum
@@ -17,10 +14,13 @@ import discord
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 from asyncache import cached
 from cachetools import TTLCache
-from colour import Color
 from sqlalchemy import select
 
 import helpers.utilities
+from bot.cosmetics import titles
+from bot.cosmetics.cosmetics import Cosmetics, CosmeticsType
+from bot.cosmetics.titles import Title
+from bot.cosmetics.pets import Pet
 from bot.exceptions import *
 from helpers.pil_transparent_gifs import save_transparent_gif
 from store.PostgresClient import PostgresClient
@@ -54,107 +54,6 @@ class PlayerStatsType(Enum):
 
 class LeaderboardType(Enum):
     Rank, Kda, Kills, Blocks, Infamy, Deaths = range(6)
-
-
-class CosmeticsType(Enum):
-    Title, Pet = range(2)
-
-
-class Cosmetics:
-    def __init__(self, **kwargs):
-        self.type = kwargs['type']
-
-
-class CosmeticsTitle(Cosmetics):
-    def __init__(self, **kwargs):
-        super().__init__(type=CosmeticsType.Title)
-        self.string = kwargs['string']
-        self.attributes = kwargs['attributes']
-
-    @classmethod
-    def from_known_string(cls, string: str):
-        return cls(**{'FIERY': {'string': 'FIERY', 'attributes': {'bold': False, 'color': ColorEffect('#fc5454')}},
-                      'FIERY_BOLD': {'string': 'FIERY', 'attributes': {'bold': True, 'color': ColorEffect('#fc5454')}},
-                      'UNDEFEATED': {'string': 'UNDEFEATED', 'attributes': {'bold': True, 'color': ColorEffect('#fc54fc')}},
-                      'SUPREME': {'string': 'SUPREME', 'attributes': {'bold': True, 'color': ColorEffect('#fca800')}},
-                      'DRAKE': {'string': 'DRAKE', 'attributes': {'bold': False, 'color': ColorEffect('#a80000')}},
-                      'CHAMPION': {'string': 'CHAMPION', 'attributes': {'bold': True,
-                                                                        'color': ColorEffectBreathe(Color('#fc5454'),
-                                                                                                    Color('#fc8e74'),
-                                                                                                    inhale_rate=1.8,
-                                                                                                    exhale_rate=1.2,
-                                                                                                    duration=60)}},
-                      'RGB': {'string': 'RGB', 'attributes': {'bold': True,
-                                                              'color': ColorEffectUnicorn(Color('red'),
-                                                                                          Color('violet'),
-                                                                                          Color('red'),
-                                                                                          duration=300)}},
-                      }[string])
-
-class ColorEffect:
-    def __init__(self, *color, duration=1, **kwargs):
-        self.type = 'static'
-        self.duration = duration
-
-        if isinstance(color[0], Color):
-            self.color = color
-        else:
-            self.color = (Color(*color, **kwargs),)
-
-    def __getitem__(self, t):
-        return self.color[0]
-
-    def __iter__(self):
-        for i in range(self.duration):
-            yield self[i]
-
-
-class ColorEffectBlink(ColorEffect):
-    def __init__(self, *color, **kwargs):
-        super().__init__(*color, **kwargs)
-        self.type = 'blink'
-
-    def __getitem__(self, t):
-        return self.color[round(self.time_function(t) // (1 / len(self.color)))]
-
-    def time_function(self, t):
-        return t / self.duration
-
-
-class ColorEffectUnicorn(ColorEffect):
-    def __init__(self, *color, **kwargs):
-        super().__init__(*color, **kwargs)
-        self.type = 'unicorn'
-
-    def __getitem__(self, t):
-        return self.spectrum[round(min(self.time_function(t) * 100 * len(self.color), len(self.spectrum) - 1))]
-
-    @functools.cached_property
-    def spectrum(self):
-        return list(itertools.chain(*(self.color[i].range_to(self.color[i + 1], 100)
-                                      for i in range(len(self.color) - 1)))) if len(self.color) > 1 else [self.color[0]]
-
-    def time_function(self, t):
-        return t / self.duration
-
-
-class ColorEffectBreathe(ColorEffectUnicorn):
-    def __init__(self, *color, inhale_rate=1.4, exhale_rate=1.4, **kwargs):
-        super().__init__(*color, **kwargs)
-        self.type = 'breathe'
-        self.inhale_rate = inhale_rate
-        self.exhale_rate = exhale_rate
-
-    def time_function(self, t):
-        return min(math.e ** (self.inhale_rate * t / self.duration) - 1,
-                   math.e ** (-self.exhale_rate * (t / self.duration - 1)) - 1,
-                   1)
-
-
-class CosmeticsPet(Cosmetics):
-    def __init__(self, **kwargs):
-        super().__init__(type=CosmeticsType.Pet)
-        self.pet_type = kwargs['pet_type']
 
 
 class PlayerStats:
@@ -306,10 +205,10 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
     cosmetics = []
 
     if title := cosmetics_data.get('TITLE', None):
-        cosmetics.append(CosmeticsTitle.from_known_string(title))
+        cosmetics.append(titles.from_known_string(title))
 
     if pet := cosmetics_data.get('PET', None):
-        cosmetics.append(CosmeticsPet(pet_type=pet))
+        cosmetics.append(Pet(pet_type=pet))
 
     return cosmetics
 
@@ -648,9 +547,6 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
     draw_base.text((14 * SPACING + image_skin.width + max(length_stats_left, 80), 10 * SPACING), stats[1][1],
                    (77, 189, 138), font_stats)
 
-    if player_info.username == 'threeleaves':
-        player_cosmetics = list(player_cosmetics) + [CosmeticsTitle.from_known_string('RGB')]
-
     animated = False
     frames = []
     for cosmetic in player_cosmetics:
@@ -665,18 +561,18 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
 
                 return image_ribbon.rotate(-35, expand=True).crop((0, 30, 164, PLAYER_CARD_HEIGHT))
 
-            effect = cosmetic.attributes.get('color', ColorEffect('#ff7a65'))
+            effect = cosmetic.color
             animated = effect.type != 'static'
 
             if animated:
                 for color in effect:
                     frame = image_base.copy()
 
-                    image_ribbon = render_ribbon(cosmetic.string, cosmetic.attributes.get('bold', False), color)
+                    image_ribbon = render_ribbon(str(cosmetic), cosmetic.bold, color)
                     frame.paste(image_ribbon, (PLAYER_CARD_WIDTH - 175, SPACING), mask=image_ribbon)
                     frames.append(frame)
             else:
-                image_ribbon = render_ribbon(cosmetic.string, cosmetic.attributes.get('bold', False), effect[0])
+                image_ribbon = render_ribbon(str(cosmetic), cosmetic.bold, effect[0])
                 image_base.paste(image_ribbon, (PLAYER_CARD_WIDTH - 175, SPACING), mask=image_ribbon)
 
     if animated:
@@ -990,7 +886,7 @@ async def render_xp_leaderboard(discord_user: discord.User) -> Render:
         draw_row.text((7 * SPACING + position_length + 65, (image_row.height + bounds_position[3]) // 2),
                       discord_user.name,
                       (212, 175, 55, 255) if target_user and target_user.discord_id == discord_user.id else (
-                      255, 255, 255, 255), font_name, anchor='ls')
+                          255, 255, 255, 255), font_name, anchor='ls')
 
         draw_row.text((8 * SPACING + position_length + 65 + length_name, (image_row.height + bounds_position[3]) // 2),
                       '#' + discord_user.discriminator, (192, 192, 192, 255), font_discrim, anchor='ls')
@@ -1143,10 +1039,9 @@ async def render_xp_levelup(discord_user: discord.User, level_before: int, level
             frame.paste((next(avatar_frames) if t < 30 else avatar_frames.send(True)).resize((65, 65)),
                         (2 * SPACING, (image_base.height - 65) // 2), mask=image_mask)
 
-        frame.paste(image_arrow,
-                    (
-                    image_base.width - 2 * SPACING - (max(bounds_level[2], image_arrow.width) + image_arrow.width) // 2,
-                    int(get_arrow_position(t) * -(image_arrow.height + image_base.height) + image_base.height)),
+        frame.paste(image_arrow, (
+            image_base.width - 2 * SPACING - (max(bounds_level[2], image_arrow.width) + image_arrow.width) // 2,
+            int(get_arrow_position(t) * -(image_arrow.height + image_base.height) + image_base.height)),
                     mask=image_arrow)
         draw_frame.text(
             (image_base.width - 2 * SPACING - max(bounds_level[2], image_arrow.width) // 2,
