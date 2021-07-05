@@ -24,6 +24,7 @@ class Title(Cosmetics, ABC):
 
     @property
     def id(self) -> str:
+        # return self.__str__  # singleton object alternative
         raise NotImplementedError
 
 
@@ -87,8 +88,10 @@ class Champion(Title):
     id = 'CHAMPION'
 
 
+# known_titles = {x.id: x() for x in Title.__subclasses__()}  # singleton object alternative
 known_titles = {x.id: x for x in Title.__subclasses__()}
 
 
 def from_known_string(string: str) -> Title:
+    # return known_titles[string]  # singleton object alternative
     return known_titles[string]()
