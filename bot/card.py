@@ -12,6 +12,7 @@ from typing import AsyncGenerator, List, Tuple
 import aiohttp
 import asyncstdlib as a
 import discord
+import humanize
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 from asyncache import cached
 from cachetools import TTLCache
@@ -525,7 +526,7 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
         stats = [('DEATHS', str(player_info.stats_arena.deaths)), ('KDA', str(player_info.stats_arena.kda))]
     elif type == CardType.Time:
         image_background = random.choice([Image.open('images/prison.png'), Image.open('images/arena.png')])
-        stats = [('TIME PLAYED', await get_player_time(username=username, discord_user=discord_user)), ('', '')]
+        stats = [('TIME PLAYED', humanize.naturaldelta(await get_player_time(username=username, discord_user=discord_user))), ('', '')]
     else:
         raise
 
@@ -1082,7 +1083,7 @@ async def render_xp_levelup(discord_user: discord.User, level_before: int, level
 
 
 async def main():
-    (await render_player_card(username='u6mc', type=CardType.Prison)).image.show()
+    (await render_player_card(username='u6mc', type=CardType.Time)).image.show()
 
 
 if __name__ == '__main__':

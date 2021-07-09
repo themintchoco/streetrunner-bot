@@ -94,6 +94,7 @@ class Player(commands.Cog):
     @kills.error
     @kda.error
     @deaths.error
+    @time.error
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, UsernameError):
             return await ctx.send(error.original.args[0]['message'])
