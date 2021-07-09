@@ -267,7 +267,7 @@ async def get_player_time(*, username: str = None, discord_user: discord.User = 
                 raise APIError(r)
 
             try:
-                return datetime.timedelta(seconds=int(r.text))
+                return datetime.timedelta(seconds=float(await r.text()))
             except (TypeError, ValueError):
                 raise APIError(r)
 
