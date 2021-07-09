@@ -3,6 +3,7 @@ import base64
 import datetime
 import json
 import os
+import random
 import urllib
 from enum import Enum
 from io import BytesIO
@@ -45,7 +46,7 @@ FONT_BOLD = 'fonts/Roboto-Bold.ttf'
 FONT_REGULAR = 'fonts/Roboto-Regular.ttf'
 FONT_LIGHT = 'fonts/Roboto-Light.ttf'
 
-CardType = Enum("CardType", 'Prison Infamy Kills Deaths Kda')
+CardType = Enum("CardType", 'Prison Infamy Kills Deaths Kda Time')
 
 
 class PlayerStatsType(Enum):
@@ -248,6 +249,27 @@ async def get_position(*, username: str = None, discord_user: discord.User = Non
             elif r.status != 200:
                 raise APIError(r)
             return (await r.json())[type.name.lower()]
+
+
+async def get_player_time(*, username: str = None, discord_user: discord.User = None) -> datetime.timedelta:
+    async with aiohttp.ClientSession() as s:
+        async with s.get(
+                f'https://streetrunner.dev/api/player/time/?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}',
+                headers={'Authorization': os.environ['API_KEY']}) as r:
+            if r.status == 404:
+                if username:
+                    raise UsernameError({'message': f'The username provided is invalid', 'username': username})
+                else:
+                    raise DiscordNotLinkedError({
+                        'message': f'You have not linked your Discord account to your Minecraft account. Please link your account using the /discord command in-game. ',
+                        'discord_id': discord_user})
+            elif r.status != 200:
+                raise APIError(r)
+
+            try:
+                return datetime.timedelta(seconds=int(r.text))
+            except (TypeError, ValueError):
+                raise APIError(r)
 
 
 def get_number_representation(number: int) -> str:
@@ -501,6 +523,9 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
     elif type == CardType.Deaths:
         image_background = Image.open('images/arena.png')
         stats = [('DEATHS', str(player_info.stats_arena.deaths)), ('KDA', str(player_info.stats_arena.kda))]
+    elif type == CardType.Time:
+        image_background = random.choice([Image.open('images/prison.png'), Image.open('images/arena.png')])
+        stats = [('TIME PLAYED', await get_player_time(username=username, discord_user=discord_user)), ('', '')]
     else:
         raise
 
