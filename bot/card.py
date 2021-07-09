@@ -12,7 +12,6 @@ from typing import AsyncGenerator, List, Tuple
 import aiohttp
 import asyncstdlib as a
 import discord
-import humanize
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 from asyncache import cached
 from cachetools import TTLCache
@@ -277,6 +276,14 @@ def get_number_representation(number: int) -> str:
     magnitude = (len(str(number)) - 1) // 3
     return f'{(number / (10 ** (magnitude * 3))):.3g}{" KMGTPEZY"[magnitude] if magnitude > 0 else ""}'
 
+def get_timedelta_representation(td: datetime.timedelta) -> str:
+    hours, remainder = divmod(td.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    repr = ((f'{hours}h ' if hours else '') +
+            (f'{minutes}m ' if minutes else ''))
+
+    return repr if repr else 'Not played yet'
 
 def get_level_from_xp(xp: int) -> int:
     i = 1
@@ -526,7 +533,7 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
         stats = [('DEATHS', str(player_info.stats_arena.deaths)), ('KDA', str(player_info.stats_arena.kda))]
     elif type == CardType.Time:
         image_background = random.choice([Image.open('images/prison.png'), Image.open('images/arena.png')])
-        stats = [('TIME PLAYED', humanize.naturaldelta(await get_player_time(username=username, discord_user=discord_user))), ('', '')]
+        stats = [('TIME PLAYED', get_timedelta_representation(await get_player_time(username=username, discord_user=discord_user))), ('', '')]
     else:
         raise
 
