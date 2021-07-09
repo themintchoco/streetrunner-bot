@@ -77,11 +77,24 @@ class Player(commands.Cog):
         else:
             await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
+    @commands.command()
+    async def time(self, ctx, username: str = None):
+        """Displays player time"""
+        render = await (
+            card.render_player_card(username=username, type=CardType.Time) if username else
+            card.render_player_card(discord_user=ctx.author, type=CardType.Time))
+
+        if render.multi_frame:
+            await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
+        else:
+            await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+
     @rank.error
     @infamy.error
     @kills.error
     @kda.error
     @deaths.error
+    @time.error
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, UsernameError):
             return await ctx.send(error.original.args[0]['message'])
