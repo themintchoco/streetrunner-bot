@@ -175,6 +175,7 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
 
     player_stats_prison = None
     player_stats_arena = None
+    player_time_played = None
 
     if prison_data := player_data.get('prison', None):
         player_stats_prison = PlayerStatsPrison(rank=prison_data['rank'], blocks=prison_data['amount'])
@@ -183,8 +184,11 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
         player_stats_arena = PlayerStatsArena(infamy=arena_data['infamy'], kills=arena_data['kills'],
                                               deaths=arena_data['deaths'], assists=arena_data['assists'])
 
+    if time_played := player_data.get('time', None):
+        player_time_played = datetime.timedelta(seconds=time_played)
+
     return PlayerInfo(player_data['uuid'], player_data['username'], stats_prison=player_stats_prison,
-                      stats_arena=player_stats_arena)
+                      stats_arena=player_stats_arena, time_played=player_time_played)
 
 
 async def get_player_cosmetics(*, username: str = None, discord_user: discord.User = None) -> List[Cosmetics]:
@@ -254,28 +258,6 @@ async def get_position(*, username: str = None, discord_user: discord.User = Non
             elif r.status != 200:
                 raise APIError(r)
             return (await r.json())[type.name.lower()]
-
-
-async def get_player_time(*, username: str = None, discord_user: discord.User = None) -> datetime.timedelta:
-    async with aiohttp.ClientSession() as s:
-        async with s.get(
-                f'https://streetrunner.dev/api/player/?type=time&{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}',
-                headers={'Authorization': os.environ['API_KEY']}) as r:
-            if r.status == 404:
-                if username:
-                    raise UsernameError({'message': f'The username provided is invalid', 'username': username})
-                else:
-                    raise DiscordNotLinkedError({
-                        'message': f'You have not linked your Discord account to your Minecraft account. Please link your account using the /discord command in-game. ',
-                        'discord_id': discord_user})
-            elif r.status != 200:
-                raise APIError(r)
-
-            try:
-                return datetime.timedelta(seconds=float(await r.text()))
-            except (TypeError, ValueError):
-                raise APIError(r)
-
 
 def get_number_representation(number: int) -> str:
     magnitude = (len(str(number)) - 1) // 3
@@ -543,7 +525,7 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
         stats = [('DEATHS', str(player_info.stats_arena.deaths)), ('KDA', str(player_info.stats_arena.kda))]
     elif type == CardType.Time:
         image_background = random.choice([Image.open('images/prison.png'), Image.open('images/arena.png')])
-        stats = [('TIME PLAYED', get_timedelta_representation(await get_player_time(username=username, discord_user=discord_user))), ('', '')]
+        stats = [('TIME PLAYED', get_timedelta_representation(player_info.time_played)), ('', '')]
     else:
         raise
 
