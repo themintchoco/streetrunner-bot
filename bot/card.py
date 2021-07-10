@@ -54,7 +54,7 @@ class PlayerStatsType(Enum):
 
 
 class LeaderboardType(Enum):
-    Rank, Kda, Kills, Blocks, Infamy, Deaths = range(6)
+    Rank, Kda, Kills, Blocks, Infamy, Deaths, Time = range(7)
 
 
 class PlayerStats:
@@ -88,6 +88,7 @@ class PlayerInfo:
         self.username = username
         self.stats_prison = kwargs.get('stats_prison', None)
         self.stats_arena = kwargs.get('stats_arena', None)
+        self.time_played = kwargs.get('time_played', None)
 
 
 class Render:
@@ -226,6 +227,7 @@ async def get_leaderboard(type: LeaderboardType) -> AsyncGenerator[PlayerInfo, N
     for player_data in leaderboard_data[type.name.lower()]:
         player_stats_prison = None
         player_stats_arena = None
+        player_time_played = None
 
         if prison_data := player_data.get('prison', None):
             player_stats_prison = PlayerStatsPrison(rank=prison_data['rank'], blocks=prison_data['amount'])
@@ -234,8 +236,11 @@ async def get_leaderboard(type: LeaderboardType) -> AsyncGenerator[PlayerInfo, N
             player_stats_arena = PlayerStatsArena(infamy=arena_data['infamy'], kills=arena_data['kills'],
                                                   deaths=arena_data['deaths'], assists=arena_data['assists'])
 
+        if time_played := player_data.get('time', None):
+            player_time_played = datetime.timedelta(seconds=time_played)
+
         yield PlayerInfo(player_data['uuid'], player_data['username'], stats_prison=player_stats_prison,
-                         stats_arena=player_stats_arena)
+                         stats_arena=player_stats_arena, time_played=player_time_played)
 
 
 async def get_position(*, username: str = None, discord_user: discord.User = None, type: LeaderboardType) -> int:
@@ -661,6 +666,8 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
         get_stats = lambda player_info: str(player_info.stats_arena.infamy)
     elif type == LeaderboardType.Deaths:
         get_stats = lambda player_info: get_number_representation(player_info.stats_arena.deaths)
+    elif type == LeaderboardType.Time:
+        get_stats = lambda player_info: get_timedelta_representation(player_info.time_played)
     else:
         raise
 

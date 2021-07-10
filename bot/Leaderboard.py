@@ -60,6 +60,13 @@ class Leaderboard(commands.Cog):
             render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Deaths)
         await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
+    @leaderboard.command(name='time')
+    async def leaderboard_deaths(self, ctx):
+        """Displays the current leaderboard in terms of play time"""
+        async with ctx.typing():
+            render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Time)
+        await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
+
     @leaderboard.command(name='xp')
     async def leaderboard_xp(self, ctx):
         """Displays the current leaderboard in terms of discord XP"""
@@ -89,6 +96,7 @@ class Leaderboard(commands.Cog):
     @leaderboard_kda.error
     @leaderboard_kills.error
     @leaderboard_deaths.error
+    @leaderboard_time.error
     @leaderboard_xp.error
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError):
