@@ -259,7 +259,7 @@ async def get_position(*, username: str = None, discord_user: discord.User = Non
 async def get_player_time(*, username: str = None, discord_user: discord.User = None) -> datetime.timedelta:
     async with aiohttp.ClientSession() as s:
         async with s.get(
-                f'https://streetrunner.dev/api/player/time/?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}',
+                f'https://streetrunner.dev/api/player/?type=time&{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}',
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status == 404:
                 if username:
@@ -282,12 +282,15 @@ def get_number_representation(number: int) -> str:
     return f'{(number / (10 ** (magnitude * 3))):.3g}{" KMGTPEZY"[magnitude] if magnitude > 0 else ""}'
 
 
-def get_timedelta_representation(td: datetime.timedelta) -> str:
+def get_timedelta_representation(td: datetime.timedelta, *, only_hours=False) -> str:
     hours, remainder = divmod(td.total_seconds(), 3600)
     minutes, seconds = divmod(remainder, 60)
 
-    repr = ((f'{int(hours)}h ' if hours else '') +
-            (f'{int(minutes)}m ' if minutes else ''))
+    if only_hours:
+        repr = f'{get_number_representation(hours)}h' if hours else ''
+    else:
+        repr = ((f'{int(hours)}h ' if hours else '') +
+                (f'{int(minutes)}m ' if minutes else ''))
 
     return repr if repr else 'Not played yet'
 
@@ -667,7 +670,7 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
     elif type == LeaderboardType.Deaths:
         get_stats = lambda player_info: get_number_representation(player_info.stats_arena.deaths)
     elif type == LeaderboardType.Time:
-        get_stats = lambda player_info: get_timedelta_representation(player_info.time_played)
+        get_stats = lambda player_info: get_timedelta_representation(player_info.time_played, only_hours=True)
     else:
         raise
 
