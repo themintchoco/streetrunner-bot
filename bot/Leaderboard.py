@@ -61,7 +61,7 @@ class Leaderboard(commands.Cog):
         await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='time')
-    async def leaderboard_deaths(self, ctx):
+    async def leaderboard_time(self, ctx):
         """Displays the current leaderboard in terms of play time"""
         async with ctx.typing():
             render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Time)
