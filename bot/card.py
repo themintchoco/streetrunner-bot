@@ -265,12 +265,13 @@ def get_number_representation(number: int) -> str:
 
 
 def get_timedelta_representation(td: datetime.timedelta, *, only_hours=False) -> str:
-    hours, remainder = divmod(td.total_seconds(), 3600)
-    minutes, seconds = divmod(remainder, 60)
-
     if only_hours:
-        repr = f'{get_number_representation(hours)}h' if hours else ''
+        hours = td.total_seconds() / 3600
+        repr = f'{hours:.2f}h' if hours else ''
     else:
+        hours, remainder = divmod(td.total_seconds(), 3600)
+        minutes, seconds = divmod(remainder, 60)
+
         repr = ((f'{int(hours)}h ' if hours else '') +
                 (f'{int(minutes)}m ' if minutes else ''))
 
