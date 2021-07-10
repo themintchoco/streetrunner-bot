@@ -277,7 +277,7 @@ def get_number_representation(number: int) -> str:
     return f'{(number / (10 ** (magnitude * 3))):.3g}{" KMGTPEZY"[magnitude] if magnitude > 0 else ""}'
 
 def get_timedelta_representation(td: datetime.timedelta) -> str:
-    hours, remainder = divmod(td.seconds, 3600)
+    hours, remainder = divmod(td.total_seconds(), 3600)
     minutes, seconds = divmod(remainder, 60)
 
     repr = ((f'{hours}h ' if hours else '') +
