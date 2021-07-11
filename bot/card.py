@@ -797,7 +797,7 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
 async def render_xp_card(discord_user: discord.User) -> Render:
     xp = await get_xp(discord_user)
 
-    image_base = Image.new('RGBA', (XP_CARD_WIDTH, XP_CARD_HEIGHT), color=(0, 0, 0, 0))
+    image_base = Image.new('RGBA', (int(XP_CARD_WIDTH * 1.5), XP_CARD_HEIGHT), color=(0, 0, 0, 0))
     draw_base = ImageDraw.Draw(image_base)
     draw_base.rounded_rectangle((0, 0, XP_CARD_WIDTH, XP_CARD_HEIGHT),
                                 fill=(32, 34, 37, 255), radius=15)
