@@ -7,7 +7,7 @@ import random
 import urllib
 from enum import Enum
 from io import BytesIO
-from typing import AsyncGenerator, List, Tuple
+from typing import AsyncGenerator, Awaitable, Callable, List, Tuple, TypeVar
 
 import aiohttp
 import asyncstdlib as a
@@ -28,16 +28,18 @@ from store.PostgresClient import PostgresClient
 from store.RedisClient import RedisClient
 from store.User import User
 
+T = TypeVar('T')
+
 PLAYER_CARD_WIDTH = 640
 PLAYER_CARD_HEIGHT = 220
 
-LEADERBOARD_WIDTH = 540
-LEADERBOARD_HEIGHT = 500
+LEADERBOARD_PODIUM_WIDTH = 540
+LEADERBOARD_PODIUM_HEIGHT = 500
 
 XP_CARD_WIDTH = 335
 XP_CARD_HEIGHT = 400
 
-XP_LEADERBOARD_WIDTH = 580
+LEADERBOARD_GENERIC_WIDTH = 580
 
 SPACING = 12
 
@@ -92,8 +94,15 @@ class PlayerInfo:
 
 
 class Render:
-    def __init__(self, *images: Image.Image):
+    def __init__(self, *images: Image.Image, **attributes):
         self._images = images
+        self._attributes = attributes
+
+    def __getattr__(self, attr: str):
+        try:
+            return self._attributes[attr]
+        except KeyError:
+            raise AttributeError()
 
     @property
     def image(self) -> Image.Image:
@@ -610,7 +619,7 @@ async def render_player_card(*, username: str = None, discord_user: discord.User
 async def render_leaderboard(*, username: str = None, discord_user: discord.User = None,
                              type: LeaderboardType) -> Render:
     async def render_row(player_info: PlayerInfo, position: int) -> Render:
-        image_row = Image.new('RGBA', (LEADERBOARD_WIDTH, 100), color=(0, 0, 0, 0))
+        image_row = Image.new('RGBA', (LEADERBOARD_PODIUM_WIDTH, 100), color=(0, 0, 0, 0))
         draw_row = ImageDraw.Draw(image_row)
 
         draw_row.rounded_rectangle((0, 0, image_row.width, image_row.height), fill=(32, 34, 37, 255), radius=15)
@@ -652,8 +661,6 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
         get_stats = lambda player_info: str(player_info.stats_arena.infamy)
     elif type == LeaderboardType.Deaths:
         get_stats = lambda player_info: get_number_representation(player_info.stats_arena.deaths)
-    elif type == LeaderboardType.Time:
-        get_stats = lambda player_info: get_timedelta_representation(player_info.time_played, only_hours=True)
     else:
         raise
 
@@ -672,20 +679,20 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
     except StopAsyncIteration:
         raise NotEnoughDataError()
 
-    image_highlight = Image.new('RGBA', (LEADERBOARD_WIDTH, LEADERBOARD_HEIGHT + SPACING), color=(0, 0, 0, 0))
+    image_highlight = Image.new('RGBA', (LEADERBOARD_PODIUM_WIDTH, LEADERBOARD_PODIUM_HEIGHT + SPACING), color=(0, 0, 0, 0))
     draw_highlight = ImageDraw.Draw(image_highlight)
 
-    draw_highlight.rounded_rectangle((0, 0, LEADERBOARD_WIDTH, LEADERBOARD_HEIGHT), fill=(32, 34, 37, 255), radius=15)
+    draw_highlight.rounded_rectangle((0, 0, LEADERBOARD_PODIUM_WIDTH, LEADERBOARD_PODIUM_HEIGHT), fill=(32, 34, 37, 255), radius=15)
 
     font_title = ImageFont.truetype(FONT_BOLD, 36)
     font_subtitle = ImageFont.truetype(FONT_BOLD, 18)
 
     bounds_title = draw_highlight.textbbox((0, 56), type.name.upper(), font_title)
-    draw_highlight.text(((LEADERBOARD_WIDTH - bounds_title[2]) // 2, 56),
+    draw_highlight.text(((LEADERBOARD_PODIUM_WIDTH - bounds_title[2]) // 2, 56),
                         type.name.upper(), (255, 255, 255, 255), font_title)
 
     length_subtitle = draw_highlight.textlength('LEADERBOARD', font_subtitle)
-    draw_highlight.text(((LEADERBOARD_WIDTH - length_subtitle) // 2, bounds_title[3] + SPACING),
+    draw_highlight.text(((LEADERBOARD_PODIUM_WIDTH - length_subtitle) // 2, bounds_title[3] + SPACING),
                         'LEADERBOARD', (255, 255, 255, 255), font_subtitle)
 
     skin_data_big = await get_skin(leaderboard_highlight[0].uuid)
@@ -724,18 +731,18 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
                             2].username == target_player_info.username else (
                             255, 255, 255, 255), font_highlight_med)
 
-    draw_highlight.polygon([(210, LEADERBOARD_HEIGHT + SPACING),
+    draw_highlight.polygon([(210, LEADERBOARD_PODIUM_HEIGHT + SPACING),
                             (163, 392),
                             (495, 392),
-                            (452, LEADERBOARD_HEIGHT + SPACING)], fill=(77, 189, 138))
-    draw_highlight.polygon([(93, LEADERBOARD_HEIGHT + SPACING),
+                            (452, LEADERBOARD_PODIUM_HEIGHT + SPACING)], fill=(77, 189, 138))
+    draw_highlight.polygon([(93, LEADERBOARD_PODIUM_HEIGHT + SPACING),
                             (48, 374),
                             (377, 374),
-                            (333, LEADERBOARD_HEIGHT + SPACING)], fill=(94, 207, 149))
-    draw_highlight.polygon([(187, LEADERBOARD_HEIGHT + SPACING),
+                            (333, LEADERBOARD_PODIUM_HEIGHT + SPACING)], fill=(94, 207, 149))
+    draw_highlight.polygon([(187, LEADERBOARD_PODIUM_HEIGHT + SPACING),
                             (155, 344),
                             (388, 344),
-                            (355, LEADERBOARD_HEIGHT + SPACING)], fill=(158, 205, 187))
+                            (355, LEADERBOARD_PODIUM_HEIGHT + SPACING)], fill=(158, 205, 187))
 
     font_stats_big = ImageFont.truetype(FONT_BLACK, 48)
     font_stats_med = ImageFont.truetype(FONT_BLACK, 36)
@@ -766,29 +773,29 @@ async def render_leaderboard(*, username: str = None, discord_user: discord.User
         row_height = 30
         radius = 10
 
-        image_row = Image.new('RGBA', (LEADERBOARD_WIDTH, row_height), color=(0, 0, 0, 0))
+        image_row = Image.new('RGBA', (LEADERBOARD_PODIUM_WIDTH, row_height), color=(0, 0, 0, 0))
         draw_row = ImageDraw.Draw(image_row)
         draw_row.ellipse(
-            ((LEADERBOARD_WIDTH - radius) // 2, (row_height - radius) // 2,
-             (LEADERBOARD_WIDTH + radius) // 2, (row_height + radius) // 2), fill=(209, 222, 241, 255))
+            ((LEADERBOARD_PODIUM_WIDTH - radius) // 2, (row_height - radius) // 2,
+             (LEADERBOARD_PODIUM_WIDTH + radius) // 2, (row_height + radius) // 2), fill=(209, 222, 241, 255))
         draw_row.ellipse(
-            ((LEADERBOARD_WIDTH - 5 * SPACING - radius) // 2, (row_height - radius) // 2,
-             (LEADERBOARD_WIDTH - 5 * SPACING + radius) // 2, (row_height + radius) // 2), fill=(209, 222, 241, 255))
+            ((LEADERBOARD_PODIUM_WIDTH - 5 * SPACING - radius) // 2, (row_height - radius) // 2,
+             (LEADERBOARD_PODIUM_WIDTH - 5 * SPACING + radius) // 2, (row_height + radius) // 2), fill=(209, 222, 241, 255))
         draw_row.ellipse(
-            ((LEADERBOARD_WIDTH + 5 * SPACING - radius) // 2, (row_height - radius) // 2,
-             (LEADERBOARD_WIDTH + 5 * SPACING + radius) // 2, (row_height + radius) // 2), fill=(209, 222, 241, 255))
+            ((LEADERBOARD_PODIUM_WIDTH + 5 * SPACING - radius) // 2, (row_height - radius) // 2,
+             (LEADERBOARD_PODIUM_WIDTH + 5 * SPACING + radius) // 2, (row_height + radius) // 2), fill=(209, 222, 241, 255))
 
         additional_rows.append(image_row)
         additional_rows.append((await render_row(target_player_info, target_position + 1)).image)
 
-    image_base = Image.new('RGBA', (LEADERBOARD_WIDTH,
-                                    LEADERBOARD_HEIGHT + sum(row.height + SPACING for row in additional_rows)),
+    image_base = Image.new('RGBA', (LEADERBOARD_PODIUM_WIDTH,
+                                    LEADERBOARD_PODIUM_HEIGHT + sum(row.height + SPACING for row in additional_rows)),
                            color=(0, 0, 0, 0))
     image_base.paste(image_highlight)
 
     height = 0
     for row in additional_rows:
-        image_base.paste(row, (0, LEADERBOARD_HEIGHT + SPACING + height))
+        image_base.paste(row, (0, LEADERBOARD_PODIUM_HEIGHT + SPACING + height))
         height += row.height + SPACING
 
     return Render(image_base)
@@ -884,33 +891,218 @@ async def render_xp_card(discord_user: discord.User) -> Render:
         return Render(image_base)
 
 
-async def render_xp_leaderboard(discord_user: discord.User) -> Render:
-    async def render_row(discord_user: discord.User, xp: int, position: int) -> Render:
-        image_row = Image.new('RGBA', (XP_LEADERBOARD_WIDTH, 75), color=(0, 0, 0, 0))
+async def render_generic_leaderboard(row_factory: Callable[[dict, T], Awaitable[Render]],
+                                     data: List[T],
+                                     target: T,
+                                     target_position: int = None,
+                                     *,
+                                     separator_factory: Callable[[dict], Awaitable[Render]] = None,
+                                     separator_filled = False) -> Render:
+    if not target_position:
+        target_position = -1
+
+    if not separator_factory:
+        async def separator_factory(ctx) -> Render:
+            image_dots = Image.new('RGBA', (ctx['ROW_WIDTH'], 30), color=(0, 0, 0, 0))
+            radius = 10
+
+            draw_dots = ImageDraw.Draw(image_dots)
+            draw_dots.ellipse(
+                ((LEADERBOARD_GENERIC_WIDTH - radius) // 2, (30 - radius) // 2,
+                 (LEADERBOARD_GENERIC_WIDTH + radius) // 2,
+                 (30 + radius) // 2),
+                fill=(209, 222, 241, 255))
+            draw_dots.ellipse(
+                ((LEADERBOARD_GENERIC_WIDTH - 5 * SPACING - radius) // 2, (30 - radius) // 2,
+                 (LEADERBOARD_GENERIC_WIDTH - 5 * SPACING + radius) // 2, (30 + radius) // 2),
+                fill=(209, 222, 241, 255))
+            draw_dots.ellipse(
+                ((LEADERBOARD_GENERIC_WIDTH + 5 * SPACING - radius) // 2, (30 - radius) // 2,
+                 (LEADERBOARD_GENERIC_WIDTH + 5 * SPACING + radius) // 2, (30 + radius) // 2),
+                fill=(209, 222, 241, 255))
+
+            return Render(image_dots)
+
+    ctx = {
+        'ROW_WIDTH': LEADERBOARD_GENERIC_WIDTH,
+        'ROW_HEIGHT': 75 + 2 * SPACING
+    }
+
+    rows = []
+    for i, entry in enumerate(data):
+        if target_position > 4 and i > 3 or i > 4:
+            break
+
+        rows.append((await row_factory({**ctx, 'POSITION': i + 1, 'ROW_HEIGHT': 75 + (2 if i else 4) * SPACING}, entry)).image)
+
+    if i < 5:
+        rows.append((await row_factory({**ctx, 'POSITION': target_position, 'ROW_HEIGHT': 75 + 4 * SPACING}, target)).image)
+        
+    rows_height = sum(row.height for row in rows)
+
+    if target_position < 5:
+        image_base = Image.new('RGBA', (LEADERBOARD_GENERIC_WIDTH, rows_height), color=(0, 0, 0, 0))
+        draw_base = ImageDraw.Draw(image_base)
+
+        draw_base.rounded_rectangle((0, 0, LEADERBOARD_GENERIC_WIDTH, rows_height),
+                                    fill=(32, 34, 37, 255), radius=15)
+    else:
+        render_separator = await separator_factory({'ROW_WIDTH': LEADERBOARD_GENERIC_WIDTH})
+        image_separator = render_separator.image
+        image_separator_height = getattr(render_separator, 'preferred_height', image_separator.height)
+
+        image_base = Image.new('RGBA', (LEADERBOARD_GENERIC_WIDTH, rows_height + image_separator_height), color=(0, 0, 0, 0))
+        draw_base = ImageDraw.Draw(image_base)
+
+        if separator_filled:
+            draw_base.rounded_rectangle(
+                (0, 0, LEADERBOARD_GENERIC_WIDTH, rows_height + image_separator_height),
+                fill=(32, 34, 37, 255), radius=15)
+        else:
+            draw_base.rounded_rectangle((0, 0, LEADERBOARD_GENERIC_WIDTH, rows_height - rows[-1].height),
+                                        fill=(32, 34, 37, 255), radius=15)
+            draw_base.rounded_rectangle(
+                (0, rows_height - rows[-1].height + image_separator_height, LEADERBOARD_GENERIC_WIDTH, rows_height + image_separator_height),
+                fill=(32, 34, 37, 255), radius=15)
+
+        image_base.paste(image_separator, (0, rows_height - rows[-1].height - (image_separator.height - image_separator_height) // 2), mask=image_separator)
+        image_base.paste(rows[-1], (0, rows_height - rows[-1].height + image_separator_height), mask=rows[-1])
+        rows.pop()
+
+    image_highlight = Image.new('RGBA', (LEADERBOARD_GENERIC_WIDTH, rows[0].height), color=(23, 24, 26, 255))
+    image_base.paste(image_highlight, mask=image_base.crop((0, 0, image_highlight.width, image_highlight.height)))
+
+    current_offset = 0
+    for row in rows:
+        image_base.paste(row, (0, current_offset), mask=row)
+        current_offset += row.height
+
+    return Render(image_base)
+
+
+async def render_time_leaderboard(*, username: str = None, discord_user: discord.User = None):
+    async def render_row(ctx, player_info) -> Render:
+        if ctx['POSITION'] != 1:
+            # override row height
+            ctx['ROW_HEIGHT'] = 75 + 2 * SPACING
+
+        image_row = Image.new('RGBA', (ctx['ROW_WIDTH'], ctx['ROW_HEIGHT']), color=(0, 0, 0, 0))
         draw_row = ImageDraw.Draw(image_row)
 
-        bounds_position = draw_row.textbbox((0, 0), f'#{position}', font_position)
-        draw_row.text((2 * SPACING + position_length // 2, image_row.height // 2),
-                      f'#{position}', (214, 214, 214, 255), font_position, anchor='mm')
+        highlight_color = [
+            (212, 175, 55, 255),
+            (154, 197, 219, 255),
+            (220, 127, 100, 255),
+            (214, 214, 214, 255)
+        ][min(ctx['POSITION'] - 1, 3)]
 
-        draw_row.ellipse((4 * SPACING + position_length - 5, 0, 4 * SPACING + position_length + 70, 75),
+        draw_row.text((2 * SPACING + position_length, image_row.height // 2),
+            f'#{ctx["POSITION"]}', (214, 214, 214, 255), font_position, anchor='rm')
+
+        skin_data = await get_skin(player_info.uuid)
+        image_avatar = (await render_avatar(skin_data['skin'], 6)).image
+
+        draw_row.line((5 * SPACING + position_length, 0,
+                       5 * SPACING + position_length, image_row.height),
+                      (214, 214, 214, 255))
+
+        draw_row.ellipse((int(4.5 * SPACING) + position_length,
+                          (image_row.height - SPACING) // 2,
+                          int(5.5 * SPACING) + position_length,
+                          (image_row.height + SPACING) // 2),
+                         highlight_color)
+
+        draw_row.arc((4 * SPACING + position_length,
+                      image_row.height // 2 - SPACING,
+                      6 * SPACING + position_length,
+                      image_row.height // 2 + SPACING),
+                     -30, 30, highlight_color)
+
+        draw_row.arc((4 * SPACING + position_length,
+                      image_row.height // 2 - SPACING,
+                      6 * SPACING + position_length,
+                      image_row.height // 2 + SPACING),
+                     150, 210, highlight_color)
+
+        image_row.paste(image_avatar, (8 * SPACING + position_length, (image_row.height - image_avatar.height) // 2))
+
+        draw_row.text((10 * SPACING + position_length + image_avatar.width, image_row.height // 2),
+            player_info.username,
+            (212, 175, 55, 255) if target_position is not None and player_info.username == target_player.username else (
+                255, 255, 255, 255), font_stats, anchor='lm')
+
+        draw_row.text((image_row.width - 2 * SPACING, image_row.height // 2),
+                      get_timedelta_representation(player_info.time_played), (255, 255, 255, 255), font_stats, anchor='rm')
+
+        return Render(image_row)
+
+    async def render_separator(ctx) -> Render:
+        image_separator = Image.new('RGBA', (ctx['ROW_WIDTH'], 30), color=(0, 0, 0, 0))
+        image_flight = Image.open('images/flight.png').resize((30, 30)).rotate(180)
+
+        image_separator.paste(image_flight, (5 * SPACING + position_length - image_flight.width // 2,
+                                             (image_separator.height - image_flight.height) // 2), mask=image_flight)
+
+        return Render(image_separator, preferred_height=10)
+
+    leaderboard = get_leaderboard(LeaderboardType.Time)
+    try:
+        players = [await leaderboard.__anext__() for i in range(5)]
+    except StopAsyncIteration:
+        pass
+
+    target_player = None
+    target_position = None
+    if username or discord_user:
+        try:
+            target_position = await get_position(username=username, discord_user=discord_user, type=LeaderboardType.Time)
+            target_player = await get_player_info(username=username, discord_user=discord_user)
+        except DiscordNotLinkedError:
+            pass
+
+    font_position = ImageFont.truetype(FONT_BLACK, 24)
+    font_stats = ImageFont.truetype(FONT_BOLD, 18)
+
+    position_length = max(round(ImageDraw.Draw(Image.new('RGB', (0, 0))).textlength(f'#{target_position if target_position else 0}', font_position)), 4 * SPACING)
+
+    return await render_generic_leaderboard(render_row, players, target_player, target_position, separator_factory=render_separator, separator_filled=True)
+
+
+async def render_xp_leaderboard(discord_user: discord.User) -> Render:
+    async def render_row(ctx, user) -> Render:
+        discord_user = helpers.utilities.resolve_id(user.discord_id)
+
+        image_row = Image.new('RGBA', (ctx['ROW_WIDTH'], ctx['ROW_HEIGHT']), color=(0, 0, 0, 0))
+        draw_row = ImageDraw.Draw(image_row)
+
+        bounds_position = draw_row.textbbox((0, 0), f'#{ctx["POSITION"]}', font_position)
+        draw_row.text((2 * SPACING + position_length // 2, image_row.height // 2),
+                      f'#{ctx["POSITION"]}', (214, 214, 214, 255), font_position, anchor='mm')
+
+        draw_row.ellipse((4 * SPACING + position_length - 5,
+                          (image_row.height - 75) // 2,
+                          4 * SPACING + position_length + 70,
+                          (image_row.height + 75) // 2),
                          fill=(26, 26, 26, 255))
-        draw_row.pieslice((4 * SPACING + position_length - 5, 0, 4 * SPACING + position_length + 70, 75), start=270,
-                          end=270 + (xp - get_min_xp_for_level(get_level_from_xp(xp))) / (
-                                  get_min_xp_for_level(get_level_from_xp(xp) + 1) - get_min_xp_for_level(
-                              get_level_from_xp(xp))) * 360, fill=(77, 189, 138, 255))
+        draw_row.pieslice((4 * SPACING + position_length - 5,
+                           (image_row.height - 75) // 2,
+                           4 * SPACING + position_length + 70,
+                           (image_row.height + 75) // 2), start=270,
+                          end=270 + (user.xp - get_min_xp_for_level(get_level_from_xp(user.xp))) / (
+                                  get_min_xp_for_level(get_level_from_xp(user.xp) + 1) - get_min_xp_for_level(
+                              get_level_from_xp(user.xp))) * 360, fill=(77, 189, 138, 255))
 
         image_mask = Image.new('RGBA', (65, 65), (0, 0, 0, 0))
         draw_mask = ImageDraw.Draw(image_mask)
         draw_mask.ellipse((0, 0, 65, 65), fill=(255, 255, 255, 255))
 
         image_avatar = Image.open(BytesIO(await discord_user.avatar_url_as(format='png').read()))
-        image_row.paste(image_avatar.resize((65, 65)), (4 * SPACING + position_length, 5), mask=image_mask)
+        image_row.paste(image_avatar.resize((65, 65)), (4 * SPACING + position_length, (image_row.height - 65) // 2), mask=image_mask)
 
         font_name = ImageFont.truetype(FONT_BOLD, 27)
         font_discrim = ImageFont.truetype(FONT_LIGHT, 22)
 
-        length_name = draw_base.textlength(discord_user.name, font_name)
+        length_name = draw_row.textlength(discord_user.name, font_name)
         draw_row.text((7 * SPACING + position_length + 65, (image_row.height + bounds_position[3]) // 2),
                       discord_user.name,
                       (212, 175, 55, 255) if target_user and target_user.discord_id == discord_user.id else (
@@ -920,17 +1112,17 @@ async def render_xp_leaderboard(discord_user: discord.User) -> Render:
                       '#' + discord_user.discriminator, (192, 192, 192, 255), font_discrim, anchor='ls')
 
         font_xp = ImageFont.truetype(FONT_BLACK, 27)
-        bounds_xp = draw_row.textbbox((0, 0), get_number_representation(xp), font_xp)
+        bounds_xp = draw_row.textbbox((0, 0), get_number_representation(user.xp), font_xp)
 
         draw_row.text((image_row.width - 2 * SPACING - bounds_xp[2], (image_row.height - bounds_xp[3]) // 2),
-                      get_number_representation(xp), (255, 255, 255, 255), font_xp)
+                      get_number_representation(user.xp), (255, 255, 255, 255), font_xp)
 
         return Render(image_row)
 
     users = sorted(await get_all_xp(), key=lambda user: user.xp, reverse=True)
 
     target_user = None
-    target_position = -1
+    target_position = None
     for i, user in enumerate(users):
         if user.discord_id == discord_user.id:
             target_user = user
@@ -938,56 +1130,9 @@ async def render_xp_leaderboard(discord_user: discord.User) -> Render:
             break
 
     font_position = ImageFont.truetype(FONT_BLACK, 24)
+    position_length = max(round(ImageDraw.Draw(Image.new('RGB', (0, 0))).textlength(f'#{target_position}', font_position)), 4 * SPACING)
 
-    if target_position < 5:
-        image_base = Image.new('RGBA', (XP_LEADERBOARD_WIDTH, 14 * SPACING + 5 * 75), color=(0, 0, 0, 0))
-        draw_base = ImageDraw.Draw(image_base)
-
-        position_length = max(round(draw_base.textlength(f'#{target_position}', font_position)), 4 * SPACING)
-
-        draw_base.rounded_rectangle((0, 0, XP_LEADERBOARD_WIDTH, 14 * SPACING + 5 * 75),
-                                    fill=(32, 34, 37, 255), radius=15)
-    else:
-        image_base = Image.new('RGBA', (XP_LEADERBOARD_WIDTH, 16 * SPACING + 5 * 75 + 30), color=(0, 0, 0, 0))
-        draw_base = ImageDraw.Draw(image_base)
-
-        position_length = max(round(draw_base.textlength(f'#{target_position}', font_position)), 4 * SPACING)
-
-        draw_base.rounded_rectangle((0, 0, XP_LEADERBOARD_WIDTH, 12 * SPACING + 4 * 75),
-                                    fill=(32, 34, 37, 255), radius=15)
-        draw_base.rounded_rectangle((0, 12 * SPACING + 4 * 75 + 30, XP_LEADERBOARD_WIDTH, 16 * SPACING + 5 * 75 + 30),
-                                    fill=(32, 34, 37, 255), radius=15)
-
-        image_row = (await render_row(discord_user, target_user.xp, target_position + 1)).image
-        image_base.paste(image_row, (0, 14 * SPACING + 4 * 75 + 30), mask=image_row)
-
-        image_dots = Image.new('RGBA', (XP_LEADERBOARD_WIDTH, 30), color=(0, 0, 0, 0))
-        radius = 10
-
-        draw_dots = ImageDraw.Draw(image_dots)
-        draw_dots.ellipse(
-            ((XP_LEADERBOARD_WIDTH - radius) // 2, (30 - radius) // 2, (XP_LEADERBOARD_WIDTH + radius) // 2,
-             (30 + radius) // 2),
-            fill=(209, 222, 241, 255))
-        draw_dots.ellipse(
-            ((XP_LEADERBOARD_WIDTH - 5 * SPACING - radius) // 2, (30 - radius) // 2,
-             (XP_LEADERBOARD_WIDTH - 5 * SPACING + radius) // 2, (30 + radius) // 2),
-            fill=(209, 222, 241, 255))
-        draw_dots.ellipse(
-            ((XP_LEADERBOARD_WIDTH + 5 * SPACING - radius) // 2, (30 - radius) // 2,
-             (XP_LEADERBOARD_WIDTH + 5 * SPACING + radius) // 2, (30 + radius) // 2),
-            fill=(209, 222, 241, 255))
-
-        image_base.paste(image_dots, (0, 12 * SPACING + 4 * 75), mask=image_dots)
-
-    image_highlight = Image.new('RGBA', (XP_LEADERBOARD_WIDTH, 4 * SPACING + 75), color=(23, 24, 26, 255))
-    image_base.paste(image_highlight, mask=image_base.crop((0, 0, image_highlight.width, image_highlight.height)))
-
-    for i in range(min(5 if target_position < 5 else 4, len(users))):
-        image_row = (await render_row(helpers.utilities.resolve_id(users[i].discord_id), users[i].xp, i + 1)).image
-        image_base.paste(image_row, (0, 2 * SPACING) if i == 0 else (0, (4 + 2 * i) * SPACING + i * 75), mask=image_row)
-
-    return Render(image_base)
+    return await render_generic_leaderboard(render_row, users, target_user, target_position)
 
 
 async def render_xp_levelup(discord_user: discord.User, level_before: int, level_after: int) -> Render:
@@ -1017,9 +1162,9 @@ async def render_xp_levelup(discord_user: discord.User, level_before: int, level
                 avatar.seek(0)
             reset = yield avatar
 
-    image_base = Image.new('RGBA', (XP_LEADERBOARD_WIDTH, 100), color=(0, 0, 0, 0))
+    image_base = Image.new('RGBA', (LEADERBOARD_GENERIC_WIDTH, 100), color=(0, 0, 0, 0))
     draw_base = ImageDraw.Draw(image_base)
-    draw_base.rounded_rectangle((0, 0, XP_LEADERBOARD_WIDTH, 100), fill=(32, 34, 37, 255), radius=15)
+    draw_base.rounded_rectangle((0, 0, LEADERBOARD_GENERIC_WIDTH, 100), fill=(32, 34, 37, 255), radius=15)
 
     image_mask = Image.new('RGBA', (65, 65), (0, 0, 0, 0))
     draw_mask = ImageDraw.Draw(image_mask)
@@ -1085,7 +1230,7 @@ async def render_xp_levelup(discord_user: discord.User, level_before: int, level
 
 
 async def main():
-    (await render_player_card(username='u6mc', type=CardType.Time)).image.show()
+    (await render_time_leaderboard(username='threeleaves')).image.show()
 
 
 if __name__ == '__main__':
