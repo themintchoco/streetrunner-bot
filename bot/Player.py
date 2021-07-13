@@ -12,7 +12,7 @@ PEDDLER_AVATAR = 'images/peddler_avatar.png'
 
 
 class Player(commands.Cog):
-    """rank, infamy, kills, deaths, peddler"""
+    """rank, infamy, kills, kda, deaths, time, peddler"""
 
     def __init__(self, bot):
         self.bot = bot

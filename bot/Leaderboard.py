@@ -6,7 +6,7 @@ from bot.exceptions import UsernameError, NotEnoughDataError
 
 
 class Leaderboard(commands.Cog):
-    """rank, blocks, infamy, kda, kills, deaths, xp"""
+    """rank, blocks, infamy, kda, kills, deaths, time, xp"""
 
     def __init__(self, bot):
         self.bot = bot
