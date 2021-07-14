@@ -935,7 +935,7 @@ async def render_generic_leaderboard(row_factory: Callable[[dict, T], Awaitable[
 
         rows.append((await row_factory({**ctx, 'POSITION': i + 1, 'ROW_HEIGHT': 75 + (2 if i else 4) * SPACING}, entry)).image)
 
-    if i < 5:
+    if target_position > 4:
         rows.append((await row_factory({**ctx, 'POSITION': target_position, 'ROW_HEIGHT': 75 + 4 * SPACING}, target)).image)
         
     rows_height = sum(row.height for row in rows)
