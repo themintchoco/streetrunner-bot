@@ -3,12 +3,12 @@ import os
 import discord
 import sentry_sdk
 
-from bot import card
-from bot.Admin import Admin
-from bot.Player import Player
-from bot.Leaderboard import Leaderboard
-from bot.WebServer import WebServer
-from bot.XP import XP
+from bot.card.XPLevelUp import XPLevelUp
+from bot.cogs.Admin import Admin
+from bot.cogs.Leaderboard import Leaderboard
+from bot.cogs.Player import Player
+from bot.cogs.WebServer import WebServer
+from bot.cogs.XP import XP
 from bot.config import bot
 
 BLACKLISTED_CHANNELS = [797035821630095393]
@@ -29,13 +29,13 @@ async def process_xp(message):
     if not message.author.bot:
         level_before, level_after = await XP.process_message(message)
         if level_after > level_before:
-            render = await card.render_xp_levelup(message.author, level_before, level_after)
+            render = await XPLevelUp(message.author, level_before, level_after).render()
             await message.channel.send(file=discord.File(render.file_animated(format='GIF'), 'xp_levelup.gif'))
 
 
 def is_xp_command(message):
     return message.startswith(f'{bot.command_prefix}xp') or (
-        message.startswith(f'{bot.command_prefix}leaderboard') and message.endswith('xp'))
+            message.startswith(f'{bot.command_prefix}leaderboard') and message.endswith('xp'))
 
 
 @bot.event

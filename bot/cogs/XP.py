@@ -5,8 +5,10 @@ import discord
 from discord.ext import commands
 from sqlalchemy import select
 
-from bot import card
-from bot.card import get_level_from_xp, get_chat_xp
+from bot.api import get_chat_xp
+from bot.card.XPCard import XPCard
+from bot.card.XPLeaderboard import XPLeaderboard
+from helpers.xp import get_level_from_xp
 from store.PostgresClient import PostgresClient
 from store.User import User
 
@@ -58,7 +60,7 @@ class XP(commands.Cog):
         """Displays your current XP and level"""
         if ctx.invoked_subcommand is None:
             async with ctx.typing():
-                render = await card.render_xp_card(discord_user=ctx.author)
+                render = await XPCard(discord_user=ctx.author).render()
 
             if render.multi_frame:
                 await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'xp.gif'))
@@ -69,7 +71,7 @@ class XP(commands.Cog):
     async def xp_leaderboard(self, ctx):
         """Displays the current leaderboard in terms of discord XP"""
         async with ctx.typing():
-            render = await card.render_xp_leaderboard(discord_user=ctx.author)
+            render = await XPLeaderboard(discord_user=ctx.author).render()
         await ctx.send(file=discord.File(render.file(format='PNG'), 'xp_leaderboard.png'))
 
     @xp.error
