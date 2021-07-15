@@ -16,7 +16,7 @@ class Leaderboard(commands.Cog):
         """Displays the current leaderboard!"""
         if ctx.invoked_subcommand is None:
             await ctx.send(
-                f'usage: {self.bot.command_prefix}{ctx.invoked_with} <rank|blocks|infamy|kda|kills|deaths|xp>')
+                f'usage: {self.bot.command_prefix}{ctx.invoked_with} <rank|blocks|infamy|kda|kills|deaths|time|xp>')
 
     @leaderboard.command(name='rank')
     async def leaderboard_rank(self, ctx):
