@@ -4,6 +4,7 @@ import math
 
 from colour import Color
 
+
 class ColorEffect:
     def __init__(self, *color, duration=1, **kwargs):
         self.type = 'static'

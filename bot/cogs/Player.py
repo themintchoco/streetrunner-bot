@@ -1,9 +1,5 @@
-import datetime
-
-import discord
 from discord.ext import commands
 
-from bot import card
 from bot.card.PlayerCard import *
 from bot.exceptions import UsernameError
 

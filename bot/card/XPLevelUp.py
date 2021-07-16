@@ -75,8 +75,6 @@ class XPLevelUp(Renderable):
         draw_arrow.rectangle((10, 20, 20, 30), fill=(77, 189, 138, 255))
 
         font_level = ImageFont.truetype(FONT_BLACK, 24)
-
-        bounds_level_label = draw_base.textbbox((0, 0), 'LEVEL ', font_level)
         bounds_level = draw_base.textbbox((0, 0), str(self._level_after), font_level)
 
         draw_base.text(

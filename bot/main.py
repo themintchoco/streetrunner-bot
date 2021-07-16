@@ -35,7 +35,7 @@ async def process_xp(message):
 
 def is_xp_command(message):
     return message.startswith(f'{bot.command_prefix}xp') or (
-            message.startswith(f'{bot.command_prefix}leaderboard') and message.endswith('xp'))
+        message.startswith(f'{bot.command_prefix}leaderboard') and message.endswith('xp'))
 
 
 @bot.event

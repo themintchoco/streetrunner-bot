@@ -178,7 +178,7 @@ class WebServer(commands.Cog):
                 message = await channel.fetch_message(int(request.match_info['message_id']))
             except discord.NotFound:
                 raise web.HTTPNotFound()
-            except:
+            except Exception:
                 raise web.HTTPInternalServerError()
 
             response = {

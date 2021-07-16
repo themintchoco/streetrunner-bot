@@ -45,24 +45,24 @@ class XPCard(Renderable):
 
         draw_base.text(((XP_CARD_WIDTH
                          - max(bounds_stats_header_right[2], length_stats_right)
-                         - 4 * SPACING) // 2
-                        , 12 * SPACING + 100 + bounds_name[3]),
+                         - 4 * SPACING) // 2,
+                        12 * SPACING + 100 + bounds_name[3]),
                        'LEVEL', (192, 192, 192, 255), font_stats_header, anchor='mt')
         draw_base.text(((XP_CARD_WIDTH
                          + max(bounds_stats_header_left[2], length_stats_left)
-                         + 4 * SPACING) // 2
-                        , 12 * SPACING + 100 + bounds_name[3]),
+                         + 4 * SPACING) // 2,
+                        12 * SPACING + 100 + bounds_name[3]),
                        'XP', (192, 192, 192, 255), font_stats_header, anchor='mt')
 
         draw_base.text(((XP_CARD_WIDTH
                          - max(bounds_stats_header_right[2], length_stats_right)
-                         - 4 * SPACING) // 2
-                        , 13 * SPACING + 100 + bounds_name[3] + bounds_stats_header_left[3]),
+                         - 4 * SPACING) // 2,
+                        13 * SPACING + 100 + bounds_name[3] + bounds_stats_header_left[3]),
                        get_number_representation(get_level_from_xp(xp)), (77, 189, 138, 255), font_stats, anchor='mt')
         draw_base.text(((XP_CARD_WIDTH
                          + max(bounds_stats_header_left[2], length_stats_left)
-                         + 4 * SPACING) // 2
-                        , 13 * SPACING + 100 + bounds_name[3] + bounds_stats_header_right[3]),
+                         + 4 * SPACING) // 2,
+                        13 * SPACING + 100 + bounds_name[3] + bounds_stats_header_right[3]),
                        get_number_representation(xp), (77, 189, 138, 255), font_stats, anchor='mt')
 
         avatar_origin = (XP_CARD_WIDTH // 2, 5 * SPACING + 50)
@@ -82,7 +82,6 @@ class XPCard(Renderable):
 
         try:
             image_avatar = Image.open(BytesIO(await self._discord_user.avatar_url_as(format='gif').read()))
-            image_background = Image.new('RGBA', image_base.size, (54, 57, 63, 255))
 
             frames = []
             for frame in ImageSequence.Iterator(image_avatar):

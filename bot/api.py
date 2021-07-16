@@ -14,7 +14,7 @@ from cachetools import TTLCache
 from bot.cosmetics import titles
 from bot.cosmetics.cosmetics import Cosmetics
 from bot.cosmetics.pets import Pet
-from bot.exceptions import *
+from bot.exceptions import UsernameError, DiscordNotLinkedError, APIError
 from bot.player.leaderboard import LeaderboardType
 from bot.player.stats import PlayerStatsType, PlayerStatsPrison, PlayerStatsArena, PlayerInfo
 from store.RedisClient import RedisClient
@@ -64,10 +64,10 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status == 404:
                 if username:
-                    raise UsernameError({'message': f'The username provided is invalid', 'username': username})
+                    raise UsernameError({'message': 'The username provided is invalid', 'username': username})
                 else:
                     raise DiscordNotLinkedError({
-                        'message': f'You have not linked your Discord account to your Minecraft account. Please link your account using the /discord command in-game. ',
+                        'message': 'You have not linked your Discord account to your Minecraft account. Please link your account using the /discord command in-game. ',
                         'discord_id': discord_user})
             elif r.status != 200:
                 raise APIError(r)
@@ -99,10 +99,10 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status == 404:
                 if username:
-                    raise UsernameError({'message': f'The username provided is invalid', 'username': username})
+                    raise UsernameError({'message': 'The username provided is invalid', 'username': username})
                 else:
                     raise DiscordNotLinkedError({
-                        'message': f'You have not linked your Discord account to your Minecraft account. Please link your account using the /discord command in-game. ',
+                        'message': 'You have not linked your Discord account to your Minecraft account. Please link your account using the /discord command in-game. ',
                         'discord_id': discord_user})
             elif r.status != 200:
                 raise APIError(r)
@@ -154,11 +154,12 @@ async def get_position(*, username: str = None, discord_user: discord.User = Non
                 f'https://streetrunner.dev/api/position/?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}&type={type.name.lower()}',
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status == 404:
-                raise UsernameError({'message': f'The username provided is invalid',
+                raise UsernameError({'message': 'The username provided is invalid',
                                      'username': username}) if username else DiscordNotLinkedError()
             elif r.status != 200:
                 raise APIError(r)
             return (await r.json())[type.name.lower()]
+
 
 async def get_chat_xp(discord_id: List[int], timerange: List[Tuple[datetime.datetime, datetime.datetime]]) -> List[int]:
     query = {'data': [{
@@ -170,7 +171,7 @@ async def get_chat_xp(discord_id: List[int], timerange: List[Tuple[datetime.date
 
     async with aiohttp.ClientSession() as s:
         async with s.post(
-                f'https://streetrunner.dev/api/chat/', json=query,
+                'https://streetrunner.dev/api/chat/', json=query,
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status != 200:
                 raise APIError(r)

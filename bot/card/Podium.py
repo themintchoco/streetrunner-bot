@@ -1,11 +1,11 @@
-import asyncstdlib
+import asyncstdlib as a
 from PIL import Image, ImageDraw, ImageFont
 
 from bot.api import *
 from bot.card.Avatar import Avatar
-from bot.card.card import SPACING, FONT_BLACK, FONT_BOLD
 from bot.card.Render import Render, Renderable
-from bot.exceptions import *
+from bot.card.card import SPACING, FONT_BLACK, FONT_BOLD
+from bot.exceptions import DiscordNotLinkedError, NotEnoughDataError
 from bot.player.leaderboard import LeaderboardType
 from bot.player.stats import PlayerInfo
 from helpers.utilities import get_number_representation
@@ -155,7 +155,7 @@ class Podium(Renderable):
         self._position_length = max(round(draw_highlight.textlength(f'#{self._target_position}', self._font_position)),
                                     4 * SPACING)
 
-        async for i, player_info in asyncstdlib.enumerate(asyncstdlib.islice(self._data, 5 if self._target_position < 8 else 4)):
+        async for i, player_info in a.enumerate(a.islice(self._data, 5 if self._target_position < 8 else 4)):
             additional_rows.append((await self.render_row(player_info, i + 4)).image)
 
         if self._target_position >= 8:

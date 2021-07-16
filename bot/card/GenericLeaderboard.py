@@ -59,7 +59,7 @@ class GenericLeaderboard(Renderable):
 
         ctx = {
             'ROW_WIDTH': LEADERBOARD_GENERIC_WIDTH,
-            'ROW_HEIGHT': 75 + 2 * SPACING
+            'ROW_HEIGHT': 75 + 2 * SPACING,
         }
 
         rows = []
