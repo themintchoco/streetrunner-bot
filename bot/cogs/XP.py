@@ -98,7 +98,7 @@ class XP(commands.Cog):
             await session.commit()
 
     @xp_give.error
-    async def on_command_error(self, ctx, error):
+    async def on_xp_command_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
             return await ctx.send(
                 f'usage: {self.bot.command_prefix}{" ".join(ctx.invoked_parents)} {ctx.invoked_with} <user> <amount>')

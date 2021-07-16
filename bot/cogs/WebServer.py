@@ -17,7 +17,8 @@ class WebServer(commands.Cog):
         self.web_server.start()
 
         self.app = web.Application()
-        asyncio.run(setup(self.app, XForwardedRelaxed(), Secure(), BasicAuth(os.environ['BASIC_USER'], os.environ['BASIC_PASS'], 'realm')))
+        asyncio.run(setup(self.app, XForwardedRelaxed(), Secure(),
+                          BasicAuth(os.environ['BASIC_USER'], os.environ['BASIC_PASS'], 'realm')))
 
         self.routes = web.RouteTableDef()
 

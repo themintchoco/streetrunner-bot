@@ -103,11 +103,14 @@ class Player(commands.Cog):
             await webhook.send('I will be taking my leave soon')
         else:
             hours, minutes = td.seconds // 3600, (td.seconds // 60) % 60
-            await webhook.send(
-                f'I will leave for another mine in around {f"{hours} hours" if hours > 1 else "1 hour" if hours == 1 else ""}{" and " if hours > 0 and minutes > 0 else ""}{f"{minutes} minutes" if minutes > 0 else ""}. ')
+            await webhook.send('I will leave for another mine in around {}{}{}. '.format(
+                f'{hours} hours' if hours > 1 else '1 hour' if hours == 1 else '',
+                ' and ' if hours > 0 and minutes > 0 else '',
+                f'{minutes} minutes' if minutes > 0 else ''
+            ))
 
     @peddler.error
-    async def on_command_error(self, ctx, error):
+    async def on_peddler_command_error(self, ctx, error):
         await self.handle_command_error(ctx, error)
 
     async def handle_command_error(self, ctx, error):

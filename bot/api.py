@@ -58,16 +58,28 @@ async def get_skin(uuid: str) -> dict:
 
 async def get_player_info(*, username: str = None, discord_user: discord.User = None,
                           type: PlayerStatsType = None) -> PlayerInfo:
+
+    query = {}
+
+    if username:
+        query['mc_username'] = urllib.parse.quote(username)
+    else:
+        query['discord_id'] = urllib.parse.quote(str(discord_user.id))
+
+    if type:
+        query['type'] = urllib.parse.quote(type.name.lower())
+
     async with aiohttp.ClientSession() as s:
         async with s.get(
-                f'https://streetrunner.dev/api/player/?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}{f"&type={type.name.lower()}" if type else ""}',
+                f'https://streetrunner.dev/api/player/?{urllib.parse.urlencode(query)}',
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status == 404:
                 if username:
                     raise UsernameError({'message': 'The username provided is invalid', 'username': username})
                 else:
                     raise DiscordNotLinkedError({
-                        'message': 'You have not linked your Discord account to your Minecraft account. Please link your account using the /discord command in-game. ',
+                        'message': 'You have not linked your Discord account to your Minecraft account.'
+                                   'Please link your account using the /discord command in-game. ',
                         'discord_id': discord_user})
             elif r.status != 200:
                 raise APIError(r)
@@ -93,16 +105,25 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
 
 
 async def get_player_cosmetics(*, username: str = None, discord_user: discord.User = None) -> List[Cosmetics]:
+
+    query = {}
+
+    if username:
+        query['mc_username'] = urllib.parse.quote(username)
+    else:
+        query['discord_id'] = urllib.parse.quote(str(discord_user.id))
+
     async with aiohttp.ClientSession() as s:
         async with s.get(
-                f'https://streetrunner.dev/api/cosmetic/?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}',
+                f'https://streetrunner.dev/api/cosmetic/?{urllib.parse.urlencode(query)}',
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status == 404:
                 if username:
                     raise UsernameError({'message': 'The username provided is invalid', 'username': username})
                 else:
                     raise DiscordNotLinkedError({
-                        'message': 'You have not linked your Discord account to your Minecraft account. Please link your account using the /discord command in-game. ',
+                        'message': 'You have not linked your Discord account to your Minecraft account. '
+                                   'Please link your account using the /discord command in-game. ',
                         'discord_id': discord_user})
             elif r.status != 200:
                 raise APIError(r)
@@ -121,9 +142,12 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
 
 
 async def get_leaderboard(type: LeaderboardType) -> AsyncGenerator[PlayerInfo, None]:
+
+    query = {'type': urllib.parse.quote(type.name.lower())}
+
     async with aiohttp.ClientSession() as s:
         async with s.get(
-                f'https://streetrunner.dev/api/leaderboard/?type={type.name.lower()}',
+                f'https://streetrunner.dev/api/leaderboard/?{urllib.parse.urlencode(query)}',
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status != 200:
                 raise APIError(r)
@@ -149,9 +173,17 @@ async def get_leaderboard(type: LeaderboardType) -> AsyncGenerator[PlayerInfo, N
 
 
 async def get_position(*, username: str = None, discord_user: discord.User = None, type: LeaderboardType) -> int:
+
+    query = {'type': urllib.parse.quote(type.name.lower())}
+
+    if username:
+        query['mc_username'] = urllib.parse.quote(username)
+    else:
+        query['discord_id'] = urllib.parse.quote(str(discord_user.id))
+
     async with aiohttp.ClientSession() as s:
         async with s.get(
-                f'https://streetrunner.dev/api/position/?{("mc_username=" + urllib.parse.quote(username)) if username else ("discord_id=" + urllib.parse.quote(str(discord_user.id)))}&type={type.name.lower()}',
+                f'https://streetrunner.dev/api/position/?{urllib.parse.urlencode(query)}',
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status == 404:
                 raise UsernameError({'message': 'The username provided is invalid',
