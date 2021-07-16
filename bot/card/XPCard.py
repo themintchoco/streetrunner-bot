@@ -1,5 +1,6 @@
 from bot.api import *
-from bot.card.card import Render, Renderable, SPACING, FONT_BLACK, FONT_BOLD, FONT_LIGHT
+from bot.card.card import SPACING, FONT_BLACK, FONT_BOLD, FONT_LIGHT
+from bot.card.Render import Render, Renderable
 from helpers.utilities import get_number_representation
 from helpers.xp import get_level_from_xp, get_min_xp_for_level, get_xp
 

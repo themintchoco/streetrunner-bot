@@ -1,7 +1,8 @@
 from typing import Iterable, Optional
 
-from bot.api import *
-from bot.card.card import Render, Renderable, SPACING
+from bot.card.card import SPACING
+from bot.card.Render import Render, Renderable
+from bot.player.stats import PlayerInfo
 
 T = TypeVar('T')
 LEADERBOARD_GENERIC_WIDTH = 580

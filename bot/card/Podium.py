@@ -1,7 +1,10 @@
 from bot.api import *
 from bot.card.Avatar import Avatar
-from bot.card.card import Render, Renderable, SPACING, FONT_BLACK, FONT_BOLD
+from bot.card.card import SPACING, FONT_BLACK, FONT_BOLD
+from bot.card.Render import Render, Renderable
 from bot.exceptions import *
+from bot.player.leaderboard import LeaderboardType
+from bot.player.stats import PlayerInfo
 from helpers.utilities import get_number_representation
 
 LEADERBOARD_PODIUM_WIDTH = 540

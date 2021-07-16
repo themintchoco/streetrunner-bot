@@ -1,7 +1,7 @@
 from PIL import Image
 
 from bot.api import get_skin
-from bot.card.card import Render, Renderable
+from bot.card.Render import Render, Renderable
 
 
 class Avatar(Renderable):

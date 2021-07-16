@@ -3,8 +3,11 @@ from typing import Iterable, Optional
 from bot.api import *
 from bot.card.Avatar import Avatar
 from bot.card.GenericLeaderboard import GenericLeaderboard
-from bot.card.card import Render, SPACING, FONT_BLACK, FONT_BOLD
+from bot.card.card import SPACING, FONT_BLACK, FONT_BOLD
+from bot.card.Render import Render
 from bot.exceptions import *
+from bot.player.leaderboard import LeaderboardType
+from bot.player.stats import PlayerInfo
 from helpers.utilities import get_timedelta_representation
 
 

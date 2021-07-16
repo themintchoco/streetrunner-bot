@@ -1,74 +1,23 @@
-import asyncio
 import base64
 import datetime
 import json
 import os
-import random
 import urllib
-from enum import Enum
 from io import BytesIO
-from typing import AsyncGenerator, Awaitable, Callable, List, Tuple, TypeVar
+from typing import AsyncGenerator, List, Tuple
 
 import aiohttp
-import asyncstdlib as a
 import discord
-from PIL import Image, ImageDraw, ImageFont, ImageSequence
 from asyncache import cached
 from cachetools import TTLCache
-from sqlalchemy import select
 
-import helpers.utilities
 from bot.cosmetics import titles
-from bot.cosmetics.cosmetics import Cosmetics, CosmeticsType
-from bot.cosmetics.titles import Title
+from bot.cosmetics.cosmetics import Cosmetics
 from bot.cosmetics.pets import Pet
 from bot.exceptions import *
-from helpers.pil_transparent_gifs import save_transparent_gif
-from store.PostgresClient import PostgresClient
+from bot.player.leaderboard import LeaderboardType
+from bot.player.stats import PlayerStatsType, PlayerStatsPrison, PlayerStatsArena, PlayerInfo
 from store.RedisClient import RedisClient
-from store.User import User
-
-
-class PlayerStatsType(Enum):
-    Prison, Arena = range(2)
-
-
-class LeaderboardType(Enum):
-    Rank, Kda, Kills, Blocks, Infamy, Deaths, Time = range(7)
-
-
-class PlayerStats:
-    def __init__(self, **kwargs):
-        self.type = kwargs['type']
-
-
-class PlayerStatsPrison(PlayerStats):
-    def __init__(self, **kwargs):
-        super().__init__(type=PlayerStatsType.Prison)
-        self.rank = kwargs['rank']
-        self.blocks = kwargs['blocks']
-
-
-class PlayerStatsArena(PlayerStats):
-    def __init__(self, **kwargs):
-        super().__init__(type=PlayerStatsType.Arena)
-        self.infamy = kwargs['infamy']
-        self.kills = kwargs['kills']
-        self.deaths = kwargs['deaths']
-        self.assists = kwargs['assists']
-
-    @property
-    def kda(self) -> float:
-        return round((self.kills + self.assists) / max(self.deaths, 1), 2)
-
-
-class PlayerInfo:
-    def __init__(self, uuid, username, **kwargs):
-        self.uuid = uuid
-        self.username = username
-        self.stats_prison = kwargs.get('stats_prison', None)
-        self.stats_arena = kwargs.get('stats_arena', None)
-        self.time_played = kwargs.get('time_played', None)
 
 
 @cached(cache=TTLCache(maxsize=1024, ttl=86400))
