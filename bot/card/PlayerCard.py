@@ -169,7 +169,7 @@ class DeathsCard(PlayerCard):
 
 class TimeCard(PlayerCard):
     def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, random.choice(['images/prison.png', 'images/arena.png']))
+        super().__init__(username, discord_user, random.choice(['images/prison.png', 'images/arena.png']))  # noqa: S311
 
     def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [

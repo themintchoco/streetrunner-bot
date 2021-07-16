@@ -217,7 +217,7 @@ class WebServer(commands.Cog):
     async def web_server(self):
         runner = web.AppRunner(self.app)
         await runner.setup()
-        await web.TCPSite(runner, host='0.0.0.0', port=self.webserver_port).start()
+        await web.TCPSite(runner, host='0.0.0.0', port=self.webserver_port).start()  # noqa: S104
 
     @web_server.before_loop
     async def web_server_before_loop(self):

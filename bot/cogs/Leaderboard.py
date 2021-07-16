@@ -107,7 +107,7 @@ class Leaderboard(commands.Cog):
 
             if isinstance(error.original, NotEnoughDataError):
                 return await ctx.send(
-                    f'There isn’t enough data to display the leaderboard at the moment. Please try again later!')
+                    'There isn’t enough data to display the leaderboard at the moment. Please try again later!')
 
         await self.handle_command_error(ctx, error)
 

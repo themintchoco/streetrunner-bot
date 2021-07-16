@@ -1,3 +1,5 @@
+# flake8: noqa
+#
 # https://gist.github.com/egocarib/ea022799cca8a102d14c54a22c45efe0
 #
 # This code adapted from https://github.com/python-pillow/Pillow/issues/4644 to resolve an issue

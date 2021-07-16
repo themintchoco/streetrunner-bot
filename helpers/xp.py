@@ -7,6 +7,7 @@ from bot.api import get_chat_xp
 from store.PostgresClient import PostgresClient
 from store.User import User
 
+
 def get_level_from_xp(xp: int) -> int:
     i = 1
     while True:
@@ -25,7 +26,7 @@ async def get_xp(discord_user: discord.User):
     async with PostgresClient().session() as session:
         user = (await session.execute(
             select(User)
-                    .where(User.discord_id == discord_user.id)
+                .where(User.discord_id == discord_user.id)
         )).scalar()
 
         if not user:
