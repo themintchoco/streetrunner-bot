@@ -1,4 +1,6 @@
-from typing import Iterable, Optional
+from typing import Iterable, Optional, TypeVar
+
+from PIL import Image, ImageDraw
 
 from bot.card.card import SPACING
 from bot.card.Render import Render, Renderable

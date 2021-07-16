@@ -1,3 +1,5 @@
+import asyncio
+
 SPACING = 12
 
 FONT_BLACK = 'fonts/Roboto-Black.ttf'

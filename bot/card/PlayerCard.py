@@ -1,7 +1,12 @@
+import random
+
+from PIL import ImageFont, ImageDraw, Image
+
 from bot.api import *
 from bot.card.PlayerModel import PlayerModel
 from bot.card.card import SPACING, FONT_BLACK, FONT_BOLD, FONT_REGULAR, FONT_LIGHT
 from bot.card.Render import Render, Renderable
+from bot.cosmetics.cosmetics import CosmeticsType
 from bot.player.stats import PlayerInfo
 from helpers.utilities import get_number_representation, get_timedelta_representation
 

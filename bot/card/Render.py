@@ -1,5 +1,7 @@
 from io import BytesIO
 
+from PIL import Image
+
 from helpers.pil_transparent_gifs import save_transparent_gif
 
 

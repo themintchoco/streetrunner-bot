@@ -1,5 +1,7 @@
 from typing import Iterable, Optional
 
+from PIL import Image, ImageDraw, ImageFont
+
 from bot.api import *
 from bot.card.Avatar import Avatar
 from bot.card.GenericLeaderboard import GenericLeaderboard

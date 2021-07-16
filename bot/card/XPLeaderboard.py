@@ -1,5 +1,8 @@
 from typing import Iterable, Optional
 
+from PIL import Image, ImageDraw, ImageFont
+from aiohttp import helpers
+
 from bot.api import *
 from bot.card.GenericLeaderboard import GenericLeaderboard
 from bot.card.card import SPACING, FONT_BLACK, FONT_BOLD, FONT_LIGHT
