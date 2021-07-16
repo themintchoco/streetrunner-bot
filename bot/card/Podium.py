@@ -1,3 +1,4 @@
+import asyncstdlib
 from PIL import Image, ImageDraw, ImageFont
 
 from bot.api import *
@@ -154,7 +155,7 @@ class Podium(Renderable):
         self._position_length = max(round(draw_highlight.textlength(f'#{self._target_position}', self._font_position)),
                                     4 * SPACING)
 
-        async for i, player_info in a.enumerate(a.islice(self._data, 5 if self._target_position < 8 else 4)):
+        async for i, player_info in asyncstdlib.enumerate(asyncstdlib.islice(self._data, 5 if self._target_position < 8 else 4)):
             additional_rows.append((await self.render_row(player_info, i + 4)).image)
 
         if self._target_position >= 8:
