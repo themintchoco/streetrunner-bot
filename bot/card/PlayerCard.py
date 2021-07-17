@@ -1,11 +1,13 @@
 import random
+from typing import List, Tuple
 
-from PIL import ImageFont, ImageDraw, Image
+import discord
+from PIL import Image, ImageDraw, ImageFont
 
-from bot.api import *
+from bot.api import get_player_cosmetics, get_player_info
 from bot.card.PlayerModel import PlayerModel
-from bot.card.card import SPACING, FONT_BLACK, FONT_BOLD, FONT_REGULAR, FONT_LIGHT
 from bot.card.Render import Render, Renderable
+from bot.card.card import FONT_BLACK, FONT_BOLD, FONT_LIGHT, FONT_REGULAR, SPACING
 from bot.cosmetics.cosmetics import CosmeticsType
 from bot.player.stats import PlayerInfo
 from helpers.utilities import get_number_representation, get_timedelta_representation

@@ -1,10 +1,10 @@
 import discord
 from discord.ext import commands
 
-from bot.card.Podium import *
+from bot.card.Podium import BlocksPodium, DeathsPodium, InfamyPodium, KdaPodium, KillsPodium, RankPodium
 from bot.card.TimeLeaderboard import TimeLeaderboard
 from bot.card.XPLeaderboard import XPLeaderboard
-from bot.exceptions import UsernameError, NotEnoughDataError
+from bot.exceptions import NotEnoughDataError, UsernameError
 
 
 class Leaderboard(commands.Cog):

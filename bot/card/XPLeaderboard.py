@@ -1,15 +1,16 @@
+from io import BytesIO
 from typing import Iterable, Optional
 
+import discord
 from PIL import Image, ImageDraw, ImageFont
 from aiohttp import helpers
 
-from bot.api import *
 from bot.card.GenericLeaderboard import GenericLeaderboard
-from bot.card.card import SPACING, FONT_BLACK, FONT_BOLD, FONT_LIGHT
 from bot.card.Render import Render
+from bot.card.card import FONT_BLACK, FONT_BOLD, FONT_LIGHT, SPACING
 from bot.player.stats import PlayerInfo
 from helpers.utilities import get_number_representation
-from helpers.xp import get_level_from_xp, get_min_xp_for_level, get_all_xp
+from helpers.xp import get_all_xp, get_level_from_xp, get_min_xp_for_level
 
 
 class XPLeaderboard(GenericLeaderboard):

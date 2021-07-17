@@ -4,11 +4,11 @@ import os
 
 import discord
 from aiohttp import web
-from aiohttp_apispec import docs, response_schema, querystring_schema, setup_aiohttp_apispec
+from aiohttp_apispec import docs, querystring_schema, response_schema, setup_aiohttp_apispec
 from aiohttp_remotes import BasicAuth, Secure, XForwardedRelaxed, setup
 from discord.ext import commands, tasks
 
-from docs.schema import *
+from docs.schema import ChannelSchema, MessageQuerySchema, MessageSchema, UserSchema
 
 
 class WebServer(commands.Cog):

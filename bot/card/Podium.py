@@ -1,10 +1,11 @@
 import asyncstdlib as a
+import discord
 from PIL import Image, ImageDraw, ImageFont
 
-from bot.api import *
+from bot.api import get_leaderboard, get_player_info, get_position
 from bot.card.Avatar import Avatar
 from bot.card.Render import Render, Renderable
-from bot.card.card import SPACING, FONT_BLACK, FONT_BOLD
+from bot.card.card import FONT_BLACK, FONT_BOLD, SPACING
 from bot.exceptions import DiscordNotLinkedError, NotEnoughDataError
 from bot.player.leaderboard import LeaderboardType
 from bot.player.stats import PlayerInfo

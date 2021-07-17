@@ -1,6 +1,9 @@
+import datetime
+
+import discord
 from discord.ext import commands
 
-from bot.card.PlayerCard import *
+from bot.card.PlayerCard import DeathsCard, InfamyCard, KdaCard, KillsCard, RankCard, TimeCard
 from bot.exceptions import UsernameError
 
 PEDDLER_NAME = 'Luthor'

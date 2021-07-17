@@ -1,8 +1,10 @@
+from io import BytesIO
+
+import discord
 from PIL import Image, ImageDraw, ImageFont
 
-from bot.api import *
 from bot.card.Render import Render, Renderable
-from bot.card.card import SPACING, FONT_BLACK, FONT_BOLD, FONT_LIGHT
+from bot.card.card import FONT_BLACK, FONT_BOLD, FONT_LIGHT, SPACING
 
 XP_LEVELUP_WIDTH = 580
 
@@ -58,7 +60,8 @@ class XPLevelUp(Renderable):
         length_level = draw_base.textlength(str(self._level_after), font_level)
         length_level_label = draw_base.textlength('LEVEL ', font_level)
 
-        if (width_required := 12 * SPACING + 65 + length_name + length_discrim + length_level_label + length_level) > image_base.width:
+        width_required = 12 * SPACING + 65 + length_name + length_discrim + length_level_label + length_level
+        if width_required > image_base.width:
             image_base = Image.new('RGBA', (int(width_required), 100), color=(0, 0, 0, 0))
             draw_base = ImageDraw.Draw(image_base)
 

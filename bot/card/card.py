@@ -17,8 +17,10 @@ async def main():
     @bot.event
     async def on_ready():
         nonlocal ready
-        if not ready:
-            ready = True
+        if ready:
+            return
+
+        ready = True
 
         from helpers.utilities import resolve_id
         from bot.card.XPLevelUp import XPLevelUp

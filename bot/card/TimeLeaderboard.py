@@ -1,13 +1,14 @@
 from typing import Iterable, Optional
 
+import discord
 from PIL import Image, ImageDraw, ImageFont
 
-from bot.api import *
+from bot.api import get_leaderboard, get_player_info, get_position
 from bot.card.Avatar import Avatar
 from bot.card.GenericLeaderboard import GenericLeaderboard
-from bot.card.card import SPACING, FONT_BLACK, FONT_BOLD
 from bot.card.Render import Render
-from bot.exceptions import *
+from bot.card.card import FONT_BLACK, FONT_BOLD, SPACING
+from bot.exceptions import DiscordNotLinkedError
 from bot.player.leaderboard import LeaderboardType
 from bot.player.stats import PlayerInfo
 from helpers.utilities import get_timedelta_representation
