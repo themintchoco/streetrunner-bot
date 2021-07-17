@@ -24,10 +24,7 @@ def get_min_xp_for_level(level: int) -> int:
 
 async def get_xp(discord_user: discord.User):
     async with PostgresClient().session() as session:
-        user = (await session.execute(
-            select(User)
-                .where(User.discord_id == discord_user.id)
-        )).scalar()
+        user = (await session.execute(select(User).where(User.discord_id == discord_user.id))).scalar()
 
         if not user:
             user = User(discord_id=discord_user.id,

@@ -9,10 +9,26 @@ FONT_LIGHT = 'fonts/Roboto-Light.ttf'
 
 
 async def main():
-    from bot.card.TimeLeaderboard import TimeLeaderboard
-    (await TimeLeaderboard(username='threeleaves').render()).image.show()
+    import os
+    from bot.config import bot
+
+    ready = False
+
+    @bot.event
+    async def on_ready():
+        nonlocal ready
+        if not ready:
+            ready = True
+
+        from helpers.utilities import resolve_id
+        from bot.card.XPLevelUp import XPLevelUp
+        (await XPLevelUp(discord_user=resolve_id(244801669043453953),
+                         level_before=12, level_after=69).render()).image.show()
+
+        await bot.close()
+
+    await bot.start(os.environ['TOKEN'])
 
 
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    asyncio.run(main())

@@ -33,7 +33,7 @@ class Render:
 
     def file_animated(self, *args, **kwargs) -> BytesIO:
         fp = BytesIO()
-        save_transparent_gif(self._images, 1, fp)
+        save_transparent_gif(self._images, 1, fp, **kwargs)
         # self.image.save(fp, save_all=True, append_images=self._images[1:], *args, **kwargs)
         fp.seek(0)
 

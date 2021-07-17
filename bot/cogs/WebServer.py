@@ -44,7 +44,7 @@ class WebServer(commands.Cog):
                     response.append({
                         'id': channel.id,
                         'name': channel.name,
-                        'category': channel.category.name if channel.category else None
+                        'category': channel.category.name if channel.category else None,
                     })
 
             return web.json_response(response)
@@ -88,7 +88,7 @@ class WebServer(commands.Cog):
                 'username': user.name,
                 'discriminator': user.discriminator,
                 'nickname': user.display_name,
-                'avatar': str(user.avatar_url)
+                'avatar': str(user.avatar_url),
             })
 
         @docs(
@@ -133,7 +133,7 @@ class WebServer(commands.Cog):
                 'username': member.name,
                 'discriminator': member.discriminator,
                 'nickname': member.display_name,
-                'avatar': str(member.avatar_url)
+                'avatar': str(member.avatar_url),
             })
 
         @docs(
@@ -184,7 +184,7 @@ class WebServer(commands.Cog):
 
             response = {
                 'author': message.author.id,
-                'content': message.content
+                'content': message.content,
             }
 
             if 'embeds' in request.query:
@@ -195,7 +195,7 @@ class WebServer(commands.Cog):
                 for reaction in message.reactions:
                     response['reactions'].append({
                         'reaction': reaction.emoji if isinstance(reaction.emoji, str) else reaction.emoji.name,
-                        'users': [user.id async for user in reaction.users()]
+                        'users': [user.id async for user in reaction.users()],
                     })
 
             return web.json_response(response)
@@ -208,7 +208,7 @@ class WebServer(commands.Cog):
             title='StreetRunner Bot API',
             info={'description': 'A simple REST API to interface with StreetRunner Bot'},
             securityDefinitions={
-                'BasicAuth': {'type': 'basic', 'name': 'Authorization', 'in': 'header'}
+                'BasicAuth': {'type': 'basic', 'name': 'Authorization', 'in': 'header'},
             },
             version='v1.3.0',
             url='/swagger.json',

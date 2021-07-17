@@ -119,7 +119,7 @@ class RankCard(PlayerCard):
     def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('RANK', player_info.stats_prison.rank),
-            ('BLOCKS MINED', get_number_representation(player_info.stats_prison.blocks))
+            ('BLOCKS MINED', get_number_representation(player_info.stats_prison.blocks)),
         ]
 
 
@@ -130,7 +130,7 @@ class InfamyCard(PlayerCard):
     def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('INFAMY', str(player_info.stats_arena.infamy)),
-            ('KDA', str(player_info.stats_arena.kda))
+            ('KDA', str(player_info.stats_arena.kda)),
         ]
 
 
@@ -141,7 +141,7 @@ class KillsCard(PlayerCard):
     def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('KILLS', str(player_info.stats_arena.kills)),
-            ('ASSISTS', str(player_info.stats_arena.assists))
+            ('ASSISTS', str(player_info.stats_arena.assists)),
         ]
 
 
@@ -152,7 +152,7 @@ class KdaCard(PlayerCard):
     def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('KILLS', str(player_info.stats_arena.kills)),
-            ('KDA', str(player_info.stats_arena.kda))
+            ('KDA', str(player_info.stats_arena.kda)),
         ]
 
 
@@ -163,7 +163,7 @@ class DeathsCard(PlayerCard):
     def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('DEATHS', str(player_info.stats_arena.deaths)),
-            ('KDA', str(player_info.stats_arena.kda))
+            ('KDA', str(player_info.stats_arena.kda)),
         ]
 
 
@@ -174,5 +174,5 @@ class TimeCard(PlayerCard):
     def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('TIME PLAYED', get_timedelta_representation(player_info.time_played)),
-            ('', '')
+            ('', ''),
         ]

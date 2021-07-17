@@ -29,10 +29,7 @@ class XP(commands.Cog):
         XP.xp_cooldown[message.author.id] = True
 
         async with PostgresClient().session() as session:
-            user = (await session.execute(
-                select(User)
-                    .where(User.discord_id == message.author.id)
-            )).scalar()
+            user = (await session.execute(select(User).where(User.discord_id == message.author.id))).scalar()
 
             if not user:
                 user = User(discord_id=message.author.id,
@@ -83,10 +80,7 @@ class XP(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def xp_give(self, ctx, target_user: discord.User, xp: int):
         async with PostgresClient().session() as session:
-            user = (await session.execute(
-                select(User)
-                    .where(User.discord_id == target_user.id)
-            )).scalar()
+            user = (await session.execute(select(User).where(User.discord_id == target_user.id))).scalar()
 
             if not user:
                 user = User(discord_id=target_user.id,

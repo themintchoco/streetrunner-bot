@@ -106,7 +106,7 @@ class Player(commands.Cog):
             await webhook.send('I will leave for another mine in around {}{}{}. '.format(
                 f'{hours} hours' if hours > 1 else '1 hour' if hours == 1 else '',
                 ' and ' if hours > 0 and minutes > 0 else '',
-                f'{minutes} minutes' if minutes > 0 else ''
+                f'{minutes} minutes' if minutes > 0 else '',
             ))
 
     @peddler.error

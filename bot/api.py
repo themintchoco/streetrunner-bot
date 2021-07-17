@@ -14,9 +14,9 @@ from cachetools import TTLCache
 from bot.cosmetics import titles
 from bot.cosmetics.cosmetics import Cosmetics
 from bot.cosmetics.pets import Pet
-from bot.exceptions import UsernameError, DiscordNotLinkedError, APIError
+from bot.exceptions import APIError, DiscordNotLinkedError, UsernameError
 from bot.player.leaderboard import LeaderboardType
-from bot.player.stats import PlayerStatsType, PlayerStatsPrison, PlayerStatsArena, PlayerInfo
+from bot.player.stats import PlayerInfo, PlayerStatsArena, PlayerStatsPrison, PlayerStatsType
 from store.RedisClient import RedisClient
 
 
@@ -26,7 +26,7 @@ async def get_skin(uuid: str) -> dict:
     if cached := conn.hgetall(f'skins:{uuid}'):
         return {
             'skin': BytesIO(base64.b64decode(cached[b'skin'])),
-            'slim': cached[b'slim'] == b'1'
+            'slim': cached[b'slim'] == b'1',
         }
 
     async with aiohttp.ClientSession() as s:
@@ -44,21 +44,20 @@ async def get_skin(uuid: str) -> dict:
 
                     conn.hset(f'skins:{uuid}', mapping={
                         'skin': base64.b64encode(skin).decode(),
-                        'slim': 1 if skin_data.get('metadata', {}).get('model', '') == 'slim' else 0
+                        'slim': 1 if skin_data.get('metadata', {}).get('model', '') == 'slim' else 0,
                     })
 
                     conn.expire(f'skins:{uuid}', datetime.timedelta(days=1))
 
                     return {
                         'skin': BytesIO(skin),
-                        'slim': skin_data.get('metadata', {}).get('model', '') == 'slim'
+                        'slim': skin_data.get('metadata', {}).get('model', '') == 'slim',
                     }
             raise
 
 
 async def get_player_info(*, username: str = None, discord_user: discord.User = None,
                           type: PlayerStatsType = None) -> PlayerInfo:
-
     query = {}
 
     if username:
@@ -105,7 +104,6 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
 
 
 async def get_player_cosmetics(*, username: str = None, discord_user: discord.User = None) -> List[Cosmetics]:
-
     query = {}
 
     if username:
@@ -142,7 +140,6 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
 
 
 async def get_leaderboard(type: LeaderboardType) -> AsyncGenerator[PlayerInfo, None]:
-
     query = {'type': urllib.parse.quote(type.name.lower())}
 
     async with aiohttp.ClientSession() as s:
@@ -173,7 +170,6 @@ async def get_leaderboard(type: LeaderboardType) -> AsyncGenerator[PlayerInfo, N
 
 
 async def get_position(*, username: str = None, discord_user: discord.User = None, type: LeaderboardType) -> int:
-
     query = {'type': urllib.parse.quote(type.name.lower())}
 
     if username:
@@ -197,7 +193,7 @@ async def get_chat_xp(discord_id: List[int], timerange: List[Tuple[datetime.date
     query = {'data': [{
         'discord_id': str(discord_id[i]),
         'start': int(timerange[i][0].timestamp()),
-        'end': int(timerange[i][1].timestamp())
+        'end': int(timerange[i][1].timestamp()),
     } for i in range(len(discord_id))],
         'cooldown': 8}
 

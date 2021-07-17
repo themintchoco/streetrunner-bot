@@ -50,7 +50,7 @@ class TimeLeaderboard(GenericLeaderboard):
             (212, 175, 55, 255),
             (154, 197, 219, 255),
             (220, 127, 100, 255),
-            (214, 214, 214, 255)
+            (214, 214, 214, 255),
         ][min(ctx['POSITION'] - 1, 3)]
 
         draw_row.text((2 * SPACING + self._position_length, image_row.height // 2),

@@ -15,7 +15,7 @@ BLACKLISTED_CHANNELS = [797035821630095393]
 
 sentry_sdk.init(
     'https://7b74da9447304a35b6f8c49da4fd09f1@o737869.ingest.sentry.io/5785215',
-    traces_sample_rate=1.0
+    traces_sample_rate=1.0,
 )
 
 bot.add_cog(Player(bot))
