@@ -3,13 +3,12 @@ from typing import Iterable, Optional
 
 import discord
 from PIL import Image, ImageDraw, ImageFont
-from aiohttp import helpers
 
 from bot.card.GenericLeaderboard import GenericLeaderboard
 from bot.card.Render import Render
 from bot.card.card import FONT_BLACK, FONT_BOLD, FONT_LIGHT, SPACING
 from bot.player.stats import PlayerInfo
-from helpers.utilities import get_number_representation
+from helpers.utilities import get_number_representation, resolve_id
 from helpers.xp import get_all_xp, get_level_from_xp, get_min_xp_for_level
 
 
@@ -31,7 +30,7 @@ class XPLeaderboard(GenericLeaderboard):
         return self._target_position
 
     async def render_row(self, ctx, user) -> Render:
-        discord_user = helpers.utilities.resolve_id(user.discord_id)
+        discord_user = resolve_id(user.discord_id)
 
         image_row = Image.new('RGBA', (ctx['ROW_WIDTH'], ctx['ROW_HEIGHT']), color=(0, 0, 0, 0))
         draw_row = ImageDraw.Draw(image_row)
