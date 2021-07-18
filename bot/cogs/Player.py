@@ -19,7 +19,8 @@ class Player(commands.Cog):
     @commands.command(aliases=['prison'])
     async def rank(self, ctx, username: str = None):
         """Displays player Prison stats"""
-        render = await RankCard(username=username, discord_user=ctx.author).render()
+        async with ctx.typing():
+            render = await RankCard(username=username, discord_user=ctx.author).render()
 
         if render.multi_frame:
             await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
@@ -29,7 +30,8 @@ class Player(commands.Cog):
     @commands.command(aliases=['arena'])
     async def infamy(self, ctx, username: str = None):
         """Displays player Arena stats"""
-        render = await InfamyCard(username=username, discord_user=ctx.author).render()
+        async with ctx.typing():
+            render = await InfamyCard(username=username, discord_user=ctx.author).render()
 
         if render.multi_frame:
             await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
@@ -39,7 +41,8 @@ class Player(commands.Cog):
     @commands.command()
     async def kills(self, ctx, username: str = None):
         """Displays player Arena kill stats"""
-        render = await KillsCard(username=username, discord_user=ctx.author).render()
+        async with ctx.typing():
+            render = await KillsCard(username=username, discord_user=ctx.author).render()
 
         if render.multi_frame:
             await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
@@ -49,7 +52,8 @@ class Player(commands.Cog):
     @commands.command()
     async def kda(self, ctx, username: str = None):
         """Displays player Arena kda stats"""
-        render = await KdaCard(username=username, discord_user=ctx.author).render()
+        async with ctx.typing():
+            render = await KdaCard(username=username, discord_user=ctx.author).render()
 
         if render.multi_frame:
             await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
@@ -59,7 +63,8 @@ class Player(commands.Cog):
     @commands.command()
     async def deaths(self, ctx, username: str = None):
         """Displays player Arena death stats"""
-        render = await DeathsCard(username=username, discord_user=ctx.author).render()
+        async with ctx.typing():
+            render = await DeathsCard(username=username, discord_user=ctx.author).render()
 
         if render.multi_frame:
             await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
@@ -69,7 +74,8 @@ class Player(commands.Cog):
     @commands.command()
     async def time(self, ctx, username: str = None):
         """Displays player time"""
-        render = await TimeCard(username=username, discord_user=ctx.author).render()
+        async with ctx.typing():
+            render = await TimeCard(username=username, discord_user=ctx.author).render()
 
         if render.multi_frame:
             await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
