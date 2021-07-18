@@ -44,10 +44,23 @@ class PlayerCard(Renderable):
         image_base = Image.new('RGBA', (PLAYER_CARD_WIDTH, PLAYER_CARD_HEIGHT), color=(0, 0, 0, 0))
         draw_base = ImageDraw.Draw(image_base)
 
-        image_background = Image.open(self._background)
+        font_username = ImageFont.truetype(FONT_BOLD, 36)
+        font_stats_header = ImageFont.truetype(FONT_LIGHT, 18)
+        font_stats = ImageFont.truetype(FONT_BLACK, 54)
 
-        if image_background.width != PLAYER_CARD_WIDTH or image_background.height != PLAYER_CARD_HEIGHT:
-            image_background = image_background.resize((PLAYER_CARD_WIDTH, PLAYER_CARD_HEIGHT))
+        length_name = draw_base.textlength(player_info.username, font_username)
+
+        width_required = 12 * SPACING + image_skin.width + length_name
+        for cosmetic in player_cosmetics:
+            if cosmetic.type == CosmeticsType.Title:
+                width_required += 135
+
+        if width_required > PLAYER_CARD_WIDTH:
+            image_base = Image.new('RGBA', (int(width_required), PLAYER_CARD_HEIGHT), color=(0, 0, 0, 0))
+            draw_base = ImageDraw.Draw(image_base)
+
+        image_background = image_base.copy()
+        image_background.paste(Image.open(self._background))
 
         image_mask = image_base.copy()
         draw_mask = ImageDraw.Draw(image_mask)
@@ -56,16 +69,16 @@ class PlayerCard(Renderable):
              PLAYER_CARD_HEIGHT + 8 * SPACING),
             fill=(255, 255, 255, 255))
 
-        image_mask.paste(image_background, mask=image_mask)
+        image_mask.paste(image_background, (0, 0), mask=image_mask)
 
         image_card = image_base.copy()
         draw_card = ImageDraw.Draw(image_card)
-        draw_card.rounded_rectangle((SPACING, SPACING, PLAYER_CARD_WIDTH - SPACING, PLAYER_CARD_HEIGHT - SPACING),
+        draw_card.rounded_rectangle((SPACING, SPACING, image_base.width - SPACING, image_base.height - SPACING),
                                     fill=(255, 255, 255, 255), radius=15)
 
-        image_card.paste(image_mask, mask=image_card)
+        image_card.paste(image_mask, (0, 0), mask=image_card)
 
-        draw_base.rounded_rectangle((SPACING, SPACING, PLAYER_CARD_WIDTH - SPACING, PLAYER_CARD_HEIGHT - SPACING),
+        draw_base.rounded_rectangle((SPACING, SPACING, image_base.width - SPACING, image_base.height - SPACING),
                                     fill=(32, 34, 37, 255), radius=15)
         image_base.paste(image_card, mask=image_card)
 
@@ -73,12 +86,8 @@ class PlayerCard(Renderable):
 
         image_base.paste(image_skin, (5 * SPACING, 2 * SPACING), mask=image_skin)
 
-        font_username = ImageFont.truetype(FONT_BOLD, 36)
         draw_base.text((10 * SPACING + image_skin.width, 3 * SPACING), player_info.username, (235, 235, 235),
                        font_username)
-
-        font_stats_header = ImageFont.truetype(FONT_LIGHT, 18)
-        font_stats = ImageFont.truetype(FONT_BLACK, 54)
 
         draw_base.text((10 * SPACING + image_skin.width, 8 * SPACING), stats[0][0], (192, 192, 192), font_stats_header)
         draw_base.text((10 * SPACING + image_skin.width, 10 * SPACING), stats[0][1], (77, 189, 138), font_stats)
@@ -102,11 +111,11 @@ class PlayerCard(Renderable):
                         frame = image_base.copy()
 
                         image_ribbon = await self.render_ribbon(str(cosmetic), cosmetic.bold, color)
-                        frame.paste(image_ribbon, (PLAYER_CARD_WIDTH - 175, SPACING), mask=image_ribbon)
+                        frame.paste(image_ribbon, (image_base.width - 175, SPACING), mask=image_ribbon)
                         frames.append(frame)
                 else:
                     image_ribbon = await self.render_ribbon(str(cosmetic), cosmetic.bold, effect[0])
-                    image_base.paste(image_ribbon, (PLAYER_CARD_WIDTH - 175, SPACING), mask=image_ribbon)
+                    image_base.paste(image_ribbon, (image_base.width - 175, SPACING), mask=image_ribbon)
 
         if animated:
             return Render(*frames)
