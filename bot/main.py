@@ -3,19 +3,19 @@ import os
 import discord
 import sentry_sdk
 
-from bot import card
-from bot.Admin import Admin
-from bot.Player import Player
-from bot.Leaderboard import Leaderboard
-from bot.WebServer import WebServer
-from bot.XP import XP
+from bot.card.XPLevelUp import XPLevelUp
+from bot.cogs.Admin import Admin
+from bot.cogs.Leaderboard import Leaderboard
+from bot.cogs.Player import Player
+from bot.cogs.WebServer import WebServer
+from bot.cogs.XP import XP
 from bot.config import bot
 
 BLACKLISTED_CHANNELS = [797035821630095393]
 
 sentry_sdk.init(
     'https://7b74da9447304a35b6f8c49da4fd09f1@o737869.ingest.sentry.io/5785215',
-    traces_sample_rate=1.0
+    traces_sample_rate=1.0,
 )
 
 bot.add_cog(Player(bot))
@@ -29,7 +29,7 @@ async def process_xp(message):
     if not message.author.bot:
         level_before, level_after = await XP.process_message(message)
         if level_after > level_before:
-            render = await card.render_xp_levelup(message.author, level_before, level_after)
+            render = await XPLevelUp(message.author, level_before, level_after).render()
             await message.channel.send(file=discord.File(render.file_animated(format='GIF'), 'xp_levelup.gif'))
 
 

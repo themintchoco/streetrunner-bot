@@ -1,8 +1,10 @@
 import discord
 from discord.ext import commands
 
-from bot import card, event
-from bot.exceptions import UsernameError, NotEnoughDataError
+from bot.card.Podium import BlocksPodium, DeathsPodium, InfamyPodium, KdaPodium, KillsPodium, RankPodium
+from bot.card.TimeLeaderboard import TimeLeaderboard
+from bot.card.XPLeaderboard import XPLeaderboard
+from bot.exceptions import NotEnoughDataError, UsernameError
 
 
 class Leaderboard(commands.Cog):
@@ -22,56 +24,56 @@ class Leaderboard(commands.Cog):
     async def leaderboard_rank(self, ctx):
         """Displays the current leaderboard in terms of prison ranks"""
         async with ctx.typing():
-            render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Rank)
+            render = await RankPodium(discord_user=ctx.author).render()
         await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='blocks')
     async def leaderboard_blocks(self, ctx):
         """Displays the current leaderboard in terms of blocks mined"""
         async with ctx.typing():
-            render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Blocks)
+            render = await BlocksPodium(discord_user=ctx.author).render()
         await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='infamy')
     async def leaderboard_infamy(self, ctx):
         """Displays the current leaderboard in terms of arena Infamy"""
         async with ctx.typing():
-            render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Infamy)
+            render = await InfamyPodium(discord_user=ctx.author).render()
         await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='kda')
     async def leaderboard_kda(self, ctx):
         """Displays the current leaderboard in terms of arena KDA"""
         async with ctx.typing():
-            render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Kda)
+            render = await KdaPodium(discord_user=ctx.author).render()
         await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='kills')
     async def leaderboard_kills(self, ctx):
         """Displays the current leaderboard in terms of arena kills"""
         async with ctx.typing():
-            render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Kills)
+            render = await KillsPodium(discord_user=ctx.author).render()
         await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='deaths')
     async def leaderboard_deaths(self, ctx):
         """Displays the current leaderboard in terms of arena deaths"""
         async with ctx.typing():
-            render = await card.render_leaderboard(discord_user=ctx.author, type=card.LeaderboardType.Deaths)
+            render = await DeathsPodium(discord_user=ctx.author).render()
         await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='time')
     async def leaderboard_time(self, ctx):
         """Displays the current leaderboard in terms of play time"""
         async with ctx.typing():
-            render = await card.render_time_leaderboard(discord_user=ctx.author)
+            render = await TimeLeaderboard(discord_user=ctx.author).render()
         await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='xp')
     async def leaderboard_xp(self, ctx):
         """Displays the current leaderboard in terms of discord XP"""
         async with ctx.typing():
-            render = await card.render_xp_leaderboard(discord_user=ctx.author)
+            render = await XPLeaderboard(discord_user=ctx.author).render()
         await ctx.send(file=discord.File(render.file(format='PNG'), 'xp_leaderboard.png'))
 
     # @leaderboard.command(name='tournament')
@@ -105,7 +107,7 @@ class Leaderboard(commands.Cog):
 
             if isinstance(error.original, NotEnoughDataError):
                 return await ctx.send(
-                    f'There isn’t enough data to display the leaderboard at the moment. Please try again later!')
+                    'There isn’t enough data to display the leaderboard at the moment. Please try again later!')
 
         await self.handle_command_error(ctx, error)
 

@@ -1,3 +1,5 @@
+# flake8: noqa
+#
 # https://gist.github.com/egocarib/ea022799cca8a102d14c54a22c45efe0
 #
 # This code adapted from https://github.com/python-pillow/Pillow/issues/4644 to resolve an issue
@@ -133,12 +135,11 @@ def _create_animated_gif(images: List[Image], durations: Union[int, List[int]]) 
         optimize=False,
         append_images=new_images[1:],
         duration=durations,
-        disposal=2,  # Other disposals don't work
-        loop=0)
+        disposal=2)
     return output_image, save_kwargs
 
 
-def save_transparent_gif(images: List[Image], durations: Union[int, List[int]], save_file):
+def save_transparent_gif(images: List[Image], durations: Union[int, List[int]], save_file, **kwargs):
     """Creates a transparent GIF, adjusting to avoid transparency issues that are present in the PIL library
 
     Note that this does NOT work for partial alpha. The partial alpha gets discarded and replaced by solid colors.
@@ -152,4 +153,4 @@ def save_transparent_gif(images: List[Image], durations: Union[int, List[int]], 
         Image - The PIL Image object (after first saving the image to the specified target)
     """
     root_frame, save_args = _create_animated_gif(images, durations)
-    root_frame.save(save_file, **save_args)
+    root_frame.save(save_file, **{**save_args, **kwargs})
