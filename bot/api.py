@@ -77,7 +77,7 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
                     raise UsernameError({'message': 'The username provided is invalid', 'username': username})
                 else:
                     raise DiscordNotLinkedError({
-                        'message': 'You have not linked your Discord account to your Minecraft account.'
+                        'message': 'You have not linked your Discord account to your Minecraft account. '
                                    'Please link your account using the /discord command in-game. ',
                         'discord_id': discord_user})
             elif r.status != 200:
