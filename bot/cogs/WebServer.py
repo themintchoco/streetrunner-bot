@@ -4,11 +4,11 @@ import os
 
 import discord
 from aiohttp import web
-from aiohttp_apispec import docs, response_schema, querystring_schema, setup_aiohttp_apispec
+from aiohttp_apispec import docs, querystring_schema, response_schema, setup_aiohttp_apispec
 from aiohttp_remotes import BasicAuth, Secure, XForwardedRelaxed, setup
 from discord.ext import commands, tasks
 
-from docs.schema import *
+from docs.schema import ChannelSchema, MessageQuerySchema, MessageSchema, UserSchema
 
 
 class WebServer(commands.Cog):
@@ -17,7 +17,8 @@ class WebServer(commands.Cog):
         self.web_server.start()
 
         self.app = web.Application()
-        asyncio.run(setup(self.app, XForwardedRelaxed(), Secure(), BasicAuth(os.environ['BASIC_USER'], os.environ['BASIC_PASS'], 'realm')))
+        asyncio.run(setup(self.app, XForwardedRelaxed(), Secure(),
+                          BasicAuth(os.environ['BASIC_USER'], os.environ['BASIC_PASS'], 'realm')))
 
         self.routes = web.RouteTableDef()
 
@@ -43,7 +44,7 @@ class WebServer(commands.Cog):
                     response.append({
                         'id': channel.id,
                         'name': channel.name,
-                        'category': channel.category.name if channel.category else None
+                        'category': channel.category.name if channel.category else None,
                     })
 
             return web.json_response(response)
@@ -87,7 +88,7 @@ class WebServer(commands.Cog):
                 'username': user.name,
                 'discriminator': user.discriminator,
                 'nickname': user.display_name,
-                'avatar': str(user.avatar_url)
+                'avatar': str(user.avatar_url),
             })
 
         @docs(
@@ -132,7 +133,7 @@ class WebServer(commands.Cog):
                 'username': member.name,
                 'discriminator': member.discriminator,
                 'nickname': member.display_name,
-                'avatar': str(member.avatar_url)
+                'avatar': str(member.avatar_url),
             })
 
         @docs(
@@ -178,12 +179,12 @@ class WebServer(commands.Cog):
                 message = await channel.fetch_message(int(request.match_info['message_id']))
             except discord.NotFound:
                 raise web.HTTPNotFound()
-            except:
+            except Exception:
                 raise web.HTTPInternalServerError()
 
             response = {
                 'author': message.author.id,
-                'content': message.content
+                'content': message.content,
             }
 
             if 'embeds' in request.query:
@@ -194,7 +195,7 @@ class WebServer(commands.Cog):
                 for reaction in message.reactions:
                     response['reactions'].append({
                         'reaction': reaction.emoji if isinstance(reaction.emoji, str) else reaction.emoji.name,
-                        'users': [user.id async for user in reaction.users()]
+                        'users': [user.id async for user in reaction.users()],
                     })
 
             return web.json_response(response)
@@ -207,7 +208,7 @@ class WebServer(commands.Cog):
             title='StreetRunner Bot API',
             info={'description': 'A simple REST API to interface with StreetRunner Bot'},
             securityDefinitions={
-                'BasicAuth': {'type': 'basic', 'name': 'Authorization', 'in': 'header'}
+                'BasicAuth': {'type': 'basic', 'name': 'Authorization', 'in': 'header'},
             },
             version='v1.3.0',
             url='/swagger.json',
@@ -217,7 +218,7 @@ class WebServer(commands.Cog):
     async def web_server(self):
         runner = web.AppRunner(self.app)
         await runner.setup()
-        await web.TCPSite(runner, host='0.0.0.0', port=self.webserver_port).start()
+        await web.TCPSite(runner, host='0.0.0.0', port=self.webserver_port).start()  # noqa: S104
 
     @web_server.before_loop
     async def web_server_before_loop(self):

@@ -5,8 +5,10 @@ import discord
 from discord.ext import commands
 from sqlalchemy import select
 
-from bot import card
-from bot.card import get_level_from_xp, get_chat_xp
+from bot.api import get_chat_xp
+from bot.card.XPCard import XPCard
+from bot.card.XPLeaderboard import XPLeaderboard
+from helpers.xp import get_level_from_xp
 from store.PostgresClient import PostgresClient
 from store.User import User
 
@@ -27,10 +29,7 @@ class XP(commands.Cog):
         XP.xp_cooldown[message.author.id] = True
 
         async with PostgresClient().session() as session:
-            user = (await session.execute(
-                select(User)
-                    .where(User.discord_id == message.author.id)
-            )).scalar()
+            user = (await session.execute(select(User).where(User.discord_id == message.author.id))).scalar()
 
             if not user:
                 user = User(discord_id=message.author.id,
@@ -58,7 +57,7 @@ class XP(commands.Cog):
         """Displays your current XP and level"""
         if ctx.invoked_subcommand is None:
             async with ctx.typing():
-                render = await card.render_xp_card(discord_user=ctx.author)
+                render = await XPCard(discord_user=ctx.author).render()
 
             if render.multi_frame:
                 await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'xp.gif'))
@@ -69,7 +68,7 @@ class XP(commands.Cog):
     async def xp_leaderboard(self, ctx):
         """Displays the current leaderboard in terms of discord XP"""
         async with ctx.typing():
-            render = await card.render_xp_leaderboard(discord_user=ctx.author)
+            render = await XPLeaderboard(discord_user=ctx.author).render()
         await ctx.send(file=discord.File(render.file(format='PNG'), 'xp_leaderboard.png'))
 
     @xp.error
@@ -81,10 +80,7 @@ class XP(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def xp_give(self, ctx, target_user: discord.User, xp: int):
         async with PostgresClient().session() as session:
-            user = (await session.execute(
-                select(User)
-                    .where(User.discord_id == target_user.id)
-            )).scalar()
+            user = (await session.execute(select(User).where(User.discord_id == target_user.id))).scalar()
 
             if not user:
                 user = User(discord_id=target_user.id,
@@ -96,7 +92,7 @@ class XP(commands.Cog):
             await session.commit()
 
     @xp_give.error
-    async def on_command_error(self, ctx, error):
+    async def on_xp_command_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
             return await ctx.send(
                 f'usage: {self.bot.command_prefix}{" ".join(ctx.invoked_parents)} {ctx.invoked_with} <user> <amount>')
@@ -104,7 +100,7 @@ class XP(commands.Cog):
 
     async def handle_command_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
-            await ctx.send(f'You do not have the permissions to use this command!')
+            await ctx.send('You do not have the permissions to use this command!')
         else:
             await ctx.send('Sorry, an error has occured. Please try again at a later time. ')
             raise

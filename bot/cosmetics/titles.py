@@ -2,7 +2,7 @@ from abc import ABC
 
 from colour import Color
 
-from bot.coloreffect import ColorEffect, ColorEffectBreathe
+from bot.coloreffect import ColorEffect, ColorEffectBreathe, ColorEffectUnicorn
 from bot.cosmetics.cosmetics import Cosmetics, CosmeticsType
 
 
@@ -63,6 +63,12 @@ class Champion(Title):
     bold = True
     color = ColorEffectBreathe(Color('#fc5454'), Color('#fc8e74'), inhale_rate=1.8, exhale_rate=1.2, duration=60)
     id = 'CHAMPION'
+
+
+class Vip(Title):
+    bold = True
+    color = ColorEffectUnicorn(Color('red'), Color('violet'), Color('red'), duration=60)
+    id = 'VIP'
 
 
 # known_titles = {x.id: x() for x in Title.__subclasses__()}  # singleton object alternative

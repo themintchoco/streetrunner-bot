@@ -23,7 +23,7 @@ class Admin(commands.Cog):
 
     async def handle_command_error(self, ctx, error):
         if isinstance(error, commands.CheckFailure):
-            await ctx.send(f'You do not have the permissions to use this command!')
+            await ctx.send('You do not have the permissions to use this command!')
         else:
             await ctx.send('Sorry, an error has occured. Please try again at a later time. ')
             raise

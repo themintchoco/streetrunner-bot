@@ -4,6 +4,7 @@ import math
 
 from colour import Color
 
+
 class ColorEffect:
     def __init__(self, *color, duration=1, **kwargs):
         self.type = 'static'
@@ -40,7 +41,7 @@ class ColorEffectUnicorn(ColorEffect):
         self.type = 'unicorn'
 
     def __getitem__(self, t):
-        return self.spectrum[round(min(self.time_function(t) * 100 * len(self.color), len(self.spectrum) - 1))]
+        return self.spectrum[round(min(self.time_function(t) * 100 * (len(self.color) - 1), len(self.spectrum) - 1))]
 
     @functools.cached_property
     def spectrum(self):
