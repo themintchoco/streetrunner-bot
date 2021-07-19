@@ -35,7 +35,21 @@ class XPLeaderboard(GenericLeaderboard):
         image_row = Image.new('RGBA', (ctx['ROW_WIDTH'], ctx['ROW_HEIGHT']), color=(0, 0, 0, 0))
         draw_row = ImageDraw.Draw(image_row)
 
+        font_name = ImageFont.truetype(FONT_BOLD, 27)
+        font_discrim = ImageFont.truetype(FONT_LIGHT, 22)
+        font_xp = ImageFont.truetype(FONT_BLACK, 27)
+
+        length_name = draw_row.textlength(discord_user.name, font_name)
+        length_discrim = draw_row.textlength('#' + discord_user.discriminator, font_discrim)
+        length_xp = draw_row.textlength(get_number_representation(user.xp), font_xp)
+
+        width_required = 14 * SPACING + self._position_length + 65 + length_name + length_discrim + length_xp
+        if width_required > image_row.width:
+            image_row = Image.new('RGBA', (int(width_required), ctx['ROW_HEIGHT']), color=(0, 0, 0, 0))
+            draw_row = ImageDraw.Draw(image_row)
+
         bounds_position = draw_row.textbbox((0, 0), f'#{ctx["POSITION"]}', self._font_position)
+
         draw_row.text((2 * SPACING + self._position_length // 2, image_row.height // 2),
                       f'#{ctx["POSITION"]}', (214, 214, 214, 255), self._font_position, anchor='mm')
 
@@ -61,10 +75,6 @@ class XPLeaderboard(GenericLeaderboard):
                         (4 * SPACING + self._position_length, (image_row.height - 65) // 2),
                         mask=image_mask)
 
-        font_name = ImageFont.truetype(FONT_BOLD, 27)
-        font_discrim = ImageFont.truetype(FONT_LIGHT, 22)
-
-        length_name = draw_row.textlength(discord_user.name, font_name)
         draw_row.text((7 * SPACING + self._position_length + 65, (image_row.height + bounds_position[3]) // 2),
                       discord_user.name,
                       (212, 175, 55, 255) if self._target and self._target.discord_id == discord_user.id else (
@@ -74,11 +84,8 @@ class XPLeaderboard(GenericLeaderboard):
             (8 * SPACING + self._position_length + 65 + length_name, (image_row.height + bounds_position[3]) // 2),
             '#' + discord_user.discriminator, (192, 192, 192, 255), font_discrim, anchor='ls')
 
-        font_xp = ImageFont.truetype(FONT_BLACK, 27)
-        bounds_xp = draw_row.textbbox((0, 0), get_number_representation(user.xp), font_xp)
-
-        draw_row.text((image_row.width - 2 * SPACING - bounds_xp[2], (image_row.height - bounds_xp[3]) // 2),
-                      get_number_representation(user.xp), (255, 255, 255, 255), font_xp)
+        draw_row.text((image_row.width - 2 * SPACING, image_row.height // 2),
+                      get_number_representation(user.xp), (255, 255, 255, 255), font_xp, anchor='rm')
 
         return Render(image_row)
 

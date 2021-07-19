@@ -25,38 +25,72 @@ class Podium(Renderable):
     def get_stats(self, player_info: PlayerInfo) -> str:
         raise NotImplementedError()
 
-    async def render_row(self, player_info: PlayerInfo, position: int) -> Render:
-        image_row = Image.new('RGBA', (LEADERBOARD_PODIUM_WIDTH, 100), color=(0, 0, 0, 0))
+    async def render_row(self, ctx, player_info: PlayerInfo) -> Render:
+        image_row = Image.new('RGBA', (ctx['ROW_WIDTH'], 100), color=(0, 0, 0, 0))
         draw_row = ImageDraw.Draw(image_row)
+
+        image_avatar = (await Avatar(player_info.uuid, 6).render()).image
+
+        length_name = draw_row.textlength(player_info.username, self._font_stats)
+        length_stats = draw_row.textlength(self.get_stats(player_info), self._font_stats)
+
+        width_required = 12 * SPACING + self._position_length + image_avatar.width + length_name + length_stats
+        if width_required > image_row.width:
+            image_row = Image.new('RGBA', (int(width_required), 100), color=(0, 0, 0, 0))
+            draw_row = ImageDraw.Draw(image_row)
 
         draw_row.rounded_rectangle((0, 0, image_row.width, image_row.height), fill=(32, 34, 37, 255), radius=15)
 
-        bounds_position = draw_row.textbbox((0, 0), f'#{position}', self._font_position)
         draw_row.text(
-            (2 * SPACING + (self._position_length - bounds_position[2]) // 2,
-             (image_row.height - bounds_position[3]) // 2),
-            f'#{position}', (214, 214, 214, 255), self._font_position)
-
-        image_avatar = (await Avatar(player_info.uuid, 6).render()).image
+            (2 * SPACING + self._position_length // 2, image_row.height // 2),
+            f'#{ctx["POSITION"]}', (214, 214, 214, 255), self._font_position, anchor='mm')
 
         image_row.paste(image_avatar,
                         (4 * SPACING + self._position_length, (image_row.height - image_avatar.height) // 2))
 
-        bounds_name = draw_row.textbbox((0, 0), player_info.username, self._font_stats)
         draw_row.text(
-            (6 * SPACING + self._position_length + image_avatar.width, (image_row.height - bounds_name[3]) // 2),
+            (6 * SPACING + self._position_length + image_avatar.width, image_row.height // 2),
             player_info.username,
             (212, 175, 55,
              255) if self._target_position != -1 and player_info.username == self._target_player_info.username else (
-                255, 255, 255, 255), self._font_stats)
+                255, 255, 255, 255), self._font_stats, anchor='lm')
 
-        bounds_stats = draw_row.textbbox((0, 0), self.get_stats(player_info), self._font_stats)
-        draw_row.text((image_row.width - 2 * SPACING - bounds_stats[2], (image_row.height - bounds_stats[3]) // 2),
-                      self.get_stats(player_info), (255, 255, 255, 255), self._font_stats)
+        draw_row.text((image_row.width - 2 * SPACING, image_row.height // 2),
+                      self.get_stats(player_info), (255, 255, 255, 255), self._font_stats, anchor='rm')
 
         return Render(image_row)
 
     async def render(self) -> Render:
+        async def get_rows():
+            rows = []
+
+            async for i, player_info in a.enumerate(rows_data):
+                rows.append((await self.render_row({**ctx, 'POSITION': i + 4}, player_info)).image)
+
+            if self._target_position >= 8:
+                row_height = 30
+                radius = 10
+
+                image_row = Image.new('RGBA', (ctx['ROW_WIDTH'], row_height), color=(0, 0, 0, 0))
+                draw_row = ImageDraw.Draw(image_row)
+                draw_row.ellipse(
+                    ((ctx['ROW_WIDTH'] - radius) // 2, (row_height - radius) // 2,
+                     (ctx['ROW_WIDTH'] + radius) // 2, (row_height + radius) // 2), fill=(209, 222, 241, 255))
+                draw_row.ellipse(
+                    ((ctx['ROW_WIDTH'] - 5 * SPACING - radius) // 2, (row_height - radius) // 2,
+                     (ctx['ROW_WIDTH'] - 5 * SPACING + radius) // 2, (row_height + radius) // 2),
+                    fill=(209, 222, 241, 255))
+                draw_row.ellipse(
+                    ((ctx['ROW_WIDTH'] + 5 * SPACING - radius) // 2, (row_height - radius) // 2,
+                     (ctx['ROW_WIDTH'] + 5 * SPACING + radius) // 2, (row_height + radius) // 2),
+                    fill=(209, 222, 241, 255))
+
+                rows.append(image_row)
+                rows.append((await self.render_row({**ctx, 'POSITION': self._target_position + 1},
+                                                   self._target_player_info)).image)
+
+            return rows
+
         self._target_position = -1
         if self._username or self._discord_user:
             try:
@@ -75,9 +109,6 @@ class Podium(Renderable):
         image_highlight = Image.new('RGBA', (LEADERBOARD_PODIUM_WIDTH, LEADERBOARD_PODIUM_HEIGHT + SPACING),
                                     color=(0, 0, 0, 0))
         draw_highlight = ImageDraw.Draw(image_highlight)
-
-        draw_highlight.rounded_rectangle((0, 0, LEADERBOARD_PODIUM_WIDTH, LEADERBOARD_PODIUM_HEIGHT),
-                                         fill=(32, 34, 37, 255), radius=15)
 
         font_title = ImageFont.truetype(FONT_BOLD, 36)
         font_subtitle = ImageFont.truetype(FONT_BOLD, 18)
@@ -102,23 +133,20 @@ class Podium(Renderable):
         font_highlight_big = ImageFont.truetype(FONT_BOLD, 24)
         font_highlight_med = ImageFont.truetype(FONT_BOLD, 18)
 
-        length_highlight_big = draw_highlight.textlength(leaderboard_highlight[0].username, font_highlight_big)
-        draw_highlight.text((270 - length_highlight_big // 2, 270), leaderboard_highlight[0].username,
+        draw_highlight.text((270, 270), leaderboard_highlight[0].username,
                             (212, 175, 55, 255) if self._target_position != -1 and leaderboard_highlight[
                                 0].username == self._target_player_info.username else (
-                                255, 255, 255, 255), font_highlight_big)
+                                255, 255, 255, 255), font_highlight_big, anchor='mt')
 
-        length_highlight_two = draw_highlight.textlength(leaderboard_highlight[1].username, font_highlight_med)
-        draw_highlight.text((93 - length_highlight_two // 2, 298), leaderboard_highlight[1].username,
+        draw_highlight.text((93, 298), leaderboard_highlight[1].username,
                             (212, 175, 55, 255) if self._target_position != -1 and leaderboard_highlight[
                                 1].username == self._target_player_info.username else (
-                                255, 255, 255, 255), font_highlight_med)
+                                255, 255, 255, 255), font_highlight_med, anchor='mt')
 
-        length_highlight_three = draw_highlight.textlength(leaderboard_highlight[2].username, font_highlight_med)
-        draw_highlight.text((449 - length_highlight_three // 2, 308), leaderboard_highlight[2].username,
+        draw_highlight.text((449, 308), leaderboard_highlight[2].username,
                             (212, 175, 55, 255) if self._target_position != -1 and leaderboard_highlight[
                                 2].username == self._target_player_info.username else (
-                                255, 255, 255, 255), font_highlight_med)
+                                255, 255, 255, 255), font_highlight_med, anchor='mt')
 
         draw_highlight.polygon([(210, LEADERBOARD_PODIUM_HEIGHT + SPACING),
                                 (163, 392),
@@ -148,46 +176,33 @@ class Podium(Renderable):
         draw_highlight.text((424 - length_stats_three // 2, 415),
                             self.get_stats(leaderboard_highlight[2]), (14, 14, 38, 255), font_stats_med)
 
-        additional_rows = []
-
         self._font_position = ImageFont.truetype(FONT_BLACK, 24)
         self._font_stats = ImageFont.truetype(FONT_BOLD, 18)
 
         self._position_length = max(round(draw_highlight.textlength(f'#{self._target_position}', self._font_position)),
                                     4 * SPACING)
 
-        async for i, player_info in a.enumerate(a.islice(self._data, 5 if self._target_position < 8 else 4)):
-            additional_rows.append((await self.render_row(player_info, i + 4)).image)
+        ctx = {'ROW_WIDTH': image_highlight.width}
+        rows_data = [x async for x in a.islice(self._data, 5 if self._target_position < 8 else 4)]
+        rows = await get_rows()
 
-        if self._target_position >= 8:
-            row_height = 30
-            radius = 10
+        rows_width = max(row.width for row in rows)
+        if rows_width > ctx['ROW_WIDTH']:
+            ctx['ROW_WIDTH'] = rows_width
+            rows = await get_rows()
 
-            image_row = Image.new('RGBA', (LEADERBOARD_PODIUM_WIDTH, row_height), color=(0, 0, 0, 0))
-            draw_row = ImageDraw.Draw(image_row)
-            draw_row.ellipse(
-                ((LEADERBOARD_PODIUM_WIDTH - radius) // 2, (row_height - radius) // 2,
-                 (LEADERBOARD_PODIUM_WIDTH + radius) // 2, (row_height + radius) // 2), fill=(209, 222, 241, 255))
-            draw_row.ellipse(
-                ((LEADERBOARD_PODIUM_WIDTH - 5 * SPACING - radius) // 2, (row_height - radius) // 2,
-                 (LEADERBOARD_PODIUM_WIDTH - 5 * SPACING + radius) // 2, (row_height + radius) // 2),
-                fill=(209, 222, 241, 255))
-            draw_row.ellipse(
-                ((LEADERBOARD_PODIUM_WIDTH + 5 * SPACING - radius) // 2, (row_height - radius) // 2,
-                 (LEADERBOARD_PODIUM_WIDTH + 5 * SPACING + radius) // 2, (row_height + radius) // 2),
-                fill=(209, 222, 241, 255))
-
-            additional_rows.append(image_row)
-            additional_rows.append((await self.render_row(self._target_player_info, self._target_position + 1)).image)
-
-        image_base = Image.new('RGBA', (LEADERBOARD_PODIUM_WIDTH,
-                                        LEADERBOARD_PODIUM_HEIGHT + sum(
-                                            row.height + SPACING for row in additional_rows)),
+        image_base = Image.new('RGBA', (rows_width,
+                                        LEADERBOARD_PODIUM_HEIGHT + sum(row.height + SPACING for row in rows)),
                                color=(0, 0, 0, 0))
-        image_base.paste(image_highlight)
+
+        draw_base = ImageDraw.Draw(image_base)
+        draw_base.rounded_rectangle((0, 0, rows_width, LEADERBOARD_PODIUM_HEIGHT),
+                                    fill=(32, 34, 37, 255), radius=15)
+
+        image_base.paste(image_highlight, ((rows_width - image_highlight.width) // 2, 0), mask=image_highlight)
 
         height = 0
-        for row in additional_rows:
+        for row in rows:
             image_base.paste(row, (0, LEADERBOARD_PODIUM_HEIGHT + SPACING + height))
             height += row.height + SPACING
 

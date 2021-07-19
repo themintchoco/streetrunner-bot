@@ -36,22 +36,40 @@ class GenericLeaderboard(Renderable):
 
         draw_dots = ImageDraw.Draw(image_dots)
         draw_dots.ellipse(
-            ((LEADERBOARD_GENERIC_WIDTH - radius) // 2, (30 - radius) // 2,
-             (LEADERBOARD_GENERIC_WIDTH + radius) // 2,
+            ((ctx['ROW_WIDTH'] - radius) // 2, (30 - radius) // 2,
+             (ctx['ROW_WIDTH'] + radius) // 2,
              (30 + radius) // 2),
             fill=(209, 222, 241, 255))
         draw_dots.ellipse(
-            ((LEADERBOARD_GENERIC_WIDTH - 5 * SPACING - radius) // 2, (30 - radius) // 2,
-             (LEADERBOARD_GENERIC_WIDTH - 5 * SPACING + radius) // 2, (30 + radius) // 2),
+            ((ctx['ROW_WIDTH'] - 5 * SPACING - radius) // 2, (30 - radius) // 2,
+             (ctx['ROW_WIDTH'] - 5 * SPACING + radius) // 2, (30 + radius) // 2),
             fill=(209, 222, 241, 255))
         draw_dots.ellipse(
-            ((LEADERBOARD_GENERIC_WIDTH + 5 * SPACING - radius) // 2, (30 - radius) // 2,
-             (LEADERBOARD_GENERIC_WIDTH + 5 * SPACING + radius) // 2, (30 + radius) // 2),
+            ((ctx['ROW_WIDTH'] + 5 * SPACING - radius) // 2, (30 - radius) // 2,
+             (ctx['ROW_WIDTH'] + 5 * SPACING + radius) // 2, (30 + radius) // 2),
             fill=(209, 222, 241, 255))
 
         return Render(image_dots)
 
     async def render(self) -> Render:
+        async def get_rows():
+            rows = []
+            for i, entry in enumerate(self._data):
+                if self._target_position > 4 and i > 3 or i > 4:
+                    break
+
+                rows.append(
+                    (await self.render_row({**ctx, 'POSITION': i + 1, 'ROW_HEIGHT': 75 + (2 if i else 4) * SPACING},
+                                           entry)).image)
+
+            if self._target_position > 4:
+                rows.append(
+                    (await self.render_row(
+                        {**ctx, 'POSITION': self._target_position + 1, 'ROW_HEIGHT': 75 + 4 * SPACING},
+                        self._target)).image)
+
+            return rows
+
         self._data = await self.data
         self._target = await self.target
         self._target_position = await self.target_position
@@ -62,45 +80,39 @@ class GenericLeaderboard(Renderable):
             'ROW_HEIGHT': 75 + 2 * SPACING,
         }
 
-        rows = []
-        for i, entry in enumerate(self._data):
-            if self._target_position > 4 and i > 3 or i > 4:
-                break
+        rows = await get_rows()
 
-            rows.append((await self.render_row({**ctx, 'POSITION': i + 1, 'ROW_HEIGHT': 75 + (2 if i else 4) * SPACING},
-                                               entry)).image)
-
-        if self._target_position > 4:
-            rows.append(
-                (await self.render_row({**ctx, 'POSITION': self._target_position + 1, 'ROW_HEIGHT': 75 + 4 * SPACING},
-                                       self._target)).image)
+        rows_width = max(row.width for row in rows)
+        if rows_width > ctx['ROW_WIDTH']:
+            ctx['ROW_WIDTH'] = rows_width
+            rows = await get_rows()
 
         rows_height = sum(row.height for row in rows)
 
         if self._target_position < 5:
-            image_base = Image.new('RGBA', (LEADERBOARD_GENERIC_WIDTH, rows_height), color=(0, 0, 0, 0))
+            image_base = Image.new('RGBA', (rows_width, rows_height), color=(0, 0, 0, 0))
             draw_base = ImageDraw.Draw(image_base)
 
-            draw_base.rounded_rectangle((0, 0, LEADERBOARD_GENERIC_WIDTH, rows_height),
+            draw_base.rounded_rectangle((0, 0, rows_width, rows_height),
                                         fill=(32, 34, 37, 255), radius=15)
         else:
-            render_separator = await self.render_separator({'ROW_WIDTH': LEADERBOARD_GENERIC_WIDTH})
+            render_separator = await self.render_separator({'ROW_WIDTH': rows_width})
             image_separator = render_separator.image
             image_separator_height = getattr(render_separator, 'preferred_height', image_separator.height)
 
-            image_base = Image.new('RGBA', (LEADERBOARD_GENERIC_WIDTH, rows_height + image_separator_height),
+            image_base = Image.new('RGBA', (rows_width, rows_height + image_separator_height),
                                    color=(0, 0, 0, 0))
             draw_base = ImageDraw.Draw(image_base)
 
             if self._separator_filled:
                 draw_base.rounded_rectangle(
-                    (0, 0, LEADERBOARD_GENERIC_WIDTH, rows_height + image_separator_height),
+                    (0, 0, rows_width, rows_height + image_separator_height),
                     fill=(32, 34, 37, 255), radius=15)
             else:
-                draw_base.rounded_rectangle((0, 0, LEADERBOARD_GENERIC_WIDTH, rows_height - rows[-1].height),
+                draw_base.rounded_rectangle((0, 0, rows_width, rows_height - rows[-1].height),
                                             fill=(32, 34, 37, 255), radius=15)
                 draw_base.rounded_rectangle(
-                    (0, rows_height - rows[-1].height + image_separator_height, LEADERBOARD_GENERIC_WIDTH,
+                    (0, rows_height - rows[-1].height + image_separator_height, rows_width,
                      rows_height + image_separator_height),
                     fill=(32, 34, 37, 255), radius=15)
 
@@ -110,7 +122,7 @@ class GenericLeaderboard(Renderable):
             image_base.paste(rows[-1], (0, rows_height - rows[-1].height + image_separator_height), mask=rows[-1])
             rows.pop()
 
-        image_highlight = Image.new('RGBA', (LEADERBOARD_GENERIC_WIDTH, rows[0].height), color=(23, 24, 26, 255))
+        image_highlight = Image.new('RGBA', (rows_width, rows[0].height), color=(23, 24, 26, 255))
         image_base.paste(image_highlight, mask=image_base.crop((0, 0, image_highlight.width, image_highlight.height)))
 
         current_offset = 0

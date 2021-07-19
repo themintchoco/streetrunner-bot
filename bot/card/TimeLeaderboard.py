@@ -41,11 +41,20 @@ class TimeLeaderboard(GenericLeaderboard):
 
     async def render_row(self, ctx, player_info) -> Render:
         if ctx['POSITION'] != 1:
-            # override row height
             ctx['ROW_HEIGHT'] = 75 + 2 * SPACING
 
         image_row = Image.new('RGBA', (ctx['ROW_WIDTH'], ctx['ROW_HEIGHT']), color=(0, 0, 0, 0))
         draw_row = ImageDraw.Draw(image_row)
+
+        image_avatar = (await Avatar(player_info.uuid, 6).render()).image
+
+        length_name = draw_row.textlength(player_info.username, self._font_stats)
+        length_time = draw_row.textlength(get_timedelta_representation(player_info.time_played), self._font_stats)
+
+        width_required = 16 * SPACING + self._position_length + image_avatar.width + length_name + length_time
+        if width_required > image_row.width:
+            image_row = Image.new('RGBA', (int(width_required), ctx['ROW_HEIGHT']), color=(0, 0, 0, 0))
+            draw_row = ImageDraw.Draw(image_row)
 
         highlight_color = [
             (212, 175, 55, 255),
@@ -56,8 +65,6 @@ class TimeLeaderboard(GenericLeaderboard):
 
         draw_row.text((2 * SPACING + self._position_length, image_row.height // 2),
                       f'#{ctx["POSITION"]}', (214, 214, 214, 255), self._font_position, anchor='rm')
-
-        image_avatar = (await Avatar(player_info.uuid, 6).render()).image
 
         draw_row.line((5 * SPACING + self._position_length, 0,
                        5 * SPACING + self._position_length, image_row.height),

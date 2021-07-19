@@ -55,7 +55,7 @@ class PlayerCard(Renderable):
             if cosmetic.type == CosmeticsType.Title:
                 width_required += 135
 
-        if width_required > PLAYER_CARD_WIDTH:
+        if width_required > image_base.width:
             image_base = Image.new('RGBA', (int(width_required), PLAYER_CARD_HEIGHT), color=(0, 0, 0, 0))
             draw_base = ImageDraw.Draw(image_base)
 

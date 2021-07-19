@@ -41,7 +41,7 @@ class ColorEffectUnicorn(ColorEffect):
         self.type = 'unicorn'
 
     def __getitem__(self, t):
-        return self.spectrum[round(min(self.time_function(t) * 100 * len(self.color), len(self.spectrum) - 1))]
+        return self.spectrum[round(min(self.time_function(t) * 100 * (len(self.color) - 1), len(self.spectrum) - 1))]
 
     @functools.cached_property
     def spectrum(self):
