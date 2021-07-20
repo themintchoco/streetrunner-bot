@@ -58,14 +58,6 @@ async def get_skin(uuid: str) -> dict:
 
 async def get_player_info(*, username: str = None, discord_user: discord.User = None,
                           type: PlayerStatsType = None) -> PlayerInfo:
-
-    # speed-up by bypassing API call
-    if username and username == 'threeleaves':
-        return PlayerInfo('1e3cb08c-e29d-478b-a0b9-3b2cacd899bd', 'threeleaves',
-                          stats_prison=PlayerStatsPrison(rank='999Z', blocks=9e9),
-                          stats_arena=PlayerStatsArena(infamy=999, kills=999, deaths=0, assists=999),
-                          time_played=datetime.timedelta.max)
-
     query = {}
 
     if username:
@@ -112,10 +104,6 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
 
 
 async def get_player_cosmetics(*, username: str = None, discord_user: discord.User = None) -> List[Cosmetics]:
-    # speed-up by bypassing API call
-    if username and username == 'threeleaves':
-        return [titles.from_known_string('VIP')]
-
     query = {}
 
     if username:
