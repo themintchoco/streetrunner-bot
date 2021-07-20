@@ -2,6 +2,7 @@ import os
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
 
 from helpers.utilities import Singleton
 
@@ -15,5 +16,5 @@ class PostgresClient(metaclass=Singleton):
 
     @property
     def session(self):
-        return sessionmaker(bind=create_async_engine(self._uri, future=True), expire_on_commit=False,
-                            class_=AsyncSession, future=True)
+        return sessionmaker(bind=create_async_engine(self._uri, future=True, poolclass=NullPool),
+                            expire_on_commit=False, class_=AsyncSession, future=True)
