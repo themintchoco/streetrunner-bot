@@ -16,4 +16,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: eb init --region ap-southeast-1 --platform docker
-      - run: eb deploy streetrunnerbot-env -l ${GITHUB_SHA::8}
+      - run: eb deploy streetrunner-bot-env -l ${GITHUB_SHA::8}
