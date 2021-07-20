@@ -1,6 +1,6 @@
 name: Check Style
 
-on: push
+on: pull_request
 
 jobs:
   check:
