@@ -18,7 +18,7 @@ def resolve_id(discord_id: int):
 
 def get_number_representation(number: int) -> str:
     magnitude = (len(str(number)) - 1) // 3
-    return f'{(number / (10 ** (magnitude * 3))):.3g}{" KMGTPEZY"[magnitude] if magnitude > 0 else ""}'
+    return f'{(number / (10 ** (magnitude * 3))):.3g}{" KMBTPEZY"[magnitude] if magnitude > 0 else ""}'
 
 
 def get_timedelta_representation(td: datetime.timedelta, *, only_hours=False) -> str:
