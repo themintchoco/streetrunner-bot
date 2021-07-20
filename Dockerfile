@@ -15,4 +15,4 @@ COPY . /app/
 ENV PYTHONPATH /app
 
 EXPOSE 5000
-CMD ["python", "bot/main.py"]
+ENTRYPOINT ["python", "bot/main.py"]
