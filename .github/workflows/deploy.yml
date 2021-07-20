@@ -1,0 +1,16 @@
+name: Deploy to EBS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  check:
+    name: Deploy to EBS
+    runs-on: ubuntu-latest
+    container: tyrellsys/aws-ebcli
+    steps:
+      - uses: actions/checkout@v2
+      - run: eb init --region ap-southeast-1 --platform python-3.7
+      - run: eb deploy streetrunnerbot-env -l $CI_COMMIT_SHORT_SHA
