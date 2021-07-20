@@ -15,5 +15,5 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v2
-      - run: eb init --region ap-southeast-1 --platform python-3.7
+      - run: eb init --region ap-southeast-1 --platform docker
       - run: eb deploy streetrunnerbot-env -l ${GITHUB_SHA::8}
