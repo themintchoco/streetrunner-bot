@@ -16,4 +16,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: eb init --region ap-southeast-1 --platform python-3.7
-      - run: eb deploy streetrunnerbot-env -l $CI_COMMIT_SHORT_SHA
+      - run: eb deploy streetrunnerbot-env -l ${{ GITHUB_SHA::8 }}
