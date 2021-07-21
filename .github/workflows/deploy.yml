@@ -9,7 +9,7 @@ jobs:
   check:
     name: Deploy to EBS
     runs-on: ubuntu-latest
-    container: tyrellsys/aws-ebcli
+    container: coxauto/aws-ebcli:3.15.1
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
