@@ -1,5 +1,5 @@
 # StreetRunner Bot
 
-[![Check Style](https://github.com/themintchoco/streetrunner-bot/actions/workflows/check.yml/badge.svg)](https://github.com/themintchoco/streetrunner-bot/actions/workflows/check.yml)
+[![Build Status](https://ci.keyute.dev/api/badges/keyute/streetrunner-bot/status.svg)](https://ci.keyute.dev/keyute/streetrunner-bot)
 
 Discord bot serving the StreetRunner Discord server. 

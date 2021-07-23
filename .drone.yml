@@ -1,0 +1,30 @@
+---
+kind: pipeline
+type: docker
+name: main
+
+steps:
+  - name: check
+    image: python:3.7
+    commands:
+      - pip install wemake-python-styleguide
+      - flake8 .
+  - name: deploy
+    image: coxauto/aws-ebcli:3.15.1
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: AWS_SECRET_ACCESS_KEY
+    when:
+      ref:
+        - refs/heads/main
+    depends_on:
+      - check
+    commands:
+      - eb init streetrunner-bot --region ap-southeast-1 --platform python-3.7
+      - eb deploy streetrunner-bot-env -l ${DRONE_COMMIT_SHA:0:8}
+
+volumes:
+  - name: cache
+    temp: { }
