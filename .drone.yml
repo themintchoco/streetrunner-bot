@@ -5,10 +5,9 @@ name: main
 
 steps:
   - name: check
-    image: python:3.7
+    image: wemakeservices/wemake-python-styleguide
     commands:
-      - pip install wemake-python-styleguide
-      - flake8 .
+      - .
   - name: deploy
     image: coxauto/aws-ebcli:3.15.1
     environment:
