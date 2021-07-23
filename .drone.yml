@@ -13,3 +13,4 @@ steps:
         from_secret: AWS_SECRET_ACCESS_KEY
       repo: streetrunner_bot
       registry: 166683195216.dkr.ecr.us-east-1.amazonaws.com
+      tags: ${DRONE_COMMIT_SHA:0:8}
