@@ -1,0 +1,21 @@
+name: Deploy to EBS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  check:
+    name: Deploy to EBS
+    runs-on: ubuntu-latest
+    container: coxauto/aws-ebcli:3.15.1
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v2
+      - run: eb init --region ap-southeast-1 --platform docker
+      - run: eb deploy streetrunner-bot-env -l ${GITHUB_SHA::8}
+      - run: eb setenv AWS_DEPLOY_VER=${GITHUB_SHA::8}
+        if: ${{ success() }}
