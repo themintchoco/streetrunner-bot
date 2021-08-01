@@ -71,6 +71,21 @@ class Vip(Title):
     id = 'VIP'
 
 
+class Wealthy(Title):
+    bold = False
+    color = ColorEffect('#fecd60')
+    id = 'WEALTHY'
+
+
+class WealthyBold(Title):
+    def __str__(self) -> str:
+        return 'WEALTHY'
+
+    bold = True
+    color = ColorEffect('#fecd60')
+    id = 'WEALTHY_BOLD'
+
+
 # known_titles = {x.id: x() for x in Title.__subclasses__()}  # singleton object alternative
 known_titles = {x.id: x for x in Title.__subclasses__()}
 
