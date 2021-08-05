@@ -13,8 +13,8 @@ class PostgresClient(metaclass=Singleton):
         index_protocol = uri.index('://')
 
         self._uri = 'postgresql+asyncpg://' + uri[index_protocol + 3:]
+        self._engine = create_async_engine(self._uri, poolclass=NullPool, future=True)
 
     @property
     def session(self):
-        return sessionmaker(bind=create_async_engine(self._uri, future=True, poolclass=NullPool),
-                            expire_on_commit=False, class_=AsyncSession, future=True)
+        return sessionmaker(bind=self._engine, expire_on_commit=False, class_=AsyncSession, future=True)
