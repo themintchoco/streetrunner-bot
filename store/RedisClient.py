@@ -2,10 +2,10 @@ import os
 
 import redis
 
-from helpers.utilities import Singleton
+from helpers.utilities import SingletonBase
 
 
-class RedisClient(metaclass=Singleton):
+class RedisClient(SingletonBase):
     def __init__(self):
         if url := os.environ.get('REDIS_TLS_URL', False):
             self.pool = redis.from_url(url, ssl_cert_reqs=None)

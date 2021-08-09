@@ -1,6 +1,6 @@
 from PIL import Image
 
-from bot.api import get_skin
+from bot.api_compatability_layer import get_skin
 from bot.card.Render import Render, Renderable
 
 

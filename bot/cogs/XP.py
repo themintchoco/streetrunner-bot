@@ -5,7 +5,7 @@ import discord
 from discord.ext import commands
 from sqlalchemy import select
 
-from bot.api import get_chat_xp
+from bot.api_compatability_layer import get_chat_xp
 from bot.card.XPCard import XPCard
 from bot.card.XPLeaderboard import XPLeaderboard
 from helpers.xp import get_level_from_xp

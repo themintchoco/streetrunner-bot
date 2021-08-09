@@ -4,10 +4,10 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 
-from helpers.utilities import Singleton
+from helpers.utilities import SingletonBase
 
 
-class PostgresClient(metaclass=Singleton):
+class PostgresClient(SingletonBase):
     def __init__(self):
         uri = os.environ.get('DATABASE_URL')
         index_protocol = uri.index('://')
