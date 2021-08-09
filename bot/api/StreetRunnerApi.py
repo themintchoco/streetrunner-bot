@@ -1,3 +1,5 @@
+import os
+
 from marshmallow import Schema, fields
 
 from bot.api.api import ApiSchema

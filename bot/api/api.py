@@ -24,16 +24,10 @@ class ApiSchemaBase(SchemaMeta):
         return super().__new__(cls, name, bases, attrs)
 
 
-class ApiData:
-    def __init__(self, data):
-        self._data = data
-
-    def __repr__(self):
-        return repr(self._data)
-
+class ApiData(dict):
     def __getattr__(self, attr):
         try:
-            return self._data[attr]
+            return self[attr]
         except KeyError:
             raise AttributeError
 
