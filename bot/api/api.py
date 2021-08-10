@@ -42,7 +42,7 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
     def __getattr__(self, attr):
         for cls in self.__class__.__subclasses__():
             if cls.__name__ == attr:
-                return lambda params={}, *args, **kwargs: cls({**self._params, **p}, *args, **kwargs)
+                return lambda params={}, *args, **kwargs: cls({**self._params, **params}, *args, **kwargs)
 
         raise AttributeError
 
