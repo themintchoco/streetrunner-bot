@@ -4,12 +4,12 @@ import discord
 from PIL import Image, ImageDraw, ImageFont
 
 from bot.api_compatability_layer import get_leaderboard, get_player_info, get_position
+from bot.api.StreetRunnerApi.Leaderboard import LeaderboardTime
 from bot.card.Avatar import Avatar
 from bot.card.GenericLeaderboard import GenericLeaderboard
 from bot.card.Render import Render
 from bot.card.card import FONT_BLACK, FONT_BOLD, SPACING
 from bot.exceptions import DiscordNotLinkedError
-from bot.player.leaderboard import LeaderboardType
 from bot.player.stats import PlayerInfo
 from helpers.utilities import get_timedelta_representation
 
@@ -21,7 +21,7 @@ class TimeLeaderboard(GenericLeaderboard):
         self._username = username
         self._discord_user = discord_user
 
-        self._data = get_leaderboard(LeaderboardType.Time)
+        self._data = get_leaderboard(LeaderboardTime)
 
     @property
     async def data(self) -> Iterable[PlayerInfo]:
@@ -118,7 +118,7 @@ class TimeLeaderboard(GenericLeaderboard):
         if self._username or self._discord_user:
             try:
                 self._target_position = await get_position(username=self._username, discord_user=self._discord_user,
-                                                           type=LeaderboardType.Time)
+                                                           leaderboard_type=LeaderboardTime)
                 self._target = await get_player_info(username=self._username, discord_user=self._discord_user)
             except DiscordNotLinkedError:
                 pass

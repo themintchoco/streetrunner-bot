@@ -33,24 +33,28 @@ class ApiData(dict):
 
 
 class ApiSchema(Schema, metaclass=ApiSchemaBase):
-    def __init__(self, params={}, *args, **kwargs):
+    def __init__(self, params={}, query={}, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._params = params
+        self._query = query
         self._data = None
 
     def __getattr__(self, attr):
         for cls in self.__class__.__subclasses__():
             if cls.__name__ == attr:
-                return lambda params={}: cls(params={**self._params, **params})
+                return lambda params={}, *args, **kwargs: cls({**self._params, **p}, *args, **kwargs)
 
         raise AttributeError
 
     async def api_get(self, *args, **kwargs):
         for endpoint in self.__endpoints__:
             try:
-                url = endpoint.format(**{k: urllib.parse.quote(v, safe='') for k, v in self._params.items()})
+                url = endpoint.format(**{k: urllib.parse.quote(v, safe='') for k, v in self._params.items() if v is not None})
             except KeyError:
                 continue
+
+            if query := urllib.parse.urlencode(self._query):
+                url += '?' + query
 
             async with aiohttp.ClientSession(raise_for_status=True) as s:
                 async with s.get(url, *args, **kwargs) as r:
@@ -61,6 +65,14 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
     @post_load
     def make_data(self, data, **kwargs):
         return ApiData(data)
+
+    async def apreload(self):
+        await self.adata
+        return self
+
+    def preload(self):
+        self.data
+        return self
 
     @property
     async def adata(self):

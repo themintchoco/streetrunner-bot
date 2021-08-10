@@ -1,19 +1,10 @@
-import os
+from marshmallow import fields
 
-from marshmallow import Schema, fields
-
-from bot.api.api import ApiSchema
-
-
-class StreetRunnerApi(ApiSchema):
-    __endpoints__ = ['https://streetrunner.dev/api/']
-
-    def api_get(self):
-        return super().api_get(headers={'Authorization': os.environ['API_KEY']})
+from bot.api.StreetRunnerApi.StreetRunnerApi import StreetRunnerApi
 
 
 class Player(StreetRunnerApi):
-    __endpoints__ = ['name/{mc_username}/', 'discord/{discord_id}/']
+    __endpoints__ = ['name/{mc_username}/', 'discord/{discord_id}/', 'uuid/{uuid}/']
 
 
 class PlayerInfo(Player):
@@ -36,10 +27,19 @@ class PlayerStatsArena(Player):
     assists = fields.Integer()
     deaths = fields.Integer()
 
+    kda = fields.Function(lambda obj: (obj.kills + obj.assists) / max(1, obj.deaths))
+
 
 class PlayerStatsTime(Player):
-    # TODO: ??
-    pass
+    __endpoints__ = ['time/']
+
+    value = fields.TimeDelta()
+
+
+class PlayerXP(Player):
+    __endpoints__ = ['xp/']
+
+    value = fields.Integer()
 
 
 class PlayerCosmetics(Player):
@@ -49,9 +49,3 @@ class PlayerCosmetics(Player):
     JOIN = fields.String()
     KILL = fields.String()
     PET = fields.String()
-
-
-class Leaderboard(StreetRunnerApi):
-    __endpoints__ = ['leaderboard/']
-
-# TODO: Leaderboards

@@ -11,6 +11,9 @@ import discord
 from asyncache import cached
 from cachetools import TTLCache
 
+from api.SkinsApi.SkinsApi import SkinsApi
+from api.StreetRunnerApi.Player import Player
+from api.StreetRunnerApi.Leaderboard import Leaderboard
 from bot.cosmetics import titles
 from bot.cosmetics.cosmetics import Cosmetics
 from bot.cosmetics.pets import Pet
@@ -29,104 +32,64 @@ async def get_skin(uuid: str) -> dict:
             'slim': cached[b'slim'] == b'1',
         }
 
-    async with aiohttp.ClientSession() as s:
-        async with s.get(
-                f'https://sessionserver.mojang.com/session/minecraft/profile/{urllib.parse.quote(uuid)}') as r:
-            if r.status != 200:
-                raise APIError(r)
-            for prop in (await r.json())['properties']:
-                if prop['name'] == 'textures':
-                    skin_data = json.loads(base64.b64decode(prop['value']))['textures']['SKIN']
-                    async with s.get(skin_data['url']) as r:
-                        if r.status != 200:
-                            raise APIError(r)
-                        skin = await r.read()
+    skin_data = await SkinsApi({'uuid': uuid}).adata
 
-                    conn.hset(f'skins:{uuid}', mapping={
-                        'skin': base64.b64encode(skin).decode(),
-                        'slim': 1 if skin_data.get('metadata', {}).get('model', '') == 'slim' else 0,
-                    })
+    for prop in skin_data.properties:
+        if prop['name'] == 'textures':
+            async with aiohttp.ClientSession() as s:
+                async with s.get(json.loads(base64.b64decode(prop['value']))['textures']['SKIN']['url']) as r:
+                    if r.status != 200:
+                        raise APIError(r)
+                    skin = await r.read()
 
-                    conn.expire(f'skins:{uuid}', datetime.timedelta(days=1))
+            conn.hset(f'skins:{uuid}', mapping={
+                'skin': base64.b64encode(skin).decode(),
+                'slim': 1 if skin_data.get('metadata', {}).get('model', '') == 'slim' else 0,
+            })
 
-                    return {
-                        'skin': BytesIO(skin),
-                        'slim': skin_data.get('metadata', {}).get('model', '') == 'slim',
-                    }
-            raise
+            conn.expire(f'skins:{uuid}', datetime.timedelta(days=1))
+
+            return {
+                'skin': BytesIO(skin),
+                'slim': skin_data.get('metadata', {}).get('model', '') == 'slim',
+            }
+
+    raise ApiError()
 
 
 async def get_player_info(*, username: str = None, discord_user: discord.User = None,
                           type: PlayerStatsType = None) -> PlayerInfo:
-    query = {}
+    try:
+        player = Player({'mc_username': username, 'discord_id': discord_user.id})
 
-    if username:
-        query['mc_username'] = urllib.parse.quote(username)
-    else:
-        query['discord_id'] = urllib.parse.quote(str(discord_user.id))
+    except aiohttp.ClientResponseError as e:
+        if e.status == 404:
+            if username:
+                raise UsernameError({'message': 'The username provided is invalid', 'username': username})
+            else:
+                raise DiscordNotLinkedError({
+                    'message': 'You have not linked your Discord account to your Minecraft account. '
+                               'Please link your account using the /discord command in-game. ',
+                    'discord_id': discord_user})
 
-    if type:
-        query['type'] = urllib.parse.quote(type.name.lower())
+        raise APIError(r)
 
-    async with aiohttp.ClientSession() as s:
-        async with s.get(
-                f'https://streetrunner.dev/api/player/?{urllib.parse.urlencode(query)}',
-                headers={'Authorization': os.environ['API_KEY']}) as r:
-            if r.status == 404:
-                if username:
-                    raise UsernameError({'message': 'The username provided is invalid', 'username': username})
-                else:
-                    raise DiscordNotLinkedError({
-                        'message': 'You have not linked your Discord account to your Minecraft account. '
-                                   'Please link your account using the /discord command in-game. ',
-                        'discord_id': discord_user})
-            elif r.status != 200:
-                raise APIError(r)
-
-            player_data = await r.json()
-
-    player_stats_prison = None
-    player_stats_arena = None
-    player_time_played = None
-
-    if prison_data := player_data.get('prison', None):
-        player_stats_prison = PlayerStatsPrison(rank=prison_data['rank'], blocks=prison_data['amount'])
-
-    if arena_data := player_data.get('arena', None):
-        player_stats_arena = PlayerStatsArena(infamy=arena_data['infamy'], kills=arena_data['kills'],
-                                              deaths=arena_data['deaths'], assists=arena_data['assists'])
-
-    if time_played := player_data.get('time', None):
-        player_time_played = datetime.timedelta(seconds=time_played)
-
-    return PlayerInfo(player_data['uuid'], player_data['username'], stats_prison=player_stats_prison,
-                      stats_arena=player_stats_arena, time_played=player_time_played)
+    return PlayerInfo(player)
 
 
 async def get_player_cosmetics(*, username: str = None, discord_user: discord.User = None) -> List[Cosmetics]:
-    query = {}
+    try:
+        cosmetics_data = await Player({'mc_username': username, 'discord_id': discord_user.id}).PlayerCosmetics().adata
 
-    if username:
-        query['mc_username'] = urllib.parse.quote(username)
-    else:
-        query['discord_id'] = urllib.parse.quote(str(discord_user.id))
-
-    async with aiohttp.ClientSession() as s:
-        async with s.get(
-                f'https://streetrunner.dev/api/cosmetic/?{urllib.parse.urlencode(query)}',
-                headers={'Authorization': os.environ['API_KEY']}) as r:
-            if r.status == 404:
-                if username:
-                    raise UsernameError({'message': 'The username provided is invalid', 'username': username})
-                else:
-                    raise DiscordNotLinkedError({
-                        'message': 'You have not linked your Discord account to your Minecraft account. '
-                                   'Please link your account using the /discord command in-game. ',
-                        'discord_id': discord_user})
-            elif r.status != 200:
-                raise APIError(r)
-
-            cosmetics_data = await r.json()
+    except aiohttp.ClientResponseError as e:
+        if e.status == 404:
+            if username:
+                raise UsernameError({'message': 'The username provided is invalid', 'username': username})
+            else:
+                raise DiscordNotLinkedError({
+                    'message': 'You have not linked your Discord account to your Minecraft account. '
+                               'Please link your account using the /discord command in-game. ',
+                    'discord_id': discord_user})
 
     cosmetics = []
 
@@ -139,54 +102,25 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
     return cosmetics
 
 
-async def get_leaderboard(type: LeaderboardType) -> AsyncGenerator[PlayerInfo, None]:
-    query = {'type': urllib.parse.quote(type.name.lower())}
+async def get_leaderboard(leaderboard_type) -> AsyncGenerator[PlayerInfo, None]:
+    try:
+        leaderboard_data = await leaderboard_type().adata
 
-    async with aiohttp.ClientSession() as s:
-        async with s.get(
-                f'https://streetrunner.dev/api/leaderboard/?{urllib.parse.urlencode(query)}',
-                headers={'Authorization': os.environ['API_KEY']}) as r:
-            if r.status != 200:
-                raise APIError(r)
-            leaderboard_data = await r.json()
+    except aiohttp.ClientResponseError as e:
+        raise APIError(r)
 
-    for player_data in leaderboard_data[type.name.lower()]:
-        player_stats_prison = None
-        player_stats_arena = None
-        player_time_played = None
-
-        if prison_data := player_data.get('prison', None):
-            player_stats_prison = PlayerStatsPrison(rank=prison_data['rank'], blocks=prison_data['amount'])
-
-        if arena_data := player_data.get('arena', None):
-            player_stats_arena = PlayerStatsArena(infamy=arena_data['infamy'], kills=arena_data['kills'],
-                                                  deaths=arena_data['deaths'], assists=arena_data['assists'])
-
-        if time_played := player_data.get('time', None):
-            player_time_played = datetime.timedelta(seconds=time_played)
-
-        yield PlayerInfo(player_data['uuid'], player_data['username'], stats_prison=player_stats_prison,
-                         stats_arena=player_stats_arena, time_played=player_time_played)
+    for entry in leaderboard_data:
+        yield PlayerInfo(Player({'uuid': entry.uuid}))
 
 
-async def get_position(*, username: str = None, discord_user: discord.User = None, type: LeaderboardType) -> int:
-    query = {'type': urllib.parse.quote(type.name.lower())}
+async def get_position(*, username: str = None, discord_user: discord.User = None, leaderboard_type) -> int:
+    try:
+        position = (await leaderboard_type().LeaderboardDataPosition().adata).value
 
-    if username:
-        query['mc_username'] = urllib.parse.quote(username)
-    else:
-        query['discord_id'] = urllib.parse.quote(str(discord_user.id))
+    except aiohttp.ClientResponseError as e:
+        raise APIError(r)
 
-    async with aiohttp.ClientSession() as s:
-        async with s.get(
-                f'https://streetrunner.dev/api/position/?{urllib.parse.urlencode(query)}',
-                headers={'Authorization': os.environ['API_KEY']}) as r:
-            if r.status == 404:
-                raise UsernameError({'message': 'The username provided is invalid',
-                                     'username': username}) if username else DiscordNotLinkedError()
-            elif r.status != 200:
-                raise APIError(r)
-            return (await r.json())[type.name.lower()]
+    return position
 
 
 async def get_chat_xp(discord_id: List[int], timerange: List[Tuple[datetime.datetime, datetime.datetime]]) -> List[int]:
