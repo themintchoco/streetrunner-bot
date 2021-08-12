@@ -163,7 +163,7 @@ class KdaCard(PlayerCard):
     def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('KILLS', str(player_info.stats_arena.kills)),
-            ('KDA', str(player_info.stats_arena.kda)),
+            ('KDA', '{:.2f}'.format(player_info.stats_arena.kda)),
         ]
 
 

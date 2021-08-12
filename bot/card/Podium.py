@@ -223,7 +223,7 @@ class KdaPodium(Podium):
         super().__init__(username, discord_user, Leaderboard.LeaderboardKda, 'Kda')
 
     def get_stats(self, player_info: PlayerInfo) -> str:
-        return str(player_info.stats_arena.kda)
+        return '{:.2f}'.format(player_info.stats_arena.kda)
 
 
 class KillsPodium(Podium):
