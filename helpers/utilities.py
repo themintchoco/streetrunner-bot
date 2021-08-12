@@ -5,7 +5,7 @@ from bot.config import bot
 
 class SingletonBase:
     def __new__(cls, *args, **kwargs):
-        if not 'instance' in cls.__dict__:
+        if 'instance' not in cls.__dict__:
             cls.instance = super().__new__(cls, *args, **kwargs)
         return cls.instance
 

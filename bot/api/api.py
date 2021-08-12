@@ -33,8 +33,12 @@ class ApiData(dict):
 
 
 class ApiSchema(Schema, metaclass=ApiSchemaBase):
-    def __init__(self, params={}, query={}, *args, **kwargs):
+    def __init__(self, params=None, query=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        if query is None:
+            query = {}
+        if params is None:
+            params = {}
         self._params = params
         self._query = query
         self._data = None

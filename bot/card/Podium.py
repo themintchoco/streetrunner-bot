@@ -2,8 +2,9 @@ import asyncstdlib as a
 import discord
 from PIL import Image, ImageDraw, ImageFont
 
+from bot.api.StreetRunnerApi.Leaderboard import LeaderboardRank, LeaderboardKda, LeaderboardKills, LeaderboardBlocks, \
+    LeaderboardInfamy, LeaderboardDeaths
 from bot.api_compatability_layer import get_leaderboard, get_player_info, get_position
-from bot.api.StreetRunnerApi.Leaderboard import LeaderboardRank, LeaderboardKda, LeaderboardKills, LeaderboardBlocks, LeaderboardInfamy, LeaderboardDeaths
 from bot.card.Avatar import Avatar
 from bot.card.Render import Render, Renderable
 from bot.card.card import FONT_BLACK, FONT_BOLD, SPACING

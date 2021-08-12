@@ -51,7 +51,7 @@ async def get_skin(uuid: str) -> dict:
                 'slim': skin_data.get('metadata', {}).get('model', '') == 'slim',
             }
 
-    raise ApiError()
+    raise APIError()
 
 
 @cached(cache=TTLCache(maxsize=1024, ttl=86400))
