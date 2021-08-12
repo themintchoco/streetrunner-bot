@@ -3,8 +3,8 @@ from typing import Iterable, Optional
 import discord
 from PIL import Image, ImageDraw, ImageFont
 
-from bot.api_compatability_layer import get_leaderboard, get_player_info, get_position
 from bot.api.StreetRunnerApi.Leaderboard import LeaderboardTime
+from bot.api_compatability_layer import get_leaderboard, get_player_info, get_position
 from bot.card.Avatar import Avatar
 from bot.card.GenericLeaderboard import GenericLeaderboard
 from bot.card.Render import Render
@@ -46,10 +46,10 @@ class TimeLeaderboard(GenericLeaderboard):
         image_row = Image.new('RGBA', (ctx['ROW_WIDTH'], ctx['ROW_HEIGHT']), color=(0, 0, 0, 0))
         draw_row = ImageDraw.Draw(image_row)
 
-        image_avatar = (await Avatar(player_info.uuid, 6).render()).image
+        image_avatar = (await Avatar(await player_info.uuid, 6).render()).image
 
-        length_name = draw_row.textlength(player_info.username, self._font_stats)
-        length_time = draw_row.textlength(get_timedelta_representation(player_info.time_played), self._font_stats)
+        length_name = draw_row.textlength(await player_info.username, self._font_stats)
+        length_time = draw_row.textlength(get_timedelta_representation(await player_info.time_played), self._font_stats)
 
         width_required = 16 * SPACING + self._position_length + image_avatar.width + length_name + length_time
         if width_required > image_row.width:
@@ -92,13 +92,14 @@ class TimeLeaderboard(GenericLeaderboard):
                         (8 * SPACING + self._position_length, (image_row.height - image_avatar.height) // 2))
 
         draw_row.text((10 * SPACING + self._position_length + image_avatar.width, image_row.height // 2),
-                      player_info.username,
-                      (212, 175, 55,
-                       255) if self._target_position != -1 and player_info.username == self._target.username else (
+                      await player_info.username,
+                      (212, 175, 55, 255) if self._target_position != -1 and (
+                              await player_info.username == await self._target.username) else (
                           255, 255, 255, 255), self._font_stats, anchor='lm')
 
         draw_row.text((image_row.width - 2 * SPACING, image_row.height // 2),
-                      get_timedelta_representation(player_info.time_played), (255, 255, 255, 255), self._font_stats,
+                      get_timedelta_representation(await player_info.time_played), (255, 255, 255, 255),
+                      self._font_stats,
                       anchor='rm')
 
         return Render(image_row)

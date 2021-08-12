@@ -23,17 +23,17 @@ class Podium(Renderable):
         self._display_name = display_name
         self._data = get_leaderboard(leaderboard_type)
 
-    def get_stats(self, player_info: PlayerInfo) -> str:
+    async def get_stats(self, player_info: PlayerInfo) -> str:
         raise NotImplementedError()
 
     async def render_row(self, ctx, player_info: PlayerInfo) -> Render:
         image_row = Image.new('RGBA', (ctx['ROW_WIDTH'], 100), color=(0, 0, 0, 0))
         draw_row = ImageDraw.Draw(image_row)
 
-        image_avatar = (await Avatar(player_info.uuid, 6).render()).image
+        image_avatar = (await Avatar(await player_info.uuid, 6).render()).image
 
-        length_name = draw_row.textlength(player_info.username, self._font_stats)
-        length_stats = draw_row.textlength(self.get_stats(player_info), self._font_stats)
+        length_name = draw_row.textlength(await player_info.username, self._font_stats)
+        length_stats = draw_row.textlength(await self.get_stats(player_info), self._font_stats)
 
         width_required = 12 * SPACING + self._position_length + image_avatar.width + length_name + length_stats
         if width_required > image_row.width:
@@ -51,13 +51,14 @@ class Podium(Renderable):
 
         draw_row.text(
             (6 * SPACING + self._position_length + image_avatar.width, image_row.height // 2),
-            player_info.username,
+            await player_info.username,
             (212, 175, 55,
-             255) if self._target_position != -1 and player_info.username == self._target_player_info.username else (
+             255) if self._target_position != -1 and (
+                await player_info.username) == self._target_player_info.username else (
                 255, 255, 255, 255), self._font_stats, anchor='lm')
 
         draw_row.text((image_row.width - 2 * SPACING, image_row.height // 2),
-                      self.get_stats(player_info), (255, 255, 255, 255), self._font_stats, anchor='rm')
+                      await self.get_stats(player_info), (255, 255, 255, 255), self._font_stats, anchor='rm')
 
         return Render(image_row)
 
@@ -122,31 +123,31 @@ class Podium(Renderable):
         draw_highlight.text(((LEADERBOARD_PODIUM_WIDTH - length_subtitle) // 2, bounds_title[3] + SPACING),
                             'LEADERBOARD', (255, 255, 255, 255), font_subtitle)
 
-        image_avatar_big = (await Avatar(leaderboard_highlight[0].uuid, 10).render()).image
+        image_avatar_big = (await Avatar(await leaderboard_highlight[0].uuid, 10).render()).image
         image_highlight.paste(image_avatar_big, (270 - image_avatar_big.width // 2, 177))
 
-        image_avatar_two = (await Avatar(leaderboard_highlight[1].uuid, 7).render()).image
+        image_avatar_two = (await Avatar(await leaderboard_highlight[1].uuid, 7).render()).image
         image_highlight.paste(image_avatar_two, (93 - image_avatar_two.width // 2, 225))
 
-        image_avatar_three = (await Avatar(leaderboard_highlight[2].uuid, 7).render()).image
+        image_avatar_three = (await Avatar(await leaderboard_highlight[2].uuid, 7).render()).image
         image_highlight.paste(image_avatar_three, (449 - image_avatar_three.width // 2, 235))
 
         font_highlight_big = ImageFont.truetype(FONT_BOLD, 24)
         font_highlight_med = ImageFont.truetype(FONT_BOLD, 18)
 
-        draw_highlight.text((270, 270), leaderboard_highlight[0].username,
-                            (212, 175, 55, 255) if self._target_position != -1 and leaderboard_highlight[
-                                0].username == self._target_player_info.username else (
+        draw_highlight.text((270, 270), await leaderboard_highlight[0].username,
+                            (212, 175, 55, 255) if self._target_position != -1 and (
+                                await leaderboard_highlight[0].username) == self._target_player_info.username else (
                                 255, 255, 255, 255), font_highlight_big, anchor='mt')
 
-        draw_highlight.text((93, 298), leaderboard_highlight[1].username,
-                            (212, 175, 55, 255) if self._target_position != -1 and leaderboard_highlight[
-                                1].username == self._target_player_info.username else (
+        draw_highlight.text((93, 298), await leaderboard_highlight[1].username,
+                            (212, 175, 55, 255) if self._target_position != -1 and (
+                                await leaderboard_highlight[1].username) == self._target_player_info.username else (
                                 255, 255, 255, 255), font_highlight_med, anchor='mt')
 
-        draw_highlight.text((449, 308), leaderboard_highlight[2].username,
-                            (212, 175, 55, 255) if self._target_position != -1 and leaderboard_highlight[
-                                2].username == self._target_player_info.username else (
+        draw_highlight.text((449, 308), await leaderboard_highlight[2].username,
+                            (212, 175, 55, 255) if self._target_position != -1 and (
+                                await leaderboard_highlight[2].username) == self._target_player_info.username else (
                                 255, 255, 255, 255), font_highlight_med, anchor='mt')
 
         draw_highlight.polygon([(210, LEADERBOARD_PODIUM_HEIGHT + SPACING),
@@ -165,17 +166,17 @@ class Podium(Renderable):
         font_stats_big = ImageFont.truetype(FONT_BLACK, 48)
         font_stats_med = ImageFont.truetype(FONT_BLACK, 36)
 
-        length_stats_big = draw_highlight.textlength(self.get_stats(leaderboard_highlight[0]), font_stats_big)
+        length_stats_big = draw_highlight.textlength(await self.get_stats(leaderboard_highlight[0]), font_stats_big)
         draw_highlight.text((270 - length_stats_big // 2, 368),
-                            self.get_stats(leaderboard_highlight[0]), (14, 14, 38, 255), font_stats_big)
+                            await self.get_stats(leaderboard_highlight[0]), (14, 14, 38, 255), font_stats_big)
 
-        length_stats_two = draw_highlight.textlength(self.get_stats(leaderboard_highlight[1]), font_stats_med)
+        length_stats_two = draw_highlight.textlength(await self.get_stats(leaderboard_highlight[1]), font_stats_med)
         draw_highlight.text((117 - length_stats_two // 2, 400),
-                            self.get_stats(leaderboard_highlight[1]), (14, 14, 38, 255), font_stats_med)
+                            await self.get_stats(leaderboard_highlight[1]), (14, 14, 38, 255), font_stats_med)
 
-        length_stats_three = draw_highlight.textlength(self.get_stats(leaderboard_highlight[2]), font_stats_med)
+        length_stats_three = draw_highlight.textlength(await self.get_stats(leaderboard_highlight[2]), font_stats_med)
         draw_highlight.text((424 - length_stats_three // 2, 415),
-                            self.get_stats(leaderboard_highlight[2]), (14, 14, 38, 255), font_stats_med)
+                            await self.get_stats(leaderboard_highlight[2]), (14, 14, 38, 255), font_stats_med)
 
         self._font_position = ImageFont.truetype(FONT_BLACK, 24)
         self._font_stats = ImageFont.truetype(FONT_BOLD, 18)
@@ -214,45 +215,45 @@ class RankPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
         super().__init__(username, discord_user, Leaderboard.LeaderboardRank, 'Rank')
 
-    def get_stats(self, player_info: PlayerInfo) -> str:
-        return player_info.stats_prison.rank
+    async def get_stats(self, player_info: PlayerInfo) -> str:
+        return (await player_info.stats_prison).rank
 
 
 class KdaPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
         super().__init__(username, discord_user, Leaderboard.LeaderboardKda, 'Kda')
 
-    def get_stats(self, player_info: PlayerInfo) -> str:
-        return '{:.2f}'.format(player_info.stats_arena.kda)
+    async def get_stats(self, player_info: PlayerInfo) -> str:
+        return '{:.2f}'.format((await player_info.stats_arena).kda)
 
 
 class KillsPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
         super().__init__(username, discord_user, Leaderboard.LeaderboardKills, 'Kills')
 
-    def get_stats(self, player_info: PlayerInfo) -> str:
-        return get_number_representation(player_info.stats_arena.kills)
+    async def get_stats(self, player_info: PlayerInfo) -> str:
+        return get_number_representation((await player_info.stats_arena).kills)
 
 
 class BlocksPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
         super().__init__(username, discord_user, Leaderboard.LeaderboardBlocks, 'Blocks')
 
-    def get_stats(self, player_info: PlayerInfo) -> str:
-        return get_number_representation(player_info.stats_prison.blocks)
+    async def get_stats(self, player_info: PlayerInfo) -> str:
+        return get_number_representation((await player_info.stats_prison).blocks)
 
 
 class InfamyPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
         super().__init__(username, discord_user, Leaderboard.LeaderboardInfamy, 'Infamy')
 
-    def get_stats(self, player_info: PlayerInfo) -> str:
-        return str(player_info.stats_arena.infamy)
+    async def get_stats(self, player_info: PlayerInfo) -> str:
+        return str((await player_info.stats_arena).infamy)
 
 
 class DeathsPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
         super().__init__(username, discord_user, Leaderboard.LeaderboardDeaths, 'Deaths')
 
-    def get_stats(self, player_info: PlayerInfo) -> str:
-        return get_number_representation(player_info.stats_arena.deaths)
+    async def get_stats(self, player_info: PlayerInfo) -> str:
+        return get_number_representation((await player_info.stats_arena).deaths)

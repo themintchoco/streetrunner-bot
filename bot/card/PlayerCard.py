@@ -22,7 +22,7 @@ class PlayerCard(Renderable):
         self._discord_user = discord_user
         self._background = background
 
-    def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         raise NotImplementedError()
 
     async def render_ribbon(self, string, bold, color) -> Render:
@@ -38,8 +38,8 @@ class PlayerCard(Renderable):
     async def render(self) -> Render:
         player_info = await get_player_info(username=self._username, discord_user=self._discord_user)
         player_cosmetics = await get_player_cosmetics(username=self._username, discord_user=self._discord_user)
-        image_skin = (await PlayerModel(player_info.uuid, 6).render()).image
-        stats = self.get_stats(player_info)
+        image_skin = (await PlayerModel(await player_info.uuid, 6).render()).image
+        stats = await self.get_stats(player_info)
 
         image_base = Image.new('RGBA', (PLAYER_CARD_WIDTH, PLAYER_CARD_HEIGHT), color=(0, 0, 0, 0))
         draw_base = ImageDraw.Draw(image_base)
@@ -48,7 +48,7 @@ class PlayerCard(Renderable):
         font_stats_header = ImageFont.truetype(FONT_LIGHT, 18)
         font_stats = ImageFont.truetype(FONT_BLACK, 54)
 
-        length_name = draw_base.textlength(player_info.username, font_username)
+        length_name = draw_base.textlength(await player_info.username, font_username)
 
         width_required = 12 * SPACING + image_skin.width + length_name
         for cosmetic in player_cosmetics:
@@ -86,7 +86,7 @@ class PlayerCard(Renderable):
 
         image_base.paste(image_skin, (5 * SPACING, 2 * SPACING), mask=image_skin)
 
-        draw_base.text((10 * SPACING + image_skin.width, 3 * SPACING), player_info.username, (235, 235, 235),
+        draw_base.text((10 * SPACING + image_skin.width, 3 * SPACING), await player_info.username, (235, 235, 235),
                        font_username)
 
         draw_base.text((10 * SPACING + image_skin.width, 8 * SPACING), stats[0][0], (192, 192, 192), font_stats_header)
@@ -127,10 +127,10 @@ class RankCard(PlayerCard):
     def __init__(self, username: str = None, discord_user: discord.User = None):
         super().__init__(username, discord_user, 'images/prison.png')
 
-    def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
-            ('RANK', player_info.stats_prison.rank),
-            ('BLOCKS MINED', get_number_representation(player_info.stats_prison.blocks)),
+            ('RANK', (await player_info.stats_prison).rank),
+            ('BLOCKS MINED', get_number_representation((await player_info.stats_prison).blocks)),
         ]
 
 
@@ -138,10 +138,10 @@ class InfamyCard(PlayerCard):
     def __init__(self, username: str = None, discord_user: discord.User = None):
         super().__init__(username, discord_user, 'images/arena.png')
 
-    def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
-            ('INFAMY', str(player_info.stats_arena.infamy)),
-            ('KDA', str(player_info.stats_arena.kda)),
+            ('INFAMY', str((await player_info.stats_arena).infamy)),
+            ('KDA', '{:.2f}'.format((await player_info.stats_arena).kda)),
         ]
 
 
@@ -149,10 +149,10 @@ class KillsCard(PlayerCard):
     def __init__(self, username: str = None, discord_user: discord.User = None):
         super().__init__(username, discord_user, 'images/arena.png')
 
-    def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
-            ('KILLS', str(player_info.stats_arena.kills)),
-            ('ASSISTS', str(player_info.stats_arena.assists)),
+            ('KILLS', str((await player_info.stats_arena).kills)),
+            ('ASSISTS', str((await player_info.stats_arena).assists)),
         ]
 
 
@@ -160,10 +160,10 @@ class KdaCard(PlayerCard):
     def __init__(self, username: str = None, discord_user: discord.User = None):
         super().__init__(username, discord_user, 'images/arena.png')
 
-    def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
-            ('KILLS', str(player_info.stats_arena.kills)),
-            ('KDA', '{:.2f}'.format(player_info.stats_arena.kda)),
+            ('KILLS', str((await player_info.stats_arena).kills)),
+            ('KDA', '{:.2f}'.format((await player_info.stats_arena).kda)),
         ]
 
 
@@ -171,10 +171,10 @@ class DeathsCard(PlayerCard):
     def __init__(self, username: str = None, discord_user: discord.User = None):
         super().__init__(username, discord_user, 'images/arena.png')
 
-    def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
-            ('DEATHS', str(player_info.stats_arena.deaths)),
-            ('KDA', str(player_info.stats_arena.kda)),
+            ('DEATHS', str((await player_info.stats_arena).deaths)),
+            ('KDA', '{:.2f}'.format((await player_info.stats_arena).kda)),
         ]
 
 
@@ -182,8 +182,8 @@ class TimeCard(PlayerCard):
     def __init__(self, username: str = None, discord_user: discord.User = None):
         super().__init__(username, discord_user, random.choice(['images/prison.png', 'images/arena.png']))  # noqa: S311
 
-    def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
-            ('TIME PLAYED', get_timedelta_representation(player_info.time_played)),
+            ('TIME PLAYED', get_timedelta_representation(await player_info.time_played)),
             ('', ''),
         ]

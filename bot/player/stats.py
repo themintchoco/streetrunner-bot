@@ -14,36 +14,36 @@ class PlayerInfo:
         self._stats_time = None
 
     @property
-    def uuid(self):
+    async def uuid(self):
         if not self._player_info:
-            self._player_info = self._player.PlayerInfo().preload()
+            self._player_info = await self._player.PlayerInfo().preload()
 
-        return self._player_info.data.uuid
+        return (await self._player_info.data).uuid
 
     @property
-    def username(self):
+    async def username(self):
         if not self._player_info:
-            self._player_info = self._player.PlayerInfo().preload()
+            self._player_info = await self._player.PlayerInfo().preload()
 
-        return self._player_info.data.name
+        return (await self._player_info.data).name
 
     @property
-    def stats_prison(self):
+    async def stats_prison(self):
         if not self._stats_prison:
-            self._stats_prison = self._player.PlayerStatsPrison().preload()
+            self._stats_prison = await self._player.PlayerStatsPrison().preload()
 
-        return self._stats_prison.data
-
-    @property
-    def stats_arena(self):
-        if not self._stats_arena:
-            self._stats_arena = self._player.PlayerStatsArena().preload()
-
-        return self._stats_arena.data
+        return await self._stats_prison.data
 
     @property
-    def time_played(self):
+    async def stats_arena(self):
         if not self._stats_arena:
-            self._stats_arena = self._player.PlayerStatsTime().preload()
+            self._stats_arena = await self._player.PlayerStatsArena().preload()
 
-        return self._stats_arena.data.value
+        return await self._stats_arena.data
+
+    @property
+    async def time_played(self):
+        if not self._stats_arena:
+            self._stats_arena = await self._player.PlayerStatsTime().preload()
+
+        return (await self._stats_arena.data).value

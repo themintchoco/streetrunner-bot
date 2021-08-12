@@ -1,10 +1,15 @@
 import asyncio
 import concurrent.futures
+import datetime
+import hashlib
+import json
 import urllib
 
 import aiohttp
 from marshmallow import Schema, post_load
 from marshmallow.schema import SchemaMeta
+
+from store.RedisClient import RedisClient
 
 
 class ApiSchemaBase(SchemaMeta):
@@ -35,12 +40,9 @@ class ApiData(dict):
 class ApiSchema(Schema, metaclass=ApiSchemaBase):
     def __init__(self, params=None, query=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if query is None:
-            query = {}
-        if params is None:
-            params = {}
-        self._params = params
-        self._query = query
+
+        self._params = params if params else {}
+        self._query = query if query else {}
         self._data = None
 
     def __getattr__(self, attr):
@@ -51,6 +53,8 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
         raise AttributeError
 
     async def api_get(self, *args, **kwargs):
+        conn = RedisClient().conn
+
         for endpoint in self.__endpoints__:
             try:
                 url = endpoint.format(
@@ -58,12 +62,18 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
             except KeyError:
                 continue
 
+            cache_key = hashlib.md5((url + json.dumps(self._query, sort_keys=True)).encode()).hexdigest()
+            if cached := await conn.get(f'api:{cache_key}'):
+                return json.loads(cached)
+
             if query := urllib.parse.urlencode(self._query):
                 url += '?' + query
 
             async with aiohttp.ClientSession(raise_for_status=True) as s:
                 async with s.get(url, *args, **kwargs) as r:
-                    return await r.json()
+                    result = await r.text()
+                    await conn.set(f'api:{cache_key}', result, ex=30)
+                    return json.loads(result)
 
         raise
 
@@ -71,25 +81,13 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
     def make_data(self, data, **kwargs):
         return ApiData(data)
 
-    async def apreload(self):
-        await self.adata
-        return self
-
-    def preload(self):
-        self.data
+    async def preload(self):
+        await self.data
         return self
 
     @property
-    async def adata(self):
+    async def data(self):
         if not self._data:
             self._data = self.load(await self.api_get())
 
         return self._data
-
-    @property
-    def data(self):
-        def helper():
-            return asyncio.run_coroutine_threadsafe(self.adata).result()
-
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            return executor.submit(asyncio.run, self.adata).result()

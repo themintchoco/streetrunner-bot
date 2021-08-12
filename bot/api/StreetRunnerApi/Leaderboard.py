@@ -1,3 +1,5 @@
+import datetime
+
 from marshmallow import fields
 
 from bot.api.StreetRunnerApi.StreetRunnerApi import StreetRunnerApi
@@ -51,7 +53,7 @@ class LeaderboardRank(LeaderboardData):
 class LeaderboardTime(LeaderboardData):
     __endpoints__ = ['time/']
 
-    value = fields.TimeDelta()
+    value = fields.Function(deserialize=lambda value: datetime.timedelta(seconds=float(value)))
 
 
 class LeaderboardDataPosition(LeaderboardBlocks, LeaderboardDeaths, LeaderboardInfamy, LeaderboardKda,
