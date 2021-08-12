@@ -5,35 +5,45 @@ class PlayerStatsType(Enum):
     Prison, Arena = range(2)
 
 
-class PlayerStats:
-    def __init__(self, **kwargs):
-        self.type = kwargs['type']
-
-
-class PlayerStatsPrison(PlayerStats):
-    def __init__(self, **kwargs):
-        super().__init__(type=PlayerStatsType.Prison)
-        self.rank = kwargs['rank']
-        self.blocks = kwargs['blocks']
-
-
-class PlayerStatsArena(PlayerStats):
-    def __init__(self, **kwargs):
-        super().__init__(type=PlayerStatsType.Arena)
-        self.infamy = kwargs['infamy']
-        self.kills = kwargs['kills']
-        self.deaths = kwargs['deaths']
-        self.assists = kwargs['assists']
+class PlayerInfo:
+    def __init__(self, player):
+        self._player = player
+        self._player_info = None
+        self._stats_prison = None
+        self._stats_arena = None
+        self._stats_time = None
 
     @property
-    def kda(self) -> float:
-        return round((self.kills + self.assists) / max(self.deaths, 1), 2)
+    def uuid(self):
+        if not self._player_info:
+            self._player_info = self._player.PlayerInfo().preload()
 
+        return self._player_info.data.uuid
 
-class PlayerInfo:
-    def __init__(self, uuid, username, **kwargs):
-        self.uuid = uuid
-        self.username = username
-        self.stats_prison = kwargs.get('stats_prison', None)
-        self.stats_arena = kwargs.get('stats_arena', None)
-        self.time_played = kwargs.get('time_played', None)
+    @property
+    def username(self):
+        if not self._player_info:
+            self._player_info = self._player.PlayerInfo().preload()
+
+        return self._player_info.data.name
+
+    @property
+    def stats_prison(self):
+        if not self._stats_prison:
+            self._stats_prison = self._player.PlayerStatsPrison().preload()
+
+        return self._stats_prison.data
+
+    @property
+    def stats_arena(self):
+        if not self._stats_arena:
+            self._stats_arena = self._player.PlayerStatsArena().preload()
+
+        return self._stats_arena.data
+
+    @property
+    def time_played(self):
+        if not self._stats_arena:
+            self._stats_arena = self._player.PlayerStatsTime().preload()
+
+        return self._stats_arena.data.value

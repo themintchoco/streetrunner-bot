@@ -2,12 +2,12 @@ import asyncstdlib as a
 import discord
 from PIL import Image, ImageDraw, ImageFont
 
-from bot.api import get_leaderboard, get_player_info, get_position
+import bot.api.StreetRunnerApi.Leaderboard as Leaderboard
+from bot.api_compatability_layer import get_leaderboard, get_player_info, get_position
 from bot.card.Avatar import Avatar
 from bot.card.Render import Render, Renderable
 from bot.card.card import FONT_BLACK, FONT_BOLD, SPACING
 from bot.exceptions import DiscordNotLinkedError, NotEnoughDataError
-from bot.player.leaderboard import LeaderboardType
 from bot.player.stats import PlayerInfo
 from helpers.utilities import get_number_representation
 
@@ -16,11 +16,12 @@ LEADERBOARD_PODIUM_HEIGHT = 500
 
 
 class Podium(Renderable):
-    def __init__(self, username: str, discord_user: discord.User, type: LeaderboardType):
+    def __init__(self, username: str, discord_user: discord.User, leaderboard_type, display_name=''):
         self._username = username
         self._discord_user = discord_user
-        self._leaderboard_type = type
-        self._data = get_leaderboard(type)
+        self._leaderboard_type = leaderboard_type
+        self._display_name = display_name
+        self._data = get_leaderboard(leaderboard_type)
 
     def get_stats(self, player_info: PlayerInfo) -> str:
         raise NotImplementedError()
@@ -95,7 +96,7 @@ class Podium(Renderable):
         if self._username or self._discord_user:
             try:
                 self._target_position = await get_position(username=self._username, discord_user=self._discord_user,
-                                                           type=self._leaderboard_type)
+                                                           leaderboard_type=self._leaderboard_type)
                 self._target_player_info = await get_player_info(username=self._username,
                                                                  discord_user=self._discord_user)
             except DiscordNotLinkedError:
@@ -113,9 +114,9 @@ class Podium(Renderable):
         font_title = ImageFont.truetype(FONT_BOLD, 36)
         font_subtitle = ImageFont.truetype(FONT_BOLD, 18)
 
-        bounds_title = draw_highlight.textbbox((0, 56), self._leaderboard_type.name.upper(), font_title)
+        bounds_title = draw_highlight.textbbox((0, 56), self._display_name.upper(), font_title)
         draw_highlight.text(((LEADERBOARD_PODIUM_WIDTH - bounds_title[2]) // 2, 56),
-                            self._leaderboard_type.name.upper(), (255, 255, 255, 255), font_title)
+                            self._display_name.upper(), (255, 255, 255, 255), font_title)
 
         length_subtitle = draw_highlight.textlength('LEADERBOARD', font_subtitle)
         draw_highlight.text(((LEADERBOARD_PODIUM_WIDTH - length_subtitle) // 2, bounds_title[3] + SPACING),
@@ -211,7 +212,7 @@ class Podium(Renderable):
 
 class RankPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, LeaderboardType.Rank)
+        super().__init__(username, discord_user, Leaderboard.LeaderboardRank, 'Rank')
 
     def get_stats(self, player_info: PlayerInfo) -> str:
         return player_info.stats_prison.rank
@@ -219,7 +220,7 @@ class RankPodium(Podium):
 
 class KdaPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, LeaderboardType.Kda)
+        super().__init__(username, discord_user, Leaderboard.LeaderboardKda, 'Kda')
 
     def get_stats(self, player_info: PlayerInfo) -> str:
         return str(player_info.stats_arena.kda)
@@ -227,7 +228,7 @@ class KdaPodium(Podium):
 
 class KillsPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, LeaderboardType.Kills)
+        super().__init__(username, discord_user, Leaderboard.LeaderboardKills, 'Kills')
 
     def get_stats(self, player_info: PlayerInfo) -> str:
         return get_number_representation(player_info.stats_arena.kills)
@@ -235,7 +236,7 @@ class KillsPodium(Podium):
 
 class BlocksPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, LeaderboardType.Blocks)
+        super().__init__(username, discord_user, Leaderboard.LeaderboardBlocks, 'Blocks')
 
     def get_stats(self, player_info: PlayerInfo) -> str:
         return get_number_representation(player_info.stats_prison.blocks)
@@ -243,7 +244,7 @@ class BlocksPodium(Podium):
 
 class InfamyPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, LeaderboardType.Infamy)
+        super().__init__(username, discord_user, Leaderboard.LeaderboardInfamy, 'Infamy')
 
     def get_stats(self, player_info: PlayerInfo) -> str:
         return str(player_info.stats_arena.infamy)
@@ -251,7 +252,7 @@ class InfamyPodium(Podium):
 
 class DeathsPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, LeaderboardType.Deaths)
+        super().__init__(username, discord_user, Leaderboard.LeaderboardDeaths, 'Deaths')
 
     def get_stats(self, player_info: PlayerInfo) -> str:
         return get_number_representation(player_info.stats_arena.deaths)

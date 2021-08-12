@@ -4,7 +4,7 @@ from typing import List, Tuple
 import discord
 from PIL import Image, ImageDraw, ImageFont
 
-from bot.api import get_player_cosmetics, get_player_info
+from bot.api_compatability_layer import get_player_cosmetics, get_player_info
 from bot.card.PlayerModel import PlayerModel
 from bot.card.Render import Render, Renderable
 from bot.card.card import FONT_BLACK, FONT_BOLD, FONT_LIGHT, FONT_REGULAR, SPACING

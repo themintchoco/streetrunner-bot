@@ -3,7 +3,7 @@ import datetime
 import discord
 from sqlalchemy import select
 
-from bot.api import get_chat_xp
+from bot.api_compatability_layer import get_chat_xp
 from store.PostgresClient import PostgresClient
 from store.User import User
 
