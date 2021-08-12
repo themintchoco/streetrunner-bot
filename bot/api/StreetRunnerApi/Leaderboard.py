@@ -58,4 +58,8 @@ class LeaderboardDataPosition(LeaderboardBlocks, LeaderboardDeaths, LeaderboardI
                               LeaderboardKills, LeaderboardRank, LeaderboardTime):
     __endpoints__ = ['{uuid}/']
 
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('many', False)
+        super().__init__(*args, **kwargs)
+
     value = fields.Integer()

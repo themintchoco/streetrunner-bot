@@ -8,7 +8,7 @@ class Player(StreetRunnerApi):
 
 
 class PlayerInfo(Player):
-    username = fields.String()
+    name = fields.String()
     uuid = fields.String()
 
 
@@ -45,7 +45,9 @@ class PlayerXP(Player):
 class PlayerCosmetics(Player):
     __endpoints__ = ['cosmetics/']
 
-    TITLE = fields.String()
-    JOIN = fields.String()
-    KILL = fields.String()
-    PET = fields.String()
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('many', True)
+        super().__init__(*args, **kwargs)
+
+    type = fields.String()
+    name = fields.String()

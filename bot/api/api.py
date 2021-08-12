@@ -1,9 +1,9 @@
 import asyncio
+import concurrent.futures
 import urllib
-from string import Formatter
 
 import aiohttp
-from marshmallow import Schema, fields, post_load
+from marshmallow import Schema, post_load
 from marshmallow.schema import SchemaMeta
 
 
@@ -49,7 +49,8 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
     async def api_get(self, *args, **kwargs):
         for endpoint in self.__endpoints__:
             try:
-                url = endpoint.format(**{k: urllib.parse.quote(v, safe='') for k, v in self._params.items() if v is not None})
+                url = endpoint.format(
+                    **{k: urllib.parse.quote(str(v), safe='') for k, v in self._params.items() if v is not None})
             except KeyError:
                 continue
 
@@ -83,4 +84,8 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
 
     @property
     def data(self):
-        return asyncio.get_event_loop().run_until_complete(self.adata)
+        def helper():
+            return asyncio.run_coroutine_threadsafe(self.adata).result()
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            return executor.submit(asyncio.run, self.adata).result()

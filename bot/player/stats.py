@@ -25,7 +25,7 @@ class PlayerInfo:
         if not self._player_info:
             self._player_info = self._player.PlayerInfo().preload()
 
-        return self._player_info.data.username
+        return self._player_info.data.name
 
     @property
     def stats_prison(self):

@@ -1,4 +1,4 @@
-from marshmallow import fields, EXCLUDE
+from marshmallow import EXCLUDE, fields
 
 from bot.api.api import ApiSchema
 
