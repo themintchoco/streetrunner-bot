@@ -2,8 +2,7 @@ import asyncstdlib as a
 import discord
 from PIL import Image, ImageDraw, ImageFont
 
-from bot.api.StreetRunnerApi.Leaderboard import LeaderboardRank, LeaderboardKda, LeaderboardKills, LeaderboardBlocks, \
-    LeaderboardInfamy, LeaderboardDeaths
+import bot.api.StreetRunnerApi.Leaderboard as Leaderboard
 from bot.api_compatability_layer import get_leaderboard, get_player_info, get_position
 from bot.card.Avatar import Avatar
 from bot.card.Render import Render, Renderable
@@ -213,7 +212,7 @@ class Podium(Renderable):
 
 class RankPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, LeaderboardRank, 'Rank')
+        super().__init__(username, discord_user, Leaderboard.LeaderboardRank, 'Rank')
 
     def get_stats(self, player_info: PlayerInfo) -> str:
         return player_info.stats_prison.rank
@@ -221,7 +220,7 @@ class RankPodium(Podium):
 
 class KdaPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, LeaderboardKda, 'Kda')
+        super().__init__(username, discord_user, Leaderboard.LeaderboardKda, 'Kda')
 
     def get_stats(self, player_info: PlayerInfo) -> str:
         return str(player_info.stats_arena.kda)
@@ -229,7 +228,7 @@ class KdaPodium(Podium):
 
 class KillsPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, LeaderboardKills, 'Kills')
+        super().__init__(username, discord_user, Leaderboard.LeaderboardKills, 'Kills')
 
     def get_stats(self, player_info: PlayerInfo) -> str:
         return get_number_representation(player_info.stats_arena.kills)
@@ -237,7 +236,7 @@ class KillsPodium(Podium):
 
 class BlocksPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, LeaderboardBlocks, 'Blocks')
+        super().__init__(username, discord_user, Leaderboard.LeaderboardBlocks, 'Blocks')
 
     def get_stats(self, player_info: PlayerInfo) -> str:
         return get_number_representation(player_info.stats_prison.blocks)
@@ -245,7 +244,7 @@ class BlocksPodium(Podium):
 
 class InfamyPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, LeaderboardInfamy, 'Infamy')
+        super().__init__(username, discord_user, Leaderboard.LeaderboardInfamy, 'Infamy')
 
     def get_stats(self, player_info: PlayerInfo) -> str:
         return str(player_info.stats_arena.infamy)
@@ -253,7 +252,7 @@ class InfamyPodium(Podium):
 
 class DeathsPodium(Podium):
     def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, LeaderboardDeaths, 'Deaths')
+        super().__init__(username, discord_user, Leaderboard.LeaderboardDeaths, 'Deaths')
 
     def get_stats(self, player_info: PlayerInfo) -> str:
         return get_number_representation(player_info.stats_arena.deaths)
