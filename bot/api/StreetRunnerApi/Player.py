@@ -1,4 +1,5 @@
 from marshmallow import fields
+from marshmallow import post_load
 
 from bot.api.StreetRunnerApi.StreetRunnerApi import StreetRunnerApi
 
@@ -27,7 +28,10 @@ class PlayerStatsArena(Player):
     assists = fields.Integer()
     deaths = fields.Integer()
 
-    kda = fields.Function(lambda obj: (obj.kills + obj.assists) / max(1, obj.deaths))
+    @post_load
+    def calculate_kda(self, data, **kwargs):
+        data['kda'] = (data['kills'] + data['assists']) / max(1, data['deaths'])
+        return data
 
 
 class PlayerStatsTime(Player):
