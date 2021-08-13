@@ -155,12 +155,18 @@ async def get_position(*, username: str = None, discord_user: discord.User = Non
 
 
 async def get_chat_xp(discord_id: List[int], timerange: List[Tuple[datetime.datetime, datetime.datetime]]) -> List[int]:
-    query = [{
-        'id': str(discord_id[i]),
-        'start': int(timerange[i][0].timestamp()),
-        'end': int(timerange[i][1].timestamp()),
-        'cooldown': 8,
-    } for i in range(len(discord_id))]
+    query = []
+    id_map = {}
+
+    for i in range(len(discord_id)):
+        query.append({
+            'id': str(discord_id[i]),
+            'start': int(timerange[i][0].timestamp()),
+            'end': int(timerange[i][1].timestamp()),
+            'cooldown': 8,
+        })
+
+        id_map[str(discord_id[i])] = i
 
     async with aiohttp.ClientSession() as s:
         async with s.post(
@@ -169,4 +175,11 @@ async def get_chat_xp(discord_id: List[int], timerange: List[Tuple[datetime.date
             if r.status != 200:
                 raise APIError(r)
 
-            return [delta['value'] if delta else 0 for delta in await r.json()]
+            result = await r.json()
+
+    deltas = [0] * len(discord_id)
+
+    for delta in result:
+        deltas[id_map[delta['id']]] = delta['value']
+
+    return deltas
