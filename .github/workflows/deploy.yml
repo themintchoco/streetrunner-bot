@@ -6,16 +6,19 @@ on:
       - main
 
 jobs:
-  check:
-    name: Deploy to EBS
+  deploy:
     runs-on: ubuntu-latest
-    container: coxauto/aws-ebcli:3.15.1
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v2
-      - run: eb init --region ap-southeast-1 --platform docker
-      - run: eb deploy streetrunner-bot-env -l ${GITHUB_SHA::8}
-      - run: eb setenv AWS_DEPLOY_VER=${GITHUB_SHA::8}
-        if: ${{ success() }}
+      - run: |
+          echo "$${{ github.sha }}" > version.txt
+          zip -9 -r deploy.zip . -x '*static*' -x '*.git*'
+      - uses: einaregilsson/beanstalk-deploy@v16
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: streetrunner-bot
+          environment_name: streetrunner-bot-env
+          version_label: ${{ github.sha }}
+          region: ap-southeast-1
+          deployment_package: deploy.zip
