@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: |
-          echo "$${{ github.sha }}" > version.txt
+          echo "${{ github.sha }}" > version.txt
           zip -9 -r deploy.zip . -x '*static*' -x '*.git*'
       - uses: einaregilsson/beanstalk-deploy@v16
         with:
