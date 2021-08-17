@@ -10,9 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: |
-          echo "${{ github.sha }}" > version.txt
-          zip -9 -r deploy.zip . -x '*static*' -x '*.git*'
+
+      - uses: schdck/create-env-json@v2
+        with:
+          file-name: 'env.json'
+          VERSION: ${{ github.sha }}
+
+      - run: zip -9 -r deploy.zip . -x '*.git*'
+
       - uses: einaregilsson/beanstalk-deploy@v16
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
