@@ -2,6 +2,8 @@ import os
 
 from discord.ext import commands
 
+from bot.config import env
+
 
 class Admin(commands.Cog):
     def __init__(self, bot):
@@ -14,8 +16,8 @@ class Admin(commands.Cog):
     async def version(self, ctx):
         if 'HEROKU_APP_NAME' in os.environ:
             await ctx.send(f'{os.environ["HEROKU_APP_NAME"]} {os.environ["HEROKU_RELEASE_VERSION"]}')
-        elif 'AWS_DEPLOY_VER' in os.environ:
-            await ctx.send(f'AWS {os.environ["AWS_DEPLOY_VER"]}')
+        elif v := env.get('VERSION', None):
+            await ctx.send(f'AWS {v}')
         else:
             await ctx.send('Local')
 
