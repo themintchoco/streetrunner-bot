@@ -48,7 +48,13 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
     def __getattr__(self, attr):
         for cls in self.__class__.__subclasses__():
             if cls.__name__ == attr:
-                return lambda params={}, *args, **kwargs: cls({**self._params, **params}, *args, **kwargs)
+                def subcls(params={}, *args, **kwargs):
+                    subinst = cls({**self._params, **params}, *args, **kwargs)
+                    subinst.__endpoints__ = [endpoint for endpoint in subinst.__endpoints__ if
+                                             any(endpoint.startswith(prefix) for prefix in self.__endpoints__)]
+                    return subinst
+
+                return subcls
 
         raise AttributeError
 
