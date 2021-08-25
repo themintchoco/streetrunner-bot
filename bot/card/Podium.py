@@ -54,7 +54,8 @@ class Podium(Renderable):
             await player_info.username,
             (212, 175, 55,
              255) if self._target_position != -1 and (
-                await player_info.username) == self._target_player_info.username else (
+                await player_info.username) == (
+                await self._target_player_info.username) else (
                 255, 255, 255, 255), self._font_stats, anchor='lm')
 
         draw_row.text((image_row.width - 2 * SPACING, image_row.height // 2),
@@ -137,17 +138,20 @@ class Podium(Renderable):
 
         draw_highlight.text((270, 270), await leaderboard_highlight[0].username,
                             (212, 175, 55, 255) if self._target_position != -1 and (
-                                await leaderboard_highlight[0].username) == self._target_player_info.username else (
+                                await leaderboard_highlight[0].username) == (
+                                await self._target_player_info.username) else (
                                 255, 255, 255, 255), font_highlight_big, anchor='mt')
 
         draw_highlight.text((93, 298), await leaderboard_highlight[1].username,
                             (212, 175, 55, 255) if self._target_position != -1 and (
-                                await leaderboard_highlight[1].username) == self._target_player_info.username else (
+                                await leaderboard_highlight[1].username) == (
+                                await self._target_player_info.username) else (
                                 255, 255, 255, 255), font_highlight_med, anchor='mt')
 
         draw_highlight.text((449, 308), await leaderboard_highlight[2].username,
                             (212, 175, 55, 255) if self._target_position != -1 and (
-                                await leaderboard_highlight[2].username) == self._target_player_info.username else (
+                                await leaderboard_highlight[2].username) == (
+                                await self._target_player_info.username) else (
                                 255, 255, 255, 255), font_highlight_med, anchor='mt')
 
         draw_highlight.polygon([(210, LEADERBOARD_PODIUM_HEIGHT + SPACING),
