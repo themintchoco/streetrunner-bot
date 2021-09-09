@@ -1,5 +1,5 @@
 # StreetRunner Bot
 
-[![Check Style](https://github.com/themintchoco/streetrunner-bot/actions/workflows/check.yml/badge.svg)](https://github.com/themintchoco/streetrunner-bot/actions/workflows/check.yml)
+[![Lint Code Base](https://github.com/themintchoco/streetrunner-bot/actions/workflows/linter.yml/badge.svg)](https://github.com/themintchoco/streetrunner-bot/actions/workflows/linter.yml)
 
 Discord bot serving the StreetRunner Discord server. 
