@@ -8,16 +8,14 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: ${{ github.actor != 'dependabot[bot]' }}
     steps:
       - uses: actions/checkout@v2
-
       - uses: schdck/create-env-json@v2
         with:
           file-name: 'env.json'
           VERSION: ${{ github.sha }}
-
       - run: zip -9 -r deploy.zip . -x '*.git*'
-
       - uses: einaregilsson/beanstalk-deploy@v16
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
