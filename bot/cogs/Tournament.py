@@ -17,7 +17,8 @@ class Tournament(commands.Cog):
         async with ctx.typing():
             render = await TournamentPodium(username=username, discord_user=ctx.author).render()
 
-        await ctx.send(file=discord.File(render.file('PNG'), 'tournament_leaderboard.png'))
+        await ctx.send("View the full leaderbaord LIVE at https://streetrunner.dev/tournament/",
+                       file=discord.File(render.file('PNG'), 'tournament_leaderboard.png'))
 
     @tournament.error
     async def on_command_error(self, ctx, error):
