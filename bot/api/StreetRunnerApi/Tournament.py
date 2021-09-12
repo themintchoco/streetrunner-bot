@@ -23,6 +23,6 @@ class TournamentData(Tournament):
 
 
 class TournamentPosition(Tournament):
-    __endpoints__ = ['{id}/']
+    __endpoints__ = ['{uuid}/']
 
     value = fields.Integer()
