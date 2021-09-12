@@ -1,6 +1,3 @@
-import itertools
-
-import asyncstdlib as a
 import discord
 from PIL import Image, ImageDraw, ImageFont
 
@@ -21,7 +18,8 @@ class TournamentPodium(Renderable):
         self._discord_user = discord_user
         self._leaderboard_type = leaderboard_type
         self._display_name = display_name
-        self._data = await self.get_leaderboard(leaderboard_type)
+
+        await get_leaderboard()
 
     async def get_leaderboard(self):
         try:
@@ -30,7 +28,7 @@ class TournamentPodium(Renderable):
         except aiohttp.ClientResponseError as e:
             raise APIError(e)
 
-        return leaderboard_data
+        self._data = leaderboard_data
 
     async def get_position(*, username: str = None, discord_user: discord.User = None, leaderboard_type) -> int:
         try:
@@ -87,7 +85,7 @@ class TournamentPodium(Renderable):
         async def get_rows():
             rows = []
 
-            async for i, player_info in a.enumerate(rows_data):
+            async for i, player_info in enumerate(rows_data):
                 rows.append((await self.render_row({**ctx, 'POSITION': i + 4}, player_info)).image)
 
             return rows
@@ -95,15 +93,16 @@ class TournamentPodium(Renderable):
         self._target_position = -1
         if self._username or self._discord_user:
             try:
-                self._target_position = await self.get_position(username=self._username, discord_user=self._discord_user,
-                                                           leaderboard_type=self._leaderboard_type)
+                self._target_position = await self.get_position(username=self._username,
+                                                                discord_user=self._discord_user,
+                                                                leaderboard_type=self._leaderboard_type)
                 self._target_player_info = await get_player_info(username=self._username,
                                                                  discord_user=self._discord_user)
             except DiscordNotLinkedError:
                 pass
 
         try:
-            leaderboard_highlight = [self._data.next() for i in range(3)]
+            leaderboard_highlight = self._data[:3]
         except StopAsyncIteration:
             raise NotEnoughDataError()
 
@@ -187,7 +186,7 @@ class TournamentPodium(Renderable):
                                     4 * SPACING)
 
         ctx = {'ROW_WIDTH': image_highlight.width}
-        rows_data = [x async for x in itertools.slice(self._data, 5)]
+        rows_data = self._data[3:8]
         rows = await get_rows()
 
         rows_width = max(row.width for row in rows)
