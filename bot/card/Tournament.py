@@ -3,12 +3,13 @@ import discord
 from PIL import Image, ImageDraw, ImageFont
 
 import bot.api.StreetRunnerApi.Tournament as Tournament
-from bot.api_compatability_layer import resolve_uuid, get_player_info
+from bot.api_compatability_layer import get_player_info, resolve_uuid
 from bot.card.Avatar import Avatar
 from bot.card.Render import Render, Renderable
 from bot.card.card import FONT_BLACK, FONT_BOLD, SPACING
 from bot.exceptions import APIError, DiscordNotLinkedError, NotEnoughDataError
 from bot.player.stats import PlayerInfo
+from helpers.utilities import get_number_representation
 
 LEADERBOARD_PODIUM_WIDTH = 540
 LEADERBOARD_PODIUM_HEIGHT = 500
@@ -42,7 +43,7 @@ class TournamentPodium(Renderable):
         return position
 
     async def get_stats(self, entry) -> str:
-        return (entry.kills + entry.assists) / max(entry.deaths, 1)
+        return get_number_representation((entry.kills + entry.assists) / max(entry.deaths, 1))
 
     async def render_row(self, ctx, player_info: PlayerInfo) -> Render:
         image_row = Image.new('RGBA', (ctx['ROW_WIDTH'], 100), color=(0, 0, 0, 0))
