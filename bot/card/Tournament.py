@@ -16,11 +16,11 @@ LEADERBOARD_PODIUM_HEIGHT = 500
 
 
 class TournamentPodium(Renderable):
-    def __init__(self, username: str, discord_user: discord.User, display_name=''):
+    def __init__(self, username: str, discord_user: discord.User):
         self._username = username
         self._discord_user = discord_user
         self._leaderboard_type = Tournament.TournamentData
-        self._display_name = display_name
+        self._display_name = 'Tournament'
 
     async def get_leaderboard(self):
         try:
