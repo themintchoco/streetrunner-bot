@@ -1,3 +1,5 @@
+import itertools
+
 import asyncstdlib as a
 import discord
 from PIL import Image, ImageDraw, ImageFont
@@ -19,7 +21,7 @@ class TournamentPodium(Renderable):
         self._discord_user = discord_user
         self._leaderboard_type = leaderboard_type
         self._display_name = display_name
-        self._data = get_leaderboard(leaderboard_type)
+        self._data = await self.get_leaderboard(leaderboard_type)
 
     async def get_leaderboard(self):
         try:
@@ -93,7 +95,7 @@ class TournamentPodium(Renderable):
         self._target_position = -1
         if self._username or self._discord_user:
             try:
-                self._target_position = await get_position(username=self._username, discord_user=self._discord_user,
+                self._target_position = await self.get_position(username=self._username, discord_user=self._discord_user,
                                                            leaderboard_type=self._leaderboard_type)
                 self._target_player_info = await get_player_info(username=self._username,
                                                                  discord_user=self._discord_user)
@@ -101,7 +103,7 @@ class TournamentPodium(Renderable):
                 pass
 
         try:
-            leaderboard_highlight = [await self._data.__anext__() for i in range(3)]
+            leaderboard_highlight = [self._data.next() for i in range(3)]
         except StopAsyncIteration:
             raise NotEnoughDataError()
 
@@ -185,7 +187,7 @@ class TournamentPodium(Renderable):
                                     4 * SPACING)
 
         ctx = {'ROW_WIDTH': image_highlight.width}
-        rows_data = [x async for x in a.islice(self._data, 5)]
+        rows_data = [x async for x in itertools.slice(self._data, 5)]
         rows = await get_rows()
 
         rows_width = max(row.width for row in rows)
