@@ -80,7 +80,7 @@ class TournamentPodium(Renderable):
         return Render(image_row)
 
     async def render(self) -> Render:
-        await get_leaderboard()
+        await self.get_leaderboard()
 
         async def get_rows():
             rows = []
