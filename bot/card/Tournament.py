@@ -3,6 +3,7 @@ import discord
 from PIL import Image, ImageDraw, ImageFont
 
 import bot.api.StreetRunnerApi.Tournament as Tournament
+from bot.api_compatability_layer import resolve_uuid
 from bot.card.Avatar import Avatar
 from bot.card.Render import Render, Renderable
 from bot.card.card import FONT_BLACK, FONT_BOLD, SPACING
