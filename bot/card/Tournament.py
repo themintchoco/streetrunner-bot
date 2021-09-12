@@ -19,8 +19,6 @@ class TournamentPodium(Renderable):
         self._leaderboard_type = leaderboard_type
         self._display_name = display_name
 
-        await get_leaderboard()
-
     async def get_leaderboard(self):
         try:
             leaderboard_data = await Tournament().TournamentData().data
@@ -82,6 +80,8 @@ class TournamentPodium(Renderable):
         return Render(image_row)
 
     async def render(self) -> Render:
+        await get_leaderboard()
+
         async def get_rows():
             rows = []
 
