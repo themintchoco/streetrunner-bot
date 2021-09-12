@@ -7,6 +7,7 @@ from bot.card.XPLevelUp import XPLevelUp
 from bot.cogs.Admin import Admin
 from bot.cogs.Leaderboard import Leaderboard
 from bot.cogs.Player import Player
+from bot.cogs.Tournament import Tournament
 from bot.cogs.WebServer import WebServer
 from bot.cogs.XP import XP
 from bot.config import bot
@@ -21,6 +22,7 @@ sentry_sdk.init(
 bot.add_cog(Player(bot))
 bot.add_cog(XP(bot))
 bot.add_cog(Leaderboard(bot))
+bot.add_cog(Tournament(bot))
 bot.add_cog(Admin(bot))
 bot.add_cog(WebServer(bot))
 
@@ -35,7 +37,7 @@ async def process_xp(message):
 
 def is_xp_command(message):
     return message.startswith(f'{bot.command_prefix}xp') or (
-        message.startswith(f'{bot.command_prefix}leaderboard') and message.endswith('xp'))
+            message.startswith(f'{bot.command_prefix}leaderboard') and message.endswith('xp'))
 
 
 @bot.event
