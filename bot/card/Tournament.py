@@ -73,7 +73,7 @@ class TournamentPodium(Renderable):
             (212, 175, 55,
              255) if self._target_position != -1 and (
                 player_info.username) == (
-                         await self._target_player_info.username) else (
+                         self._target_player_info.username) else (
                 255, 255, 255, 255), self._font_stats, anchor='lm')
 
         draw_row.text((image_row.width - 2 * SPACING, image_row.height // 2),
@@ -123,34 +123,34 @@ class TournamentPodium(Renderable):
         draw_highlight.text(((LEADERBOARD_PODIUM_WIDTH - length_subtitle) // 2, bounds_title[3] + SPACING),
                             'LEADERBOARD', (255, 255, 255, 255), font_subtitle)
 
-        image_avatar_big = (await Avatar(await leaderboard_highlight[0].uuid, 10).render()).image
+        image_avatar_big = (await Avatar(leaderboard_highlight[0].uuid, 10).render()).image
         image_highlight.paste(image_avatar_big, (270 - image_avatar_big.width // 2, 177))
 
-        image_avatar_two = (await Avatar(await leaderboard_highlight[1].uuid, 7).render()).image
+        image_avatar_two = (await Avatar(leaderboard_highlight[1].uuid, 7).render()).image
         image_highlight.paste(image_avatar_two, (93 - image_avatar_two.width // 2, 225))
 
-        image_avatar_three = (await Avatar(await leaderboard_highlight[2].uuid, 7).render()).image
+        image_avatar_three = (await Avatar(leaderboard_highlight[2].uuid, 7).render()).image
         image_highlight.paste(image_avatar_three, (449 - image_avatar_three.width // 2, 235))
 
         font_highlight_big = ImageFont.truetype(FONT_BOLD, 24)
         font_highlight_med = ImageFont.truetype(FONT_BOLD, 18)
 
-        draw_highlight.text((270, 270), await leaderboard_highlight[0].username,
+        draw_highlight.text((270, 270), leaderboard_highlight[0].username,
                             (212, 175, 55, 255) if self._target_position != -1 and (
-                                await leaderboard_highlight[0].username) == (
-                                                       await self._target_player_info.username) else (
+                                leaderboard_highlight[0].username) == (
+                                                       self._target_player_info.username) else (
                                 255, 255, 255, 255), font_highlight_big, anchor='mt')
 
-        draw_highlight.text((93, 298), await leaderboard_highlight[1].username,
+        draw_highlight.text((93, 298), leaderboard_highlight[1].username,
                             (212, 175, 55, 255) if self._target_position != -1 and (
-                                await leaderboard_highlight[1].username) == (
-                                                       await self._target_player_info.username) else (
+                                leaderboard_highlight[1].username) == (
+                                                       self._target_player_info.username) else (
                                 255, 255, 255, 255), font_highlight_med, anchor='mt')
 
-        draw_highlight.text((449, 308), await leaderboard_highlight[2].username,
+        draw_highlight.text((449, 308), leaderboard_highlight[2].username,
                             (212, 175, 55, 255) if self._target_position != -1 and (
-                                await leaderboard_highlight[2].username) == (
-                                                       await self._target_player_info.username) else (
+                                leaderboard_highlight[2].username) == (
+                                                       self._target_player_info.username) else (
                                 255, 255, 255, 255), font_highlight_med, anchor='mt')
 
         draw_highlight.polygon([(210, LEADERBOARD_PODIUM_HEIGHT + SPACING),
