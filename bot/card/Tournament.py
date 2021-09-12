@@ -88,7 +88,7 @@ class TournamentPodium(Renderable):
         async def get_rows():
             rows = []
 
-            async for i, player_info in enumerate(rows_data):
+            for i, player_info in enumerate(rows_data):
                 rows.append((await self.render_row({**ctx, 'POSITION': i + 4}, player_info)).image)
 
             return rows
