@@ -43,7 +43,7 @@ class TournamentPodium(Renderable):
         return position
 
     async def get_stats(self, entry) -> str:
-        return get_number_representation((entry.kills + entry.assists) / max(entry.deaths, 1))
+        return get_number_representation(entry.value)
 
     async def render_row(self, ctx, player_info: PlayerInfo) -> Render:
         image_row = Image.new('RGBA', (ctx['ROW_WIDTH'], 100), color=(0, 0, 0, 0))
