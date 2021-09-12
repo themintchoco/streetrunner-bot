@@ -16,12 +16,12 @@ class TournamentPodium(Renderable):
     def __init__(self, username: str, discord_user: discord.User, display_name=''):
         self._username = username
         self._discord_user = discord_user
-        self._leaderboard_type = leaderboard_type
+        self._leaderboard_type = Tournament.TournamentData
         self._display_name = display_name
 
     async def get_leaderboard(self):
         try:
-            leaderboard_data = await Tournament().TournamentData().data
+            leaderboard_data = await Tournament.TournamentData().data
 
         except aiohttp.ClientResponseError as e:
             raise APIError(e)
