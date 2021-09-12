@@ -30,7 +30,7 @@ class TournamentPodium(Renderable):
 
     async def get_position(*, username: str = None, discord_user: discord.User = None, leaderboard_type) -> int:
         try:
-            position = (await Tournament().TournamentPosition({
+            position = (await Tournament.TournamentPosition({
                 'uuid': await resolve_uuid(username=username, discord_id=discord_user.id if discord_user else None),
             }).data).value
 
