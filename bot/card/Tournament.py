@@ -1,3 +1,4 @@
+import aiohttp
 import discord
 from PIL import Image, ImageDraw, ImageFont
 
@@ -5,7 +6,7 @@ import bot.api.StreetRunnerApi.Tournament as Tournament
 from bot.card.Avatar import Avatar
 from bot.card.Render import Render, Renderable
 from bot.card.card import FONT_BLACK, FONT_BOLD, SPACING
-from bot.exceptions import DiscordNotLinkedError, NotEnoughDataError
+from bot.exceptions import APIError, DiscordNotLinkedError, NotEnoughDataError
 from bot.player.stats import PlayerInfo
 
 LEADERBOARD_PODIUM_WIDTH = 540
