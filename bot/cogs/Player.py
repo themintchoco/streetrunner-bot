@@ -7,7 +7,7 @@ from bot.card.PlayerCard import DeathsCard, InfamyCard, KdaCard, KillsCard, Rank
 from bot.exceptions import UsernameError
 
 class Player(commands.Cog):
-    """rank, infamy, kills, kda, deaths, time, peddler"""
+    """rank, infamy, kills, kda, deaths, time"""
 
     def __init__(self, bot):
         self.bot = bot
