@@ -65,6 +65,20 @@ class Champion(Title):
     id = 'CHAMPION'
 
 
+class ChampionS1(Champion):
+    id = 'CHAMPION_S1'
+
+    def __str__(self):
+        return 'CHAMPION¹'
+
+
+class ChampionS2(Champion):
+    id = 'CHAMPION_S2'
+
+    def __str__(self):
+        return 'CHAMPION²'
+
+
 class Vip(Title):
     bold = True
     color = ColorEffectUnicorn(Color('red'), Color('violet'), Color('red'), duration=60)
