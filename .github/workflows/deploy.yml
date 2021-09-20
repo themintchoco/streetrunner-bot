@@ -15,13 +15,15 @@ jobs:
         with:
           file-name: 'env.json'
           VERSION: ${{ github.sha }}
-      - run: zip -9 -r deploy.zip . -x '*.git*'
+      - run: |
+          zip -9 -r deploy.zip . -x '*.git*'
+          echo ::set-output name=short_sha::${GITHUB_SHA::8}
       - uses: einaregilsson/beanstalk-deploy@v16
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           application_name: streetrunner-bot
           environment_name: streetrunner-bot-env
-          version_label: ${{ github.sha }}
+          version_label: ${{ steps.vars.outputs.short_sha }}
           region: ap-southeast-1
           deployment_package: deploy.zip
