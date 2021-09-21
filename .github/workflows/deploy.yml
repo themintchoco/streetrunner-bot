@@ -15,9 +15,10 @@ jobs:
         with:
           file-name: 'env.json'
           VERSION: ${{ github.sha }}
-      - run: |
-          zip -9 -r deploy.zip . -x '*.git*'
-          echo ::set-output name=short_sha::${GITHUB_SHA::8}
+      - run: zip -9 -r deploy.zip . -x '*.git*'
+      - name: Set Short SHA
+        id: vars
+        run: "echo ::set-output name=short_sha::${GITHUB_SHA::8}"
       - uses: einaregilsson/beanstalk-deploy@v16
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
