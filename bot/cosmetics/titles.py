@@ -100,10 +100,20 @@ class WealthyBold(Title):
     id = 'WEALTHY_BOLD'
 
 
-# known_titles = {x.id: x() for x in Title.__subclasses__()}  # singleton object alternative
-known_titles = {x.id: x for x in Title.__subclasses__()}
+def inheritors(klass):
+    subclasses = set()
+    work = [klass]
+    while work:
+        parent = work.pop()
+        for child in parent.__subclasses__():
+            if child not in subclasses:
+                subclasses.add(child)
+                work.append(child)
+    return subclasses
+
+
+known_titles = {x.id: x() for x in inheritors(Title)}
 
 
 def from_known_string(string: str) -> Title:
-    # return known_titles[string]  # singleton object alternative
-    return known_titles[string]()
+    return known_titles[string]
