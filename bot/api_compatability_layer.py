@@ -17,18 +17,10 @@ from bot.cosmetics.cosmetics import Cosmetics
 from bot.cosmetics.pets import Pet
 from bot.exceptions import APIError, DiscordNotLinkedError, UsernameError
 from bot.player.stats import PlayerInfo
-from store.RedisClient import RedisClient
 
 
 @cached(cache=TTLCache(maxsize=1024, ttl=86400))
 async def get_skin(uuid: str) -> dict:
-    conn = RedisClient().conn
-    if cached := await conn.hgetall(f'skins:{uuid}'):
-        return {
-            'skin': BytesIO(base64.b64decode(cached[b'skin'])),
-            'slim': cached[b'slim'] == b'1',
-        }
-
     skin_data = await SkinsApi({'uuid': uuid}).data
 
     for prop in skin_data.properties:
@@ -38,13 +30,6 @@ async def get_skin(uuid: str) -> dict:
                     if r.status != 200:
                         raise APIError(r)
                     skin = await r.read()
-
-            await conn.hset(f'skins:{uuid}', mapping={
-                'skin': base64.b64encode(skin).decode(),
-                'slim': 1 if skin_data.get('metadata', {}).get('model', '') == 'slim' else 0,
-            })
-
-            await conn.expire(f'skins:{uuid}', datetime.timedelta(days=1))
 
             return {
                 'skin': BytesIO(skin),
@@ -56,15 +41,8 @@ async def get_skin(uuid: str) -> dict:
 
 @cached(cache=TTLCache(maxsize=1024, ttl=86400))
 async def resolve_uuid(*, username: str = None, discord_id: int = None) -> str:
-    conn = RedisClient().conn
-    cache_key = f'uuid:username:{username}' if username else f'uuid:discord:{discord_id}'
-
-    if cached := await conn.get(cache_key):
-        return cached.decode()
-
     try:
         uuid = (await Player({'mc_username': username, 'discord_id': discord_id}).PlayerInfo().data).uuid
-        await conn.set(cache_key, uuid, ex=datetime.timedelta(days=1))
         return uuid
 
     except aiohttp.ClientResponseError as e:
