@@ -26,5 +26,5 @@ jobs:
           application_name: streetrunner-bot
           environment_name: streetrunner-bot-env
           version_label: ${{ steps.vars.outputs.short_sha }}
-          region: ap-southeast-1
+          region: us-east-1
           deployment_package: deploy.zip
