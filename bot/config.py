@@ -17,4 +17,4 @@ intents.members = True
 bot = commands.Bot(command_prefix='!',
                    intents=intents,
                    help_command=PrettyHelp(no_category='Other'),
-                   activity=discord.Game('mc.streetrunner.dev | !help'))
+                   activity=discord.Game('mc.streetrunner.gg | !help'))

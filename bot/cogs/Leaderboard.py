@@ -88,7 +88,7 @@ class Leaderboard(commands.Cog):
     #             pass
     #
     #     await ctx.send(file=discord.File(render.file(format='PNG'), 'tournament.png'))
-    #     await ctx.send('View the full leaderboard LIVE at https://streetrunner.dev/tournament/'
+    #     await ctx.send('View the full leaderboard LIVE at https://streetrunner.gg/tournament/'
     #                    + (f'?username={username}' if username else ''))
 
     @leaderboard.error
