@@ -7,7 +7,6 @@ from bot.card.XPLevelUp import XPLevelUp
 from bot.cogs.Admin import Admin
 from bot.cogs.Leaderboard import Leaderboard
 from bot.cogs.Player import Player
-from bot.cogs.WebServer import WebServer
 from bot.cogs.XP import XP
 from bot.config import bot
 
@@ -22,8 +21,6 @@ bot.add_cog(Player(bot))
 bot.add_cog(XP(bot))
 bot.add_cog(Leaderboard(bot))
 bot.add_cog(Admin(bot))
-bot.add_cog(WebServer(bot))
-
 
 async def process_xp(message):
     if not message.author.bot:
