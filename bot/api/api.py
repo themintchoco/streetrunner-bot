@@ -1,9 +1,15 @@
+import asyncio
+import concurrent.futures
+import datetime
+import hashlib
 import json
 import urllib
 
 import aiohttp
 from marshmallow import Schema, post_load
 from marshmallow.schema import SchemaMeta
+
+from store.RedisClient import RedisClient
 
 
 class ApiSchemaBase(SchemaMeta):
@@ -53,6 +59,8 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
         raise AttributeError
 
     async def api_get(self, *args, **kwargs):
+        conn = RedisClient().conn
+
         for endpoint in self.__endpoints__:
             try:
                 url = endpoint.format(
@@ -60,12 +68,18 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
             except KeyError:
                 continue
 
+            cache_key = hashlib.md5((url + json.dumps(self._query, sort_keys=True)).encode()).hexdigest()
+            if cached := await conn.get(f'api:{cache_key}'):
+                return json.loads(cached)
+
             if query := urllib.parse.urlencode(self._query):
                 url += '?' + query
 
             async with aiohttp.ClientSession(raise_for_status=True) as s:
                 async with s.get(url, *args, **kwargs) as r:
-                    return json.loads(await r.text())
+                    result = await r.text()
+                    await conn.set(f'api:{cache_key}', result, ex=30)
+                    return json.loads(result)
 
         raise
 
