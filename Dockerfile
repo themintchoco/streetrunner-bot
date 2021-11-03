@@ -15,4 +15,5 @@ COPY . /app/
 ENV PYTHONPATH /app
 
 EXPOSE 5000
+HEALTHCHECK CMD curl --fail http://localhost:5000/health || exit 1
 ENTRYPOINT ["python", "bot/main.py"]

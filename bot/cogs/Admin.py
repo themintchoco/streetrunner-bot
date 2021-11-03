@@ -17,7 +17,7 @@ class Admin(commands.Cog):
         if 'HEROKU_APP_NAME' in os.environ:
             await ctx.send(f'{os.environ["HEROKU_APP_NAME"]} {os.environ["HEROKU_RELEASE_VERSION"]}')
         elif v := env.get('VERSION', None):
-            await ctx.send(f'AWS {v}')
+            await ctx.send(f"Keyute's Super Duper Awesome Server {v}")
         else:
             await ctx.send('Local')
 

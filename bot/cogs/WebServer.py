@@ -26,6 +26,10 @@ class WebServer(commands.Cog):
         async def index(request):
             return web.FileResponse('docs/index.html')
 
+        @self.routes.get('/health')
+        async def health(request):
+            return web.Response()
+
         @docs(
             tags=['channel'],
             summary='Get channels',
