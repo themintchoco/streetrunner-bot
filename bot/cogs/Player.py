@@ -15,7 +15,7 @@ class Player(commands.Cog):
         self.bot = bot
 
     @commands.command(aliases=['prison'])
-    async def rank(self, ctx, obj: typing.Union[discord.Member, str]):
+    async def rank(self, ctx, obj: typing.Optional[discord.Member, str]):
         """Displays player Prison stats"""
         async with ctx.typing():
             is_string = isinstance(obj, str)
@@ -28,7 +28,7 @@ class Player(commands.Cog):
             await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
     @commands.command(aliases=['arena'])
-    async def infamy(self, ctx, obj: typing.Union[discord.Member, str]):
+    async def infamy(self, ctx, obj: typing.Optional[discord.Member, str]):
         """Displays player Arena stats"""
         async with ctx.typing():
             is_string = isinstance(obj, str)
@@ -41,7 +41,7 @@ class Player(commands.Cog):
             await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
     @commands.command()
-    async def kills(self, ctx, obj: typing.Union[discord.Member, str]):
+    async def kills(self, ctx, obj: typing.Optional[discord.Member, str]):
         """Displays player Arena kill stats"""
         async with ctx.typing():
             is_string = isinstance(obj, str)
@@ -54,7 +54,7 @@ class Player(commands.Cog):
             await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
     @commands.command()
-    async def kda(self, ctx, obj: typing.Union[discord.Member, str]):
+    async def kda(self, ctx, obj: typing.Optional[discord.Member, str]):
         """Displays player Arena kda stats"""
         async with ctx.typing():
             is_string = isinstance(obj, str)
@@ -67,7 +67,7 @@ class Player(commands.Cog):
             await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
     @commands.command()
-    async def deaths(self, ctx, obj: typing.Union[discord.Member, str]):
+    async def deaths(self, ctx, obj: typing.Optional[discord.Member, str]):
         """Displays player Arena death stats"""
         async with ctx.typing():
             is_string = isinstance(obj, str)
@@ -80,7 +80,7 @@ class Player(commands.Cog):
             await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
     @commands.command()
-    async def time(self, ctx, obj: typing.Union[discord.Member, str]):
+    async def time(self, ctx, obj: typing.Optional[discord.Member, str]):
         """Displays player time"""
         async with ctx.typing():
             is_string = isinstance(obj, str)
