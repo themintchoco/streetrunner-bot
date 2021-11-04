@@ -9,7 +9,7 @@ from bot.exceptions import UsernameError
 
 
 def is_string(obj):
-    return obj is not None or isinstance(obj, str)
+    return obj is None or isinstance(obj, str)
 
 class Player(commands.Cog):
     """rank, infamy, kills, kda, deaths, time"""
