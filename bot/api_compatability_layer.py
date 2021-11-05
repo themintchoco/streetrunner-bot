@@ -72,8 +72,8 @@ async def resolve_uuid(*, username: str = None, discord_id: int = None) -> str:
                 raise UsernameError({'message': 'The username provided is invalid', 'username': username})
             else:
                 raise DiscordNotLinkedError({
-                    'message': 'You have not linked your Discord account to your Minecraft account. '
-                               'Please link your account using the /discord command in-game. ',
+                    'message': f'<@{discord_id}> is not linked to StreetRunner. '
+                               'Linking can be done by using the /discord command in-game. ',
                     'discord_id': discord_id})
         raise APIError(e)
 
@@ -91,9 +91,9 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
                 raise UsernameError({'message': 'The username provided is invalid', 'username': username})
             else:
                 raise DiscordNotLinkedError({
-                    'message': 'You have not linked your Discord account to your Minecraft account. '
-                               'Please link your account using the /discord command in-game. ',
-                    'discord_id': discord_user})
+                    'message': f'<@{discord_user.id}> is not linked to StreetRunner. '
+                               'Linking can be done by using the /discord command in-game. ',
+                    'discord_id': discord_user.id})
 
         raise APIError(e)
 
@@ -113,8 +113,8 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
                 raise UsernameError({'message': 'The username provided is invalid', 'username': username})
             else:
                 raise DiscordNotLinkedError({
-                    'message': 'You have not linked your Discord account to your Minecraft account. '
-                               'Please link your account using the /discord command in-game. ',
+                    'message': f'<@{discord_user.id}> is not linked to StreetRunner. '
+                               'Linking can be done by using the /discord command in-game. ',
                     'discord_id': discord_user})
         raise APIError(e)
 
