@@ -241,11 +241,11 @@ class WebServer(commands.Cog):
 
             cosmetic_data = request['data']
 
-            if cosmetic_data.type == 'TITLE':
-                cosmetic = titles.from_known_string(cosmetic_data.name)
+            if cosmetic_data['type'] == 'TITLE':
+                cosmetic = titles.from_known_string(cosmetic_data['name'])
                 kls = titles.Title
-            elif cosmetic_data.type == 'PET':
-                cosmetic = pets.from_known_string(cosmetic_data.name)
+            elif cosmetic_data['type'] == 'PET':
+                cosmetic = pets.from_known_string(cosmetic_data['name'])
                 kls = pets.Pet
 
             if role := getattr(cosmetic, 'role', None):
