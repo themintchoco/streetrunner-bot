@@ -247,6 +247,8 @@ class WebServer(commands.Cog):
                 elif cosmetic_type == 'PET':
                     cosmetic_from_known_string = pets.from_known_string
                     kls = pets.Pet
+                else:
+                    continue
 
                 await member.remove_roles(*(guild.get_role(x) for x in kls.roles()))
 
