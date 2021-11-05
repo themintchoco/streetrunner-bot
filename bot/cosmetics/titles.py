@@ -1,12 +1,10 @@
-from abc import ABC
-
 from colour import Color
 
 from bot.coloreffect import ColorEffect, ColorEffectBreathe, ColorEffectUnicorn
 from bot.cosmetics.cosmetics import Cosmetics, CosmeticsType
 
 
-class Title(Cosmetics, ABC):
+class Title(Cosmetics):
     def __init__(self, **kwargs):
         super().__init__(type=CosmeticsType.Title)
 
@@ -39,18 +37,21 @@ class FieryBold(Title):
     bold = True
     color = ColorEffect('#fc5454')
     id = 'FIERY_BOLD'
+    role = 906008699473104916
 
 
 class Undefeated(Title):
     bold = True
     color = ColorEffect('#fc54fc')
     id = 'UNDEFEATED'
+    role = 906012867772428298
 
 
 class Supreme(Title):
     bold = True
     color = ColorEffect('#fca800')
     id = 'SUPREME'
+    role = 906013315078164490
 
 
 class Drake(Title):
@@ -63,6 +64,7 @@ class Champion(Title):
     bold = True
     color = ColorEffectBreathe(Color('#fc5454'), Color('#fc8e74'), inhale_rate=1.8, exhale_rate=1.2, duration=60)
     id = 'CHAMPION'
+    role = 906109826118086697
 
 
 class ChampionS1(Champion):
@@ -98,21 +100,10 @@ class WealthyBold(Title):
     bold = True
     color = ColorEffect('#fecd60')
     id = 'WEALTHY_BOLD'
+    role = 906013562403717141
 
 
-def inheritors(klass):
-    subclasses = set()
-    work = [klass]
-    while work:
-        parent = work.pop()
-        for child in parent.__subclasses__():
-            if child not in subclasses:
-                subclasses.add(child)
-                work.append(child)
-    return subclasses
-
-
-known_titles = {x.id: x() for x in inheritors(Title)}
+known_titles = {x.id: x() for x in Title.known()}
 
 
 def from_known_string(string: str) -> Title:

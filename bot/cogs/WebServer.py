@@ -4,10 +4,12 @@ import os
 
 import discord
 from aiohttp import web
-from aiohttp_apispec import docs, querystring_schema, response_schema, setup_aiohttp_apispec
+from aiohttp_apispec import docs, querystring_schema, request_schema, response_schema, setup_aiohttp_apispec
 from aiohttp_remotes import BasicAuth, Secure, XForwardedRelaxed, setup
 from discord.ext import commands, tasks
 
+from bot.api.StreetRunnerApi.Player import Player, PlayerCosmetics
+from bot.cosmetics import pets, titles
 from docs.schema import ChannelSchema, MessageQuerySchema, MessageSchema, UserSchema
 
 
@@ -17,8 +19,12 @@ class WebServer(commands.Cog):
         self.web_server.start()
 
         self.app = web.Application()
-        asyncio.run(setup(self.app, XForwardedRelaxed(), Secure(),
-                          BasicAuth(os.environ['BASIC_USER'], os.environ['BASIC_PASS'], 'realm')))
+
+        if os.environ.get('DEV', False) == 'DEV':
+            asyncio.run(setup(self.app))
+        else:
+            asyncio.run(setup(self.app, XForwardedRelaxed(), Secure(),
+                              BasicAuth(os.environ['BASIC_USER'], os.environ['BASIC_PASS'], 'realm')))
 
         self.routes = web.RouteTableDef()
 
@@ -203,6 +209,47 @@ class WebServer(commands.Cog):
                     })
 
             return web.json_response(response)
+
+        @docs(
+            tags=['cosmetics'],
+            summary='Updates cosmetics information',
+            description='Updates comsmetics information for a user',
+            responses={
+                200: {'description': 'OK'},
+                404: {'description': 'User was not found'},
+            },
+        )
+        @request_schema(PlayerCosmetics())
+        @self.routes.post('/cosmetics/{uuid}')
+        async def update_cosmetics(request):
+            try:
+                discord_id = int((await Player({'uuid': request.match_info['uuid']}).PlayerInfo().data).discord)
+            except AttributeError:
+                raise web.HTTPNotFound()
+
+            guild = self.bot.get_guild(int(os.environ['GUILD_ID']))
+            if not guild:
+                raise web.HTTPNotFound()
+
+            member = guild.get_member(discord_id)
+            if not member:
+                raise web.HTTPNotFound()
+
+            cosmetics_data = await request.json(loads=PlayerCosmetics().loads)
+
+            for cosmetic_data in cosmetics_data:
+                if cosmetic_data.type == 'TITLE':
+                    cosmetic = titles.from_known_string(cosmetic_data.name)
+                    kls = titles.Title
+                elif cosmetic_data.type == 'PET':
+                    cosmetic = pets.from_known_string(cosmetic_data.name)
+                    kls = pets.Pet
+
+                if role := getattr(cosmetic, 'role', None):
+                    await member.remove_roles(*(guild.get_role(x) for x in kls.roles()))
+                    await member.add_roles(guild.get_role(role))
+
+            return web.Response()
 
         self.webserver_port = os.environ.get('PORT', 5000)
         self.app.add_routes(self.routes)
