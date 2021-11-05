@@ -146,6 +146,21 @@ class Spiderman(Pet):
     role = 906118589290012672
 
 
+class SteveCreeper(Pet):
+    id = 'STEVE_CREEPER'
+    role = 906130204978712596
+
+
+class SteveSkeleton(Pet):
+    id = 'STEVE_SKELETON'
+    role = 906129742288269383
+
+
+class SteveZombie(Pet):
+    id = 'STEVE_ZOMBIE'
+    role = 906130632629956628
+
+
 class Turtle(Pet):
     id = 'TURTLE'
     role = 906116479920005130
