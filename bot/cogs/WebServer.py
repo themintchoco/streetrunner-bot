@@ -223,7 +223,7 @@ class WebServer(commands.Cog):
         @self.routes.post('/cosmetics/{uuid}')
         async def update_cosmetics(request):
             # Temporary whitelisting
-            if request.match_info['uuid'] not in ['1e3cb08c-e29d-478b-a0b9-3b2cacd899bd']:
+            if request.match_info['uuid'] not in ['1e3cb08c-e29d-478b-a0b9-3b2cacd899bd', 'b971f82d-f01e-4024-875a-43cc2cc0ea53']:
                 raise web.HTTPForbidden()
 
             try:
