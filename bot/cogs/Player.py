@@ -97,7 +97,7 @@ class Player(commands.Cog):
     @time.error
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, UsernameError):
-            return await ctx.send(error.original.args[0]['message'])
+            return await ctx.send(error.original.args[0]['message'], allowed_mentions=discord.AllowedMentions.none())
 
         await self.handle_command_error(ctx, error)
 
