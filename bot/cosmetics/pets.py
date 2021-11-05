@@ -121,13 +121,18 @@ class GhostSwarm(Pet):
     role = 906126312039661578
 
 
+class Mummy(Pet):
+    id = 'MUMMY'
+    role = 906216651068936212
+
+
 class Panda(Pet):
     id = 'PANDA'
     role = 906115542149115914
 
 
 class Penguin(Pet):
-    id = 'PENGUIN'
+    id = 'BABY_PENGUIN'
     role = 906116898423439360
 
 
