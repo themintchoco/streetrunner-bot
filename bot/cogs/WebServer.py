@@ -222,6 +222,10 @@ class WebServer(commands.Cog):
         @request_schema(PlayerCosmetics())
         @self.routes.post('/cosmetics/{uuid}')
         async def update_cosmetics(request):
+            # Temporary whitelisting
+            if request.match_info['uuid'] not in ['1e3cb08c-e29d-478b-a0b9-3b2cacd899bd']:
+                raise web.HTTPForbidden()
+
             try:
                 discord_id = int((await Player({'uuid': request.match_info['uuid']}).PlayerInfo().data).discord)
             except AttributeError:
