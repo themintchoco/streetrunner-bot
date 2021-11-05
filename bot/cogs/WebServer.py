@@ -4,7 +4,7 @@ import os
 
 import discord
 from aiohttp import web
-from aiohttp_apispec import docs, querystring_schema, request_schema, response_schema, setup_aiohttp_apispec, validation_middleware
+from aiohttp_apispec import docs, querystring_schema, request_schema, response_schema, setup_aiohttp_apispec
 from aiohttp_remotes import BasicAuth, Secure, XForwardedRelaxed, setup
 from discord.ext import commands, tasks
 
@@ -219,7 +219,6 @@ class WebServer(commands.Cog):
                 404: {'description': 'User was not found'},
             },
         )
-        @request_schema(PlayerCosmetics(many=False))
         @self.routes.post('/cosmetics/{uuid}')
         async def update_cosmetics(request):
             # Temporary whitelisting
@@ -239,22 +238,23 @@ class WebServer(commands.Cog):
             if not member:
                 raise web.HTTPNotFound()
 
-            cosmetic_data = request['data']
+            cosmetic_data = await request.json()
 
-            if cosmetic_data['type'] == 'TITLE':
-                cosmetic_from_known_string = titles.from_known_string
-                kls = titles.Title
-            elif cosmetic_data['type'] == 'PET':
-                cosmetic_from_known_string = pets.from_known_string
-                kls = pets.Pet
+            for cosmetic_type, cosmetic_name in cosmetic_data.items():
+                if cosmetic_type == 'TITLE':
+                    cosmetic_from_known_string = titles.from_known_string
+                    kls = titles.Title
+                elif cosmetic_type == 'PET':
+                    cosmetic_from_known_string = pets.from_known_string
+                    kls = pets.Pet
 
-            await member.remove_roles(*(guild.get_role(x) for x in kls.roles()))
+                await member.remove_roles(*(guild.get_role(x) for x in kls.roles()))
 
-            if cosmetic_name := cosmetic_data.get('name'):
-                cosmetic = cosmetic_from_known_string(cosmetic_name)
+                if cosmetic_name:
+                    cosmetic = cosmetic_from_known_string(cosmetic_name)
 
-                if role := getattr(cosmetic, 'role', None):
-                    await member.add_roles(guild.get_role(role))
+                    if role := getattr(cosmetic, 'role', None):
+                        await member.add_roles(guild.get_role(role))
 
             return web.Response()
 
@@ -271,8 +271,6 @@ class WebServer(commands.Cog):
             version='v1.3.0',
             url='/swagger.json',
         )
-
-        self.app.middlewares.extend([validation_middleware])
 
     @tasks.loop()
     async def web_server(self):
