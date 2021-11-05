@@ -242,15 +242,19 @@ class WebServer(commands.Cog):
             cosmetic_data = request['data']
 
             if cosmetic_data['type'] == 'TITLE':
-                cosmetic = titles.from_known_string(cosmetic_data['name'])
+                cosmetic_from_known_string = titles.from_known_string
                 kls = titles.Title
             elif cosmetic_data['type'] == 'PET':
-                cosmetic = pets.from_known_string(cosmetic_data['name'])
+                cosmetic_from_known_string = pets.from_known_string
                 kls = pets.Pet
 
-            if role := getattr(cosmetic, 'role', None):
-                await member.remove_roles(*(guild.get_role(x) for x in kls.roles()))
-                await member.add_roles(guild.get_role(role))
+            await member.remove_roles(*(guild.get_role(x) for x in kls.roles()))
+
+            if cosmetic_name := cosmetic_data.get('name'):
+                cosmetic = cosmetic_from_known_string(cosmetic_name)
+
+                if role := getattr(cosmetic, 'role', None):
+                    await member.add_roles(guild.get_role(role))
 
             return web.Response()
 
