@@ -12,9 +12,8 @@ from cachetools import TTLCache
 
 from bot.api.SkinsApi.SkinsApi import SkinsApi
 from bot.api.StreetRunnerApi.Player import Player
-from bot.cosmetics import titles
+from bot.cosmetics import pets, titles
 from bot.cosmetics.cosmetics import Cosmetics
-from bot.cosmetics.pets import Pet
 from bot.exceptions import APIError, DiscordNotLinkedError, UsernameError
 from bot.player.stats import PlayerInfo
 from store.RedisClient import RedisClient
@@ -126,7 +125,7 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
             cosmetics.append(titles.from_known_string(cosmetic_data.name))
 
         if cosmetic_data.type == 'PET':
-            cosmetics.append(Pet(pet_type=cosmetic_data.name))
+            cosmetics.append(pets.from_known_string(cosmetic_data.name))
 
     return cosmetics
 
