@@ -4,7 +4,7 @@ import os
 
 import discord
 from aiohttp import web
-from aiohttp_apispec import docs, querystring_schema, request_schema, response_schema, setup_aiohttp_apispec
+from aiohttp_apispec import docs, querystring_schema, request_schema, response_schema, setup_aiohttp_apispec, validation_middleware
 from aiohttp_remotes import BasicAuth, Secure, XForwardedRelaxed, setup
 from discord.ext import commands, tasks
 
@@ -219,7 +219,7 @@ class WebServer(commands.Cog):
                 404: {'description': 'User was not found'},
             },
         )
-        @request_schema(PlayerCosmetics())
+        @request_schema(PlayerCosmetics(many=False))
         @self.routes.post('/cosmetics/{uuid}')
         async def update_cosmetics(request):
             # Temporary whitelisting
@@ -239,19 +239,18 @@ class WebServer(commands.Cog):
             if not member:
                 raise web.HTTPNotFound()
 
-            cosmetics_data = await request.json(loads=PlayerCosmetics().loads)
+            cosmetic_data = request['data']
 
-            for cosmetic_data in cosmetics_data:
-                if cosmetic_data.type == 'TITLE':
-                    cosmetic = titles.from_known_string(cosmetic_data.name)
-                    kls = titles.Title
-                elif cosmetic_data.type == 'PET':
-                    cosmetic = pets.from_known_string(cosmetic_data.name)
-                    kls = pets.Pet
+            if cosmetic_data.type == 'TITLE':
+                cosmetic = titles.from_known_string(cosmetic_data.name)
+                kls = titles.Title
+            elif cosmetic_data.type == 'PET':
+                cosmetic = pets.from_known_string(cosmetic_data.name)
+                kls = pets.Pet
 
-                if role := getattr(cosmetic, 'role', None):
-                    await member.remove_roles(*(guild.get_role(x) for x in kls.roles()))
-                    await member.add_roles(guild.get_role(role))
+            if role := getattr(cosmetic, 'role', None):
+                await member.remove_roles(*(guild.get_role(x) for x in kls.roles()))
+                await member.add_roles(guild.get_role(role))
 
             return web.Response()
 
@@ -268,6 +267,8 @@ class WebServer(commands.Cog):
             version='v1.3.0',
             url='/swagger.json',
         )
+
+        self.app.middlewares.extend([validation_middleware])
 
     @tasks.loop()
     async def web_server(self):
