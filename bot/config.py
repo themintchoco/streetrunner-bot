@@ -13,6 +13,7 @@ if os.path.isfile('env.json'):
 
 intents = discord.Intents.default()
 intents.members = True
+intents.guilds = True
 
 bot = commands.Bot(command_prefix='!',
                    intents=intents,
