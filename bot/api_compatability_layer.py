@@ -92,9 +92,9 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
                 raise UsernameError({'message': 'The username provided is invalid', 'username': username})
             else:
                 raise DiscordNotLinkedError({
-                    'message': f'<@{discord_id}> is not linked to StreetRunner. '
+                    'message': f'<@{discord_user.id}> is not linked to StreetRunner. '
                                'Linking can be done by using the /discord command in-game. ',
-                    'discord_id': discord_user})
+                    'discord_id': discord_user.id})
 
         raise APIError(e)
 
@@ -114,7 +114,7 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
                 raise UsernameError({'message': 'The username provided is invalid', 'username': username})
             else:
                 raise DiscordNotLinkedError({
-                    'message': f'<@{discord_id}> is not linked to StreetRunner. '
+                    'message': f'<@{discord_user.id}> is not linked to StreetRunner. '
                                'Linking can be done by using the /discord command in-game. ',
                     'discord_id': discord_user})
         raise APIError(e)
