@@ -11,7 +11,7 @@ class Player(StreetRunnerApi):
 class PlayerInfo(Player):
     name = fields.String()
     uuid = fields.String()
-    discord = fields.String()
+    discord = fields.String(allow_none=True)
 
 
 class PlayerStatsPrison(Player):
