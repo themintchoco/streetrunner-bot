@@ -43,7 +43,7 @@ class PlayerInfo:
 
     @property
     async def time_played(self):
-        if not self._stats_arena:
-            self._stats_arena = await self._player.PlayerStatsTime().preload()
+        if not self._stats_time:
+            self._stats_time = await self._player.PlayerStatsTime().preload()
 
-        return (await self._stats_arena.data).value
+        return (await self._stats_time.data).value
