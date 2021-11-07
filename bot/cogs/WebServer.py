@@ -222,7 +222,7 @@ class WebServer(commands.Cog):
         @self.routes.post('/cosmetics/{uuid}')
         async def update_cosmetics(request):
             try:
-                discord_id = int((await Player({'uuid': request.match_info['uuid']}).PlayerInfo().data).discord)
+                discord_id = (await Player({'uuid': request.match_info['uuid']}).PlayerInfo().data).discord
             except AttributeError:
                 raise web.HTTPNotFound()
 

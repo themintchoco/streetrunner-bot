@@ -11,7 +11,13 @@ class Player(StreetRunnerApi):
 class PlayerInfo(Player):
     name = fields.String()
     uuid = fields.String()
-    discord = fields.String(allow_none=True)
+    discord = fields.Integer(allow_none=True)
+
+
+class PlayerPrivacy(Player):
+    __endpoints__ = ['privacy/']
+
+    value = fields.Integer()
 
 
 class PlayerStatsPrison(Player):

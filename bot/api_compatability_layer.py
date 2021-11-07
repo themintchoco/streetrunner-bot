@@ -69,12 +69,9 @@ async def resolve_uuid(*, username: str = None, discord_id: int = None) -> str:
     except aiohttp.ClientResponseError as e:
         if e.status == 404:
             if username:
-                raise UsernameError({'message': 'The username provided is invalid', 'username': username})
+                raise UsernameError(username)
             else:
-                raise DiscordNotLinkedError({
-                    'message': f'<@{discord_id}> is not linked to StreetRunner. '
-                               'Linking can be done by using the /discord command in-game. ',
-                    'discord_id': discord_id})
+                raise DiscordNotLinkedError(discord_id)
         raise APIError(e)
 
 
@@ -88,12 +85,9 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
     except aiohttp.ClientResponseError as e:
         if e.status == 404:
             if username:
-                raise UsernameError({'message': 'The username provided is invalid', 'username': username})
+                raise UsernameError(username)
             else:
-                raise DiscordNotLinkedError({
-                    'message': f'<@{discord_user.id}> is not linked to StreetRunner. '
-                               'Linking can be done by using the /discord command in-game. ',
-                    'discord_id': discord_user.id})
+                raise DiscordNotLinkedError(discord_id)
 
         raise APIError(e)
 
@@ -110,12 +104,9 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
     except aiohttp.ClientResponseError as e:
         if e.status == 404:
             if username:
-                raise UsernameError({'message': 'The username provided is invalid', 'username': username})
+                raise UsernameError(username)
             else:
-                raise DiscordNotLinkedError({
-                    'message': f'<@{discord_user.id}> is not linked to StreetRunner. '
-                               'Linking can be done by using the /discord command in-game. ',
-                    'discord_id': discord_user})
+                raise DiscordNotLinkedError(discord_id)
         raise APIError(e)
 
     cosmetics = []

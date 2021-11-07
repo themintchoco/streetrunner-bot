@@ -1,9 +1,12 @@
 class UsernameError(ValueError):
-    pass
+    def __init__(self, username=None):
+        super().__init__('The username provided is invalid')
 
 
 class DiscordNotLinkedError(UsernameError):
-    pass
+    def __init__(self, discord_id):
+        super().__init__(f'<@{discord_id}> is not linked to StreetRunner. '
+                         'Linking can be done by using the /discord command in-game. ')
 
 
 class NotEnoughDataError(RuntimeError):
