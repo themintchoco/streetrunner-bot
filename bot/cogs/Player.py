@@ -1,7 +1,6 @@
 import typing
 
 import discord
-from aiohttp import ClientResponseError
 from discord.ext import commands
 
 from bot.api import StreetRunnerApi
@@ -56,27 +55,28 @@ class Player(commands.Cog):
         else:
             username = None
 
-        player = StreetRunnerApi.Player.Player({'mc_username': username, 'discord_id': user.id})
-        target = ctx
+        async with ctx.typing():
+            player = StreetRunnerApi.Player.Player({'mc_username': username, 'discord_id': user.id})
+            target = ctx
 
-        try:
-            if (await player.PlayerPrivacy().data).value & privacy_mask:
-                username = username or (await player.PlayerInfo().data).name
+            try:
+                if (await player.PlayerPrivacy().data).value & privacy_mask:
+                    player_info = await player.PlayerInfo().data
 
-                if (target := user) == ctx.author:
-                    await ctx.send('Sent to your DMs due to your privacy settings.')
-                else:
-                    await ctx.send(f'Due to {username}’s privacy settings, stats cannot be shown.')
-                    return
+                    if (target := self.bot.get_user(player_info.discord)) == ctx.author:
+                        await ctx.send('Sent to your DMs due to your privacy settings.')
+                    else:
+                        await ctx.send(f'Due to {player_info.username}’s privacy settings, stats cannot be shown.')
+                        return
 
-        except ClientResponseError as e:
-            if e.status == 404:
-                if username:
-                    raise UsernameError(username)
-                else:
-                    raise DiscordNotLinkedError(user.id)
+            except APIError as e:
+                if e.status == 404:
+                    if username:
+                        raise UsernameError(username)
+                    else:
+                        raise DiscordNotLinkedError(user.id)
 
-            raise APIError(e)
+                raise
 
         async with target.typing():
             render = await card_type(username=username, discord_user=user).render()
@@ -86,15 +86,34 @@ class Player(commands.Cog):
         else:
             await target.send(file=discord.File(render.file('PNG'), 'player_card.png'))
 
+    @commands.command()
+    async def privacy(self, ctx, mask: typing.Optional[int]):
+        """Get or set privacy"""
+        player = StreetRunnerApi.Player.Player({'discord_id': ctx.author.id})
+
+        try:
+            if mask is not None:
+                await player.PlayerPrivacy().update({'value': mask})
+                await ctx.send(f'Privacy set to {mask}')
+            else:
+                await ctx.send(f'Privacy set to {(await player.PlayerPrivacy().data).value}')
+
+        except APIError as e:
+            if e.status == 404:
+                raise DiscordNotLinkedError(ctx.author.id)
+
+            raise
+
     @rank.error
     @infamy.error
     @kills.error
     @kda.error
     @deaths.error
     @time.error
+    @privacy.error
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, UsernameError):
-            return await ctx.send(error.original, allowed_mentions=discord.AllowedMentions.none())
+            return await ctx.send(error.original.args[0]['message'], allowed_mentions=discord.AllowedMentions.none())
 
         await self.handle_command_error(ctx, error)
 

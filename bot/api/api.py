@@ -1,6 +1,3 @@
-import asyncio
-import concurrent.futures
-import datetime
 import hashlib
 import json
 import urllib
@@ -9,6 +6,7 @@ import aiohttp
 from marshmallow import Schema, post_load
 from marshmallow.schema import SchemaMeta
 
+from bot.exceptions import APIError
 from store.RedisClient import RedisClient
 
 
@@ -83,6 +81,18 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
 
         raise
 
+    async def api_post(self, *args, **kwargs):
+        for endpoint in self.__endpoints__:
+            try:
+                url = endpoint.format(
+                    **{k: urllib.parse.quote(str(v), safe='') for k, v in self._params.items() if v is not None})
+            except KeyError:
+                continue
+
+            async with aiohttp.ClientSession(raise_for_status=True) as s:
+                async with s.post(url, *args, **kwargs) as r:
+                    return
+
     @post_load
     def make_data(self, data, **kwargs):
         return ApiData(data)
@@ -97,3 +107,7 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
             self._data = self.load(await self.api_get())
 
         return self._data
+
+    async def update(self, data):
+        self._data = self.load(data)
+        await self.api_post(json=data)

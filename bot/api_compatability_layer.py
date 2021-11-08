@@ -66,13 +66,13 @@ async def resolve_uuid(*, username: str = None, discord_id: int = None) -> str:
         await conn.set(cache_key, uuid, ex=datetime.timedelta(days=1))
         return uuid
 
-    except aiohttp.ClientResponseError as e:
+    except APIError as e:
         if e.status == 404:
             if username:
                 raise UsernameError(username)
             else:
                 raise DiscordNotLinkedError(discord_id)
-        raise APIError(e)
+        raise
 
 
 async def get_player_info(*, username: str = None, discord_user: discord.User = None, type=None) -> PlayerInfo:
@@ -82,14 +82,14 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
             'discord_id': discord_user.id if discord_user else None,
         })
 
-    except aiohttp.ClientResponseError as e:
+    except APIError as e:
         if e.status == 404:
             if username:
                 raise UsernameError(username)
             else:
                 raise DiscordNotLinkedError(discord_id)
 
-        raise APIError(e)
+        raise
 
     return PlayerInfo(player)
 
@@ -101,13 +101,13 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
             'discord_id': discord_user.id if discord_user else None,
         }).PlayerCosmetics().data
 
-    except aiohttp.ClientResponseError as e:
+    except APIError as e:
         if e.status == 404:
             if username:
                 raise UsernameError(username)
             else:
                 raise DiscordNotLinkedError(discord_id)
-        raise APIError(e)
+        raise
 
     cosmetics = []
 
@@ -122,24 +122,16 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
 
 
 async def get_leaderboard(leaderboard_type) -> AsyncGenerator[PlayerInfo, None]:
-    try:
-        leaderboard_data = await leaderboard_type().data
-
-    except aiohttp.ClientResponseError as e:
-        raise APIError(e)
+    leaderboard_data = await leaderboard_type().data
 
     for entry in leaderboard_data:
         yield PlayerInfo(Player({'uuid': entry.uuid}))
 
 
 async def get_position(*, username: str = None, discord_user: discord.User = None, leaderboard_type) -> int:
-    try:
-        position = (await leaderboard_type().LeaderboardDataPosition({
-            'uuid': await resolve_uuid(username=username, discord_id=discord_user.id if discord_user else None),
-        }).data).value
-
-    except aiohttp.ClientResponseError as e:
-        raise APIError(e)
+    position = (await leaderboard_type().LeaderboardDataPosition({
+        'uuid': await resolve_uuid(username=username, discord_id=discord_user.id if discord_user else None),
+    }).data).value
 
     return position
 
