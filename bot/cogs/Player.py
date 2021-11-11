@@ -1,15 +1,15 @@
-import datetime
 import typing
 
 import discord
 from discord.ext import commands
 
-from bot.card.PlayerCard import DeathsCard, InfamyCard, KdaCard, KillsCard, RankCard, TimeCard
+from bot.card.PlayerCard import DeathsCard, InfamyCard, KdaCard, KillsCard, RankCard, TimeCard, WikiCard
 from bot.exceptions import UsernameError
 
 
 def is_string(obj):
     return obj is None or isinstance(obj, str)
+
 
 class Player(commands.Cog):
     """rank, infamy, kills, kda, deaths, time"""
@@ -88,6 +88,18 @@ class Player(commands.Cog):
             await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
         else:
             await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+
+    @commands.command()
+    async def wiki(self, ctx, obj: typing.Optional[typing.Union[discord.Member, str]]):
+        """Displays player wiki points"""
+        async with ctx.typing():
+            render = await WikiCard(username=obj if is_string(obj) else None,
+                                    discord_user=ctx.author if is_string(obj) else obj).render()
+
+        if render.multi_frame:
+            await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
+        else:
+            await ctx.send(file=discord.File(render.file('PNG', 'player_card.png')))
 
     @rank.error
     @infamy.error
