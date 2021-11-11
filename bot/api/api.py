@@ -66,7 +66,7 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
             except KeyError:
                 continue
 
-            cache_key = hashlib.md5((url + json.dumps(self._query, sort_keys=True)).encode()).hexdigest()
+            cache_key = self.cache_key_for_url(url)
             if cached := await conn.get(f'api:{cache_key}'):
                 return json.loads(cached)
 
@@ -82,6 +82,8 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
         raise
 
     async def api_post(self, *args, **kwargs):
+        conn = RedisClient().conn
+
         for endpoint in self.__endpoints__:
             try:
                 url = endpoint.format(
@@ -89,9 +91,15 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
             except KeyError:
                 continue
 
+            cache_key = self.cache_key_for_url(url)
+            await conn.delete(f'api:{cache_key}')
+
             async with aiohttp.ClientSession(raise_for_status=True) as s:
                 async with s.post(url, *args, **kwargs) as r:
                     return
+
+    def cache_key_for_url(self, url):
+        return hashlib.md5((url + json.dumps(self._query, sort_keys=True)).encode()).hexdigest()
 
     @post_load
     def make_data(self, data, **kwargs):

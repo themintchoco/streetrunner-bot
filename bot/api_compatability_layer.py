@@ -6,7 +6,7 @@ from io import BytesIO
 from typing import AsyncGenerator, List, Tuple
 
 import aiohttp
-import discord
+import nextcord
 from asyncache import cached
 from cachetools import TTLCache
 
@@ -75,7 +75,7 @@ async def resolve_uuid(*, username: str = None, discord_id: int = None) -> str:
         raise
 
 
-async def get_player_info(*, username: str = None, discord_user: discord.User = None, type=None) -> PlayerInfo:
+async def get_player_info(*, username: str = None, discord_user: nextcord.User = None, type=None) -> PlayerInfo:
     try:
         player = Player({
             'mc_username': username if username else None,
@@ -94,7 +94,7 @@ async def get_player_info(*, username: str = None, discord_user: discord.User = 
     return PlayerInfo(player)
 
 
-async def get_player_cosmetics(*, username: str = None, discord_user: discord.User = None) -> List[Cosmetics]:
+async def get_player_cosmetics(*, username: str = None, discord_user: nextcord.User = None) -> List[Cosmetics]:
     try:
         cosmetics_data = await Player({
             'mc_username': username if username else None,
@@ -128,7 +128,7 @@ async def get_leaderboard(leaderboard_type) -> AsyncGenerator[PlayerInfo, None]:
         yield PlayerInfo(Player({'uuid': entry.uuid}))
 
 
-async def get_position(*, username: str = None, discord_user: discord.User = None, leaderboard_type) -> int:
+async def get_position(*, username: str = None, discord_user: nextcord.User = None, leaderboard_type) -> int:
     position = (await leaderboard_type().LeaderboardDataPosition({
         'uuid': await resolve_uuid(username=username, discord_id=discord_user.id if discord_user else None),
     }).data).value

@@ -1,6 +1,6 @@
 import datetime
 
-import discord
+import nextcord
 from sqlalchemy import select
 
 from bot.api_compatability_layer import get_chat_xp
@@ -22,7 +22,7 @@ def get_min_xp_for_level(level: int) -> int:
     return 0
 
 
-async def get_xp(discord_user: discord.User):
+async def get_xp(discord_user: nextcord.User):
     async with PostgresClient().session() as session:
         user = (await session.execute(select(User).where(User.discord_id == discord_user.id))).scalar()
 

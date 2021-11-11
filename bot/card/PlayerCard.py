@@ -1,7 +1,7 @@
 import random
 from typing import List, Tuple
 
-import discord
+import nextcord
 from PIL import Image, ImageDraw, ImageFont
 
 from bot.api_compatability_layer import get_player_cosmetics, get_player_info
@@ -17,7 +17,7 @@ PLAYER_CARD_HEIGHT = 220
 
 
 class PlayerCard(Renderable):
-    def __init__(self, username: str, discord_user: discord.User, background: str):
+    def __init__(self, username: str, discord_user: nextcord.User, background: str):
         self._username = username
         self._discord_user = discord_user
         self._background = background
@@ -124,7 +124,7 @@ class PlayerCard(Renderable):
 
 
 class RankCard(PlayerCard):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
         super().__init__(username, discord_user, 'images/prison.png')
 
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
@@ -135,7 +135,7 @@ class RankCard(PlayerCard):
 
 
 class InfamyCard(PlayerCard):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
         super().__init__(username, discord_user, 'images/arena.png')
 
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
@@ -146,7 +146,7 @@ class InfamyCard(PlayerCard):
 
 
 class KillsCard(PlayerCard):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
         super().__init__(username, discord_user, 'images/arena.png')
 
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
@@ -157,7 +157,7 @@ class KillsCard(PlayerCard):
 
 
 class KdaCard(PlayerCard):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
         super().__init__(username, discord_user, 'images/arena.png')
 
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
@@ -168,7 +168,7 @@ class KdaCard(PlayerCard):
 
 
 class DeathsCard(PlayerCard):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
         super().__init__(username, discord_user, 'images/arena.png')
 
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
@@ -179,7 +179,7 @@ class DeathsCard(PlayerCard):
 
 
 class TimeCard(PlayerCard):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
         super().__init__(username, discord_user, random.choice(['images/prison.png', 'images/arena.png']))  # noqa: S311
 
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:

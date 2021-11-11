@@ -1,6 +1,6 @@
 import os
 
-import discord
+import nextcord
 import sentry_sdk
 
 from bot.card.XPLevelUp import XPLevelUp
@@ -30,7 +30,7 @@ async def process_xp(message):
         level_before, level_after = await XP.process_message(message)
         if level_after > level_before:
             render = await XPLevelUp(message.author, level_before, level_after).render()
-            await message.channel.send(file=discord.File(render.file_animated(format='GIF'), 'xp_levelup.gif'))
+            await message.channel.send(file=nextcord.File(render.file_animated(format='GIF'), 'xp_levelup.gif'))
 
 
 def is_xp_command(message):

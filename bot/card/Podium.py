@@ -1,5 +1,5 @@
 import asyncstdlib as a
-import discord
+import nextcord
 from PIL import Image, ImageDraw, ImageFont
 
 import bot.api.StreetRunnerApi.Leaderboard as Leaderboard
@@ -16,7 +16,7 @@ LEADERBOARD_PODIUM_HEIGHT = 500
 
 
 class Podium(Renderable):
-    def __init__(self, username: str, discord_user: discord.User, leaderboard_type, display_name=''):
+    def __init__(self, username: str, discord_user: nextcord.User, leaderboard_type, display_name=''):
         self._username = username
         self._discord_user = discord_user
         self._leaderboard_type = leaderboard_type
@@ -216,7 +216,7 @@ class Podium(Renderable):
 
 
 class RankPodium(Podium):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
         super().__init__(username, discord_user, Leaderboard.LeaderboardRank, 'Rank')
 
     async def get_stats(self, player_info: PlayerInfo) -> str:
@@ -224,7 +224,7 @@ class RankPodium(Podium):
 
 
 class KdaPodium(Podium):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
         super().__init__(username, discord_user, Leaderboard.LeaderboardKda, 'Kda')
 
     async def get_stats(self, player_info: PlayerInfo) -> str:
@@ -232,7 +232,7 @@ class KdaPodium(Podium):
 
 
 class KillsPodium(Podium):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
         super().__init__(username, discord_user, Leaderboard.LeaderboardKills, 'Kills')
 
     async def get_stats(self, player_info: PlayerInfo) -> str:
@@ -240,7 +240,7 @@ class KillsPodium(Podium):
 
 
 class BlocksPodium(Podium):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
         super().__init__(username, discord_user, Leaderboard.LeaderboardBlocks, 'Blocks')
 
     async def get_stats(self, player_info: PlayerInfo) -> str:
@@ -248,7 +248,7 @@ class BlocksPodium(Podium):
 
 
 class InfamyPodium(Podium):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
         super().__init__(username, discord_user, Leaderboard.LeaderboardInfamy, 'Infamy')
 
     async def get_stats(self, player_info: PlayerInfo) -> str:
@@ -256,7 +256,7 @@ class InfamyPodium(Podium):
 
 
 class DeathsPodium(Podium):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
         super().__init__(username, discord_user, Leaderboard.LeaderboardDeaths, 'Deaths')
 
     async def get_stats(self, player_info: PlayerInfo) -> str:

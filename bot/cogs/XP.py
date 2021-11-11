@@ -1,8 +1,8 @@
 import asyncio
 import datetime
 
-import discord
-from discord.ext import commands
+import nextcord
+from nextcord.ext import commands
 from sqlalchemy import select
 
 from bot.api_compatability_layer import get_chat_xp
@@ -60,16 +60,16 @@ class XP(commands.Cog):
                 render = await XPCard(discord_user=ctx.author).render()
 
             if render.multi_frame:
-                await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'xp.gif'))
+                await ctx.send(file=nextcord.File(render.file_animated(format='GIF', loop=0), 'xp.gif'))
             else:
-                await ctx.send(file=discord.File(render.file(format='PNG'), 'xp.png'))
+                await ctx.send(file=nextcord.File(render.file(format='PNG'), 'xp.png'))
 
     @xp.command(name='leaderboard')
     async def xp_leaderboard(self, ctx):
         """Displays the current leaderboard in terms of discord XP"""
         async with ctx.typing():
             render = await XPLeaderboard(discord_user=ctx.author).render()
-        await ctx.send(file=discord.File(render.file(format='PNG'), 'xp_leaderboard.png'))
+        await ctx.send(file=nextcord.File(render.file(format='PNG'), 'xp_leaderboard.png'))
 
     @xp.error
     @xp_leaderboard.error
@@ -78,7 +78,7 @@ class XP(commands.Cog):
 
     @xp.group(name='give')
     @commands.has_permissions(administrator=True)
-    async def xp_give(self, ctx, target_user: discord.User, xp: int):
+    async def xp_give(self, ctx, target_user: nextcord.User, xp: int):
         async with PostgresClient().session() as session:
             user = (await session.execute(select(User).where(User.discord_id == target_user.id))).scalar()
 

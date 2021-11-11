@@ -1,6 +1,6 @@
 from typing import Iterable, Optional
 
-import discord
+import nextcord
 from PIL import Image, ImageDraw, ImageFont
 
 from bot.api.StreetRunnerApi.Leaderboard import LeaderboardTime
@@ -15,7 +15,7 @@ from helpers.utilities import get_timedelta_representation
 
 
 class TimeLeaderboard(GenericLeaderboard):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
         super().__init__()
 
         self._username = username

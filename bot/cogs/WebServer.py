@@ -2,11 +2,11 @@ import asyncio
 import json
 import os
 
-import discord
+import nextcord
 from aiohttp import web
 from aiohttp_apispec import docs, querystring_schema, request_schema, response_schema, setup_aiohttp_apispec
 from aiohttp_remotes import BasicAuth, Secure, XForwardedRelaxed, setup
-from discord.ext import commands, tasks
+from nextcord.ext import commands, tasks
 
 from bot.api.StreetRunnerApi.Player import Player, PlayerCosmetics
 from bot.cosmetics import pets, titles
@@ -76,7 +76,7 @@ class WebServer(commands.Cog):
 
             msg = await request.text()
             try:
-                await channel.send(embed=discord.Embed.from_dict(json.loads(msg)))
+                await channel.send(embed=nextcord.Embed.from_dict(json.loads(msg)))
             except json.decoder.JSONDecodeError:
                 await channel.send(msg)
 
@@ -118,7 +118,7 @@ class WebServer(commands.Cog):
 
             msg = await request.text()
             try:
-                await user.send(embed=discord.Embed.from_dict(json.loads(msg)))
+                await user.send(embed=nextcord.Embed.from_dict(json.loads(msg)))
             except json.decoder.JSONDecodeError:
                 await user.send(msg)
 
@@ -166,7 +166,7 @@ class WebServer(commands.Cog):
 
             msg = await request.text()
             try:
-                await member.send(embed=discord.Embed.from_dict(json.loads(msg)))
+                await member.send(embed=nextcord.Embed.from_dict(json.loads(msg)))
             except json.decoder.JSONDecodeError:
                 await member.send(msg)
 
@@ -187,7 +187,7 @@ class WebServer(commands.Cog):
 
             try:
                 message = await channel.fetch_message(int(request.match_info['message_id']))
-            except discord.NotFound:
+            except nextcord.NotFound:
                 raise web.HTTPNotFound()
             except Exception:
                 raise web.HTTPInternalServerError()

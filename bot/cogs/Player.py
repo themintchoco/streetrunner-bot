@@ -1,47 +1,50 @@
 import typing
 
-import discord
-from discord.ext import commands
+import nextcord
+from nextcord.ext import commands
 
 from bot.api import StreetRunnerApi
 from bot.card.PlayerCard import DeathsCard, InfamyCard, KdaCard, KillsCard, PlayerCard, RankCard, TimeCard
 from bot.exceptions import APIError, DiscordNotLinkedError, UsernameError
 from bot.player.privacy import Privacy
+from bot.view.PrivacyOptionsView import PrivacyOptionsView
 
 
 class Player(commands.Cog):
     """rank, infamy, kills, kda, deaths, time"""
 
+    privacy_user_message_map = {}
+
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(aliases=['prison'])
-    async def rank(self, ctx, user: typing.Optional[typing.Union[discord.Member, str]]):
+    async def rank(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
         """Displays player Prison stats"""
         await self.respond_card(ctx, RankCard, user, Privacy.prison)
 
     @commands.command(aliases=['arena'])
-    async def infamy(self, ctx, user: typing.Optional[typing.Union[discord.Member, str]]):
+    async def infamy(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
         """Displays player Arena stats"""
         await self.respond_card(ctx, InfamyCard, user, Privacy.arena)
 
     @commands.command()
-    async def kills(self, ctx, user: typing.Optional[typing.Union[discord.Member, str]]):
+    async def kills(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
         """Displays player Arena kill stats"""
         await self.respond_card(ctx, KillsCard, user, Privacy.arena)
 
     @commands.command()
-    async def kda(self, ctx, user: typing.Optional[typing.Union[discord.Member, str]]):
+    async def kda(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
         """Displays player Arena kda stats"""
         await self.respond_card(ctx, KdaCard, user, Privacy.arena)
 
     @commands.command()
-    async def deaths(self, ctx, user: typing.Optional[typing.Union[discord.Member, str]]):
+    async def deaths(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
         """Displays player Arena death stats"""
         await self.respond_card(ctx, DeathsCard, user, Privacy.arena)
 
     @commands.command()
-    async def time(self, ctx, user: typing.Optional[typing.Union[discord.Member, str]]):
+    async def time(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
         """Displays player time"""
         await self.respond_card(ctx, TimeCard, user, Privacy.time)
 
@@ -82,27 +85,23 @@ class Player(commands.Cog):
             render = await card_type(username=username, discord_user=user).render()
 
         if render.multi_frame:
-            await target.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
+            await target.send(file=nextcord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
         else:
-            await target.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+            await target.send(file=nextcord.File(render.file('PNG'), 'player_card.png'))
 
     @commands.command()
-    async def privacy(self, ctx, mask: typing.Optional[int]):
-        """Get or set privacy"""
-        player = StreetRunnerApi.Player.Player({'discord_id': ctx.author.id})
+    async def privacy(self, ctx):
+        """Adjust privacy settings"""
+        async with ctx.typing():
+            if message := self.privacy_user_message_map.get(ctx.author.id):
+                await message.delete()
 
-        try:
-            if mask is not None:
-                await player.PlayerPrivacy().update({'value': mask})
-                await ctx.send(f'Privacy set to {mask}')
-            else:
-                await ctx.send(f'Privacy set to {(await player.PlayerPrivacy().data).value}')
+            privacy = (await StreetRunnerApi.Player.Player({'discord_id': ctx.author.id}).PlayerPrivacy().data).value
 
-        except APIError as e:
-            if e.status == 404:
-                raise DiscordNotLinkedError(ctx.author.id)
-
-            raise
+            self.privacy_user_message_map[ctx.author.id] = await ctx.send(
+                embed=nextcord.Embed(title=f'Privacy settings for {ctx.author.display_name}'),
+                view=PrivacyOptionsView(user=ctx.author, privacy=privacy),
+            )
 
     @rank.error
     @infamy.error
@@ -113,7 +112,7 @@ class Player(commands.Cog):
     @privacy.error
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, UsernameError):
-            return await ctx.send(error.original.args[0]['message'], allowed_mentions=discord.AllowedMentions.none())
+            return await ctx.send(error.original.args[0]['message'], allowed_mentions=nextcord.AllowedMentions.none())
 
         await self.handle_command_error(ctx, error)
 
