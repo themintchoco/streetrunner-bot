@@ -1,4 +1,3 @@
-import datetime
 import typing
 
 import discord
@@ -11,6 +10,18 @@ from bot.exceptions import UsernameError
 def is_string(obj):
     return obj is None or isinstance(obj, str)
 
+
+async def respond(cls, ctx, obj):
+    async with ctx.typing():
+        render = await cls(username=obj if is_string(obj) else None,
+                           discord_user=ctx.author if is_string(obj) else obj).render()
+
+    if render.multi_frame:
+        await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
+    else:
+        await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+
+
 class Player(commands.Cog):
     """rank, infamy, kills, kda, deaths, time"""
 
@@ -20,74 +31,32 @@ class Player(commands.Cog):
     @commands.command(aliases=['prison'])
     async def rank(self, ctx, obj: typing.Optional[typing.Union[discord.Member, str]]):
         """Displays player Prison stats"""
-        async with ctx.typing():
-            render = await RankCard(username=obj if is_string(obj) else None,
-                                    discord_user=ctx.author if is_string(obj) else obj).render()
-
-        if render.multi_frame:
-            await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
-        else:
-            await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+        await respond(RankCard, ctx, obj)
 
     @commands.command(aliases=['arena'])
     async def infamy(self, ctx, obj: typing.Optional[typing.Union[discord.Member, str]]):
         """Displays player Arena stats"""
-        async with ctx.typing():
-            render = await InfamyCard(username=obj if is_string(obj) else None,
-                                      discord_user=ctx.author if is_string(obj) else obj).render()
-
-        if render.multi_frame:
-            await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
-        else:
-            await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+        await respond(InfamyCard, ctx, obj)
 
     @commands.command()
     async def kills(self, ctx, obj: typing.Optional[typing.Union[discord.Member, str]]):
         """Displays player Arena kill stats"""
-        async with ctx.typing():
-            render = await KillsCard(username=obj if is_string(obj) else None,
-                                     discord_user=ctx.author if is_string(obj) else obj).render()
-
-        if render.multi_frame:
-            await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
-        else:
-            await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+        await respond(KillsCard, ctx, obj)
 
     @commands.command()
     async def kda(self, ctx, obj: typing.Optional[typing.Union[discord.Member, str]]):
         """Displays player Arena kda stats"""
-        async with ctx.typing():
-            render = await KdaCard(username=obj if is_string(obj) else None,
-                                   discord_user=ctx.author if is_string(obj) else obj).render()
-
-        if render.multi_frame:
-            await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
-        else:
-            await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+        await respond(KdaCard, ctx, obj)
 
     @commands.command()
     async def deaths(self, ctx, obj: typing.Optional[typing.Union[discord.Member, str]]):
         """Displays player Arena death stats"""
-        async with ctx.typing():
-            render = await DeathsCard(username=obj if is_string(obj) else None,
-                                      discord_user=ctx.author if is_string(obj) else obj).render()
-
-        if render.multi_frame:
-            await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
-        else:
-            await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+        await respond(DeathsCard, ctx, obj)
 
     @commands.command()
     async def time(self, ctx, obj: typing.Optional[typing.Union[discord.Member, str]]):
         """Displays player time"""
-        async with ctx.typing():
-            render = await TimeCard(username=obj if is_string(obj) else None,
-                                    discord_user=ctx.author if is_string(obj) else obj).render()
-
-        if render.multi_frame:
-            await ctx.send(file=discord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
-        else:
-            await ctx.send(file=discord.File(render.file('PNG'), 'player_card.png'))
+        await respond(TimeCard, ctx, obj)
 
     @rank.error
     @infamy.error
