@@ -187,3 +187,14 @@ class TimeCard(PlayerCard):
             ('TIME PLAYED', get_timedelta_representation(await player_info.time_played)),
             ('', ''),
         ]
+
+
+class WikiCard(TimeCard):
+    def __init__(self, username: str = None, discord_user: discord.User = None):
+        super().__init__(username, discord_user, random.choice(['images/prison.png', 'images/arena.png']))
+
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+        return [
+            ('POINTS', str(await player_info.wiki_points)),
+            ('', '')
+        ]

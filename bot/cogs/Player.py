@@ -4,7 +4,7 @@ import nextcord
 from nextcord.ext import commands
 
 from bot.api import StreetRunnerApi
-from bot.card.PlayerCard import DeathsCard, InfamyCard, KdaCard, KillsCard, PlayerCard, RankCard, TimeCard
+from bot.card.PlayerCard import DeathsCard, InfamyCard, KdaCard, KillsCard, PlayerCard, RankCard, TimeCard, WikiCard
 from bot.exceptions import APIError, DiscordNotLinkedError, UsernameError
 from bot.player.privacy import Privacy
 from bot.view.PrivacyOptionsView import PrivacyOptionsView
@@ -47,6 +47,11 @@ class Player(commands.Cog):
     async def time(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
         """Displays player time"""
         await self.respond_card(ctx, TimeCard, user, Privacy.time)
+        
+    @commands.command()
+    async def wiki(self, ctx, obj: typing.Optional[typing.Union[discord.Member, str]]):
+        """Displays player wiki points"""
+        await self.respond_card(ctx, WikiCard, user)
 
     async def respond_card(self, ctx, card_type: PlayerCard, user, privacy_mask: Privacy = 0):
         if user is None:
@@ -109,6 +114,7 @@ class Player(commands.Cog):
     @kda.error
     @deaths.error
     @time.error
+    @wiki.error
     @privacy.error
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, UsernameError):
