@@ -56,3 +56,12 @@ class PlayerCosmetics(Player):
 
     type = fields.String()
     name = fields.String()
+
+
+class WikiPoints(Player):
+    __endpoints__ = ['wiki/']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    value = fields.Float()

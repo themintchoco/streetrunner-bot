@@ -12,6 +12,7 @@ class PlayerInfo:
         self._stats_prison = None
         self._stats_arena = None
         self._stats_time = None
+        self._stats_wiki = None
 
     @property
     async def uuid(self):
@@ -47,3 +48,9 @@ class PlayerInfo:
             self._stats_time = await self._player.PlayerStatsTime().preload()
 
         return (await self._stats_time.data).value
+
+    @property
+    async def wiki_points(self):
+        if not self._stats_wiki:
+            self._stats_wiki = await self._player.WikiPoints().preload()
+        return (await self._stats_wiki.data).value
