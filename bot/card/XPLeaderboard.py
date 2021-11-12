@@ -1,7 +1,7 @@
 from io import BytesIO
 from typing import Iterable, Optional
 
-import discord
+import nextcord
 from PIL import Image, ImageDraw, ImageFont
 
 from bot.card.GenericLeaderboard import GenericLeaderboard
@@ -13,7 +13,7 @@ from helpers.xp import get_all_xp, get_level_from_xp, get_min_xp_for_level
 
 
 class XPLeaderboard(GenericLeaderboard):
-    def __init__(self, discord_user: discord.User = None):
+    def __init__(self, discord_user: nextcord.User = None):
         super().__init__()
         self._discord_user = discord_user
 

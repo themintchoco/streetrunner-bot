@@ -1,9 +1,7 @@
 import random
-from abc import ABC
-from enum import Enum
 from typing import List, Tuple
 
-import discord
+import nextcord
 from PIL import Image, ImageDraw, ImageFont
 
 from bot.api_compatability_layer import get_player_cosmetics, get_player_info
@@ -18,17 +16,11 @@ PLAYER_CARD_WIDTH = 640
 PLAYER_CARD_HEIGHT = 220
 
 
-class CardType(Enum):
-    PRISON = 'images/prison.png'
-    ARENA = 'images/arena.png'
-
-
 class PlayerCard(Renderable):
-    _background = random.choice(list(CardType)).value
-
-    def __init__(self, username: str, discord_user: discord.User):
+    def __init__(self, username: str, discord_user: nextcord.User, background: str):
         self._username = username
         self._discord_user = discord_user
+        self._background = background
 
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         raise NotImplementedError()
@@ -131,15 +123,10 @@ class PlayerCard(Renderable):
         return Render(image_base)
 
 
-class PrisonCard(PlayerCard, ABC):
-    _background = CardType.PRISON.value
+class RankCard(PlayerCard):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, 'images/prison.png')
 
-
-class ArenaCard(PlayerCard, ABC):
-    _background = CardType.ARENA.value
-
-
-class RankCard(PrisonCard):
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('RANK', (await player_info.stats_prison).rank),
@@ -147,7 +134,10 @@ class RankCard(PrisonCard):
         ]
 
 
-class InfamyCard(ArenaCard):
+class InfamyCard(PlayerCard):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, 'images/arena.png')
+
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('INFAMY', str((await player_info.stats_arena).infamy)),
@@ -155,7 +145,10 @@ class InfamyCard(ArenaCard):
         ]
 
 
-class KillsCard(ArenaCard):
+class KillsCard(PlayerCard):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, 'images/arena.png')
+
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('KILLS', str((await player_info.stats_arena).kills)),
@@ -163,7 +156,10 @@ class KillsCard(ArenaCard):
         ]
 
 
-class KdaCard(ArenaCard):
+class KdaCard(PlayerCard):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, 'images/arena.png')
+
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('KILLS', str((await player_info.stats_arena).kills)),
@@ -171,7 +167,10 @@ class KdaCard(ArenaCard):
         ]
 
 
-class DeathsCard(ArenaCard):
+class DeathsCard(PlayerCard):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, 'images/arena.png')
+
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('DEATHS', str((await player_info.stats_arena).deaths)),
@@ -180,8 +179,22 @@ class DeathsCard(ArenaCard):
 
 
 class TimeCard(PlayerCard):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, random.choice(['images/prison.png', 'images/arena.png']))  # noqa: S311
+
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('TIME PLAYED', get_timedelta_representation(await player_info.time_played)),
             ('', ''),
+        ]
+
+
+class WikiCard(PlayerCard):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, random.choice(['images/prison.png', 'images/arena.png']))  # noqa: S311
+
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+        return [
+            ('POINTS', str(await player_info.wiki_points)),
+            ('', '')
         ]

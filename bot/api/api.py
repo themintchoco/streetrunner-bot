@@ -1,6 +1,3 @@
-import asyncio
-import concurrent.futures
-import datetime
 import hashlib
 import json
 import urllib
@@ -9,6 +6,7 @@ import aiohttp
 from marshmallow import Schema, post_load
 from marshmallow.schema import SchemaMeta
 
+from bot.exceptions import APIError
 from store.RedisClient import RedisClient
 
 
@@ -68,7 +66,7 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
             except KeyError:
                 continue
 
-            cache_key = hashlib.md5((url + json.dumps(self._query, sort_keys=True)).encode()).hexdigest()
+            cache_key = self.cache_key_for_url(url)
             if cached := await conn.get(f'api:{cache_key}'):
                 return json.loads(cached)
 
@@ -82,6 +80,26 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
                     return json.loads(result)
 
         raise
+
+    async def api_post(self, *args, **kwargs):
+        conn = RedisClient().conn
+
+        for endpoint in self.__endpoints__:
+            try:
+                url = endpoint.format(
+                    **{k: urllib.parse.quote(str(v), safe='') for k, v in self._params.items() if v is not None})
+            except KeyError:
+                continue
+
+            cache_key = self.cache_key_for_url(url)
+            await conn.delete(f'api:{cache_key}')
+
+            async with aiohttp.ClientSession(raise_for_status=True) as s:
+                async with s.post(url, *args, **kwargs) as r:
+                    return
+
+    def cache_key_for_url(self, url):
+        return hashlib.md5((url + json.dumps(self._query, sort_keys=True)).encode()).hexdigest()
 
     @post_load
     def make_data(self, data, **kwargs):
@@ -97,3 +115,7 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
             self._data = self.load(await self.api_get())
 
         return self._data
+
+    async def update(self, data):
+        self._data = self.load(data)
+        await self.api_post(json=data)

@@ -1,5 +1,5 @@
-import discord
-from discord.ext import commands
+import nextcord
+from nextcord.ext import commands
 
 from bot.card.Podium import BlocksPodium, DeathsPodium, InfamyPodium, KdaPodium, KillsPodium, RankPodium
 from bot.card.TimeLeaderboard import TimeLeaderboard
@@ -25,56 +25,56 @@ class Leaderboard(commands.Cog):
         """Displays the current leaderboard in terms of prison ranks"""
         async with ctx.typing():
             render = await RankPodium(discord_user=ctx.author).render()
-        await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
+        await ctx.send(file=nextcord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='blocks')
     async def leaderboard_blocks(self, ctx):
         """Displays the current leaderboard in terms of blocks mined"""
         async with ctx.typing():
             render = await BlocksPodium(discord_user=ctx.author).render()
-        await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
+        await ctx.send(file=nextcord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='infamy')
     async def leaderboard_infamy(self, ctx):
         """Displays the current leaderboard in terms of arena Infamy"""
         async with ctx.typing():
             render = await InfamyPodium(discord_user=ctx.author).render()
-        await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
+        await ctx.send(file=nextcord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='kda')
     async def leaderboard_kda(self, ctx):
         """Displays the current leaderboard in terms of arena KDA"""
         async with ctx.typing():
             render = await KdaPodium(discord_user=ctx.author).render()
-        await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
+        await ctx.send(file=nextcord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='kills')
     async def leaderboard_kills(self, ctx):
         """Displays the current leaderboard in terms of arena kills"""
         async with ctx.typing():
             render = await KillsPodium(discord_user=ctx.author).render()
-        await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
+        await ctx.send(file=nextcord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='deaths')
     async def leaderboard_deaths(self, ctx):
         """Displays the current leaderboard in terms of arena deaths"""
         async with ctx.typing():
             render = await DeathsPodium(discord_user=ctx.author).render()
-        await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
+        await ctx.send(file=nextcord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='time')
     async def leaderboard_time(self, ctx):
         """Displays the current leaderboard in terms of play time"""
         async with ctx.typing():
             render = await TimeLeaderboard(discord_user=ctx.author).render()
-        await ctx.send(file=discord.File(render.file('PNG'), 'leaderboard.png'))
+        await ctx.send(file=nextcord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='xp')
     async def leaderboard_xp(self, ctx):
         """Displays the current leaderboard in terms of discord XP"""
         async with ctx.typing():
             render = await XPLeaderboard(discord_user=ctx.author).render()
-        await ctx.send(file=discord.File(render.file(format='PNG'), 'xp_leaderboard.png'))
+        await ctx.send(file=nextcord.File(render.file(format='PNG'), 'xp_leaderboard.png'))
 
     # @leaderboard.command(name='tournament')
     # async def leaderboard_tournament(self, ctx):
@@ -87,7 +87,7 @@ class Leaderboard(commands.Cog):
     #         except:
     #             pass
     #
-    #     await ctx.send(file=discord.File(render.file(format='PNG'), 'tournament.png'))
+    #     await ctx.send(file=nextcord.File(render.file(format='PNG'), 'tournament.png'))
     #     await ctx.send('View the full leaderboard LIVE at https://streetrunner.gg/tournament/'
     #                    + (f'?username={username}' if username else ''))
 

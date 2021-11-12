@@ -1,6 +1,6 @@
 from io import BytesIO
 
-import discord
+import nextcord
 from PIL import Image, ImageDraw, ImageFont
 
 from bot.card.Render import Render, Renderable
@@ -10,7 +10,7 @@ XP_LEVELUP_WIDTH = 580
 
 
 class XPLevelUp(Renderable):
-    def __init__(self, discord_user: discord.User, level_before: int, level_after: int):
+    def __init__(self, discord_user: nextcord.User, level_before: int, level_after: int):
         self._discord_user = discord_user
         self._level_before = level_before
         self._level_after = level_after
@@ -85,7 +85,7 @@ class XPLevelUp(Renderable):
             image_avatar = Image.open(BytesIO(await self._discord_user.avatar_url_as(format='gif').read()))
             avatar_frames = get_animated_avatar_frames(image_avatar)
             animated_avatar = True
-        except discord.InvalidArgument:
+        except nextcord.InvalidArgument:
             image_avatar = Image.open(BytesIO(await self._discord_user.avatar_url_as(format='png').read()))
             image_base.paste(image_avatar.resize((65, 65)), (2 * SPACING, (image_base.height - 65) // 2),
                              mask=image_mask)

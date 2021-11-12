@@ -1,6 +1,6 @@
 import os
 
-from discord.ext import commands
+from nextcord.ext import commands
 
 from bot.config import env
 

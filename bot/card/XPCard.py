@@ -1,6 +1,6 @@
 from io import BytesIO
 
-import discord
+import nextcord
 from PIL import Image, ImageDraw, ImageFont, ImageSequence
 
 from bot.card.Render import Render, Renderable
@@ -13,7 +13,7 @@ XP_CARD_HEIGHT = 400
 
 
 class XPCard(Renderable):
-    def __init__(self, discord_user: discord.User):
+    def __init__(self, discord_user: nextcord.User):
         self._discord_user = discord_user
 
     async def render(self) -> Render:
@@ -93,7 +93,7 @@ class XPCard(Renderable):
                 frames.append(image_frame)
 
             return Render(*frames)
-        except discord.InvalidArgument:
+        except nextcord.InvalidArgument:
             image_avatar = Image.open(BytesIO(await self._discord_user.avatar_url_as(format='png').read()))
             image_base.paste(image_avatar.resize((100, 100)), (avatar_origin[0] - 50, avatar_origin[1] - 50),
                              mask=image_mask)

@@ -1,21 +1,18 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
 name: Deploy Docker Image
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: [ "Test" ]
+    branches: [ main ]
+    types:
+      - completed
 
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push-image:
+  deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
