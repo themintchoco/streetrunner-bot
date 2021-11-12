@@ -72,7 +72,7 @@ class Player(commands.Cog):
                     player_info = await player.PlayerInfo().data
 
                     if (target := self.bot.get_user(player_info.discord)) != ctx.author:
-                        await ctx.send(f'Due to {player_info.username}’s privacy settings, stats cannot be shown.')
+                        await ctx.send(f'Due to {player_info.name}’s privacy settings, stats cannot be shown.')
                         return
 
             except APIError as e:
