@@ -15,6 +15,7 @@ from bot.api.StreetRunnerApi.Player import Player
 from bot.cosmetics import pets, titles
 from bot.cosmetics.cosmetics import Cosmetics
 from bot.exceptions import APIError, DiscordNotLinkedError, UsernameError
+from bot.player.privacy import Privacy
 from bot.player.stats import PlayerInfo
 from store.RedisClient import RedisClient
 
@@ -121,8 +122,8 @@ async def get_player_cosmetics(*, username: str = None, discord_user: nextcord.U
     return cosmetics
 
 
-async def get_leaderboard(leaderboard_type) -> AsyncGenerator[PlayerInfo, None]:
-    leaderboard_data = await leaderboard_type().data
+async def get_leaderboard(leaderboard_type, privacy: Privacy = 0) -> AsyncGenerator[PlayerInfo, None]:
+    leaderboard_data = await leaderboard_type(query={'privacy': privacy.value}).data
 
     for entry in leaderboard_data:
         yield PlayerInfo(Player({'uuid': entry.uuid}))

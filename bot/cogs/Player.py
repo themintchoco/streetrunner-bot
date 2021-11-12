@@ -104,7 +104,12 @@ class Player(commands.Cog):
             privacy = (await StreetRunnerApi.Player.Player({'discord_id': ctx.author.id}).PlayerPrivacy().data).value
 
             self.privacy_user_message_map[ctx.author.id] = await ctx.send(
-                embed=nextcord.Embed(title=f'Privacy settings for {ctx.author.display_name}'),
+                embed=nextcord.Embed(
+                    title=f'Privacy settings for {ctx.author.display_name}',
+                    description='When Privacy is enabled, personal responses that fall in the selected categories '
+                    'will be sent to your DMs instead. You will also not appear in leaderboards for the categories '
+                    'selected. '
+                ),
                 view=PrivacyOptionsView(user=ctx.author, privacy=privacy),
             )
 

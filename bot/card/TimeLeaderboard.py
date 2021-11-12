@@ -10,6 +10,7 @@ from bot.card.GenericLeaderboard import GenericLeaderboard
 from bot.card.Render import Render
 from bot.card.card import FONT_BLACK, FONT_BOLD, SPACING
 from bot.exceptions import DiscordNotLinkedError
+from bot.player.privacy import Privacy
 from bot.player.stats import PlayerInfo
 from helpers.utilities import get_timedelta_representation
 
@@ -21,7 +22,7 @@ class TimeLeaderboard(GenericLeaderboard):
         self._username = username
         self._discord_user = discord_user
 
-        self._data = get_leaderboard(LeaderboardTime)
+        self._data = get_leaderboard(LeaderboardTime, Privacy.time)
 
     @property
     async def data(self) -> Iterable[PlayerInfo]:
@@ -118,9 +119,12 @@ class TimeLeaderboard(GenericLeaderboard):
         self._target_position = -1
         if self._username or self._discord_user:
             try:
-                self._target_position = await get_position(username=self._username, discord_user=self._discord_user,
-                                                           leaderboard_type=LeaderboardTime)
-                self._target = await get_player_info(username=self._username, discord_user=self._discord_user)
+                if not (await Player({'mc_username': self._username,
+                                      'discord_id': self._discord_user.id
+                                      }).PlayerPrivacy().data).value & Privacy.time:
+                    self._target_position = await get_position(username=self._username, discord_user=self._discord_user,
+                                                               leaderboard_type=LeaderboardTime)
+                    self._target = await get_player_info(username=self._username, discord_user=self._discord_user)
             except DiscordNotLinkedError:
                 pass
 
