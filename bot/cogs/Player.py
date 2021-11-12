@@ -71,9 +71,7 @@ class Player(commands.Cog):
                 if (await player.PlayerPrivacy().data).value & privacy_mask:
                     player_info = await player.PlayerInfo().data
 
-                    if (target := self.bot.get_user(player_info.discord)) == ctx.author:
-                        await ctx.send('Sent to your DMs due to your privacy settings.')
-                    else:
+                    if (target := self.bot.get_user(player_info.discord)) != ctx.author:
                         await ctx.send(f'Due to {player_info.username}’s privacy settings, stats cannot be shown.')
                         return
 
@@ -89,10 +87,15 @@ class Player(commands.Cog):
         async with target.typing():
             render = await card_type(username=username, discord_user=user).render()
 
-        if render.multi_frame:
-            await target.send(file=nextcord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
-        else:
-            await target.send(file=nextcord.File(render.file('PNG'), 'player_card.png'))
+        try:
+            if render.multi_frame:
+                await target.send(file=nextcord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
+            else:
+                await target.send(file=nextcord.File(render.file('PNG'), 'player_card.png'))
+            await ctx.send('Sent to your DMs due to your privacy settings.')
+        except nextcord.errors.Forbidden:
+            await ctx.send('DM cannot be sent, please check your settings. Alternatively, disable Privacy to allow '
+                           'responses to be sent here. ')
 
     @commands.command()
     async def privacy(self, ctx):
