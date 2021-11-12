@@ -19,8 +19,8 @@ PLAYER_CARD_HEIGHT = 220
 
 
 class CardType(Enum):
-    MINES = 'images/prison.png'
-    ARENA = 'images/arena.png'
+    MINES = 'images/prison.jpg'
+    ARENA = 'images/arena.jpg'
 
 
 class PlayerCard(Renderable):
