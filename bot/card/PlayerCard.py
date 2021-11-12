@@ -19,7 +19,7 @@ PLAYER_CARD_HEIGHT = 220
 
 
 class CardType(Enum):
-    MINES = 'images/prison.jpg'
+    PRISON = 'images/prison.jpg'
     ARENA = 'images/arena.jpg'
 
 
@@ -131,48 +131,48 @@ class PlayerCard(Renderable):
         return Render(image_base)
 
 
-class MinesCard(PlayerCard, ABC):
-    _background = CardType.MINES.value
+class PrisonCard(PlayerCard, ABC):
+    _background = CardType.PRISON.value
 
 
 class ArenaCard(PlayerCard, ABC):
     _background = CardType.ARENA.value
 
 
-class RankCard(PlayerCard):
-    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+class RankCard(PrisonCard):
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str, str]]:
         return [
             ('RANK', (await player_info.stats_prison).rank),
             ('BLOCKS MINED', get_number_representation((await player_info.stats_prison).blocks)),
         ]
 
 
-class InfamyCard(PlayerCard):
-    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+class InfamyCard(ArenaCard):
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str, str]]:
         return [
             ('INFAMY', str((await player_info.stats_arena).infamy)),
             ('KDA', '{:.2f}'.format((await player_info.stats_arena).kda)),
         ]
 
 
-class KillsCard(PlayerCard):
-    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+class KillsCard(ArenaCard):
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str, str]]:
         return [
             ('KILLS', str((await player_info.stats_arena).kills)),
             ('ASSISTS', str((await player_info.stats_arena).assists)),
         ]
 
 
-class KdaCard(PlayerCard):
-    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+class KdaCard(ArenaCard):
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str, str]]:
         return [
             ('KILLS', str((await player_info.stats_arena).kills)),
             ('KDA', '{:.2f}'.format((await player_info.stats_arena).kda)),
         ]
 
 
-class DeathsCard(PlayerCard):
-    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+class DeathsCard(ArenaCard):
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str, str]]:
         return [
             ('DEATHS', str((await player_info.stats_arena).deaths)),
             ('KDA', '{:.2f}'.format((await player_info.stats_arena).kda)),
@@ -180,7 +180,7 @@ class DeathsCard(PlayerCard):
 
 
 class TimeCard(PlayerCard):
-    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str, str]]:
         return [
             ('TIME PLAYED', get_timedelta_representation(await player_info.time_played)),
             ('', ''),
@@ -188,7 +188,7 @@ class TimeCard(PlayerCard):
 
 
 class WikiCard(PlayerCard):
-    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
+    async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str, str]]:
         return [
             ('POINTS', str(await player_info.wiki_points)),
             ('', '')
