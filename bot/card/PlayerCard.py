@@ -1,4 +1,6 @@
 import random
+from abc import ABC
+from enum import Enum
 from typing import List, Tuple
 
 import nextcord
@@ -16,11 +18,17 @@ PLAYER_CARD_WIDTH = 640
 PLAYER_CARD_HEIGHT = 220
 
 
+class CardType(Enum):
+    MINES = 'images/prison.png'
+    ARENA = 'images/arena.png'
+
+
 class PlayerCard(Renderable):
-    def __init__(self, username: str, discord_user: nextcord.User, background: str):
+    _background = random.choice(list(CardType)).value
+
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
         self._username = username
         self._discord_user = discord_user
-        self._background = background
 
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         raise NotImplementedError()
@@ -123,10 +131,15 @@ class PlayerCard(Renderable):
         return Render(image_base)
 
 
-class RankCard(PlayerCard):
-    def __init__(self, username: str = None, discord_user: nextcord.User = None):
-        super().__init__(username, discord_user, 'images/prison.png')
+class MinesCard(PlayerCard, ABC):
+    _background = CardType.MINES.value
 
+
+class ArenaCard(PlayerCard, ABC):
+    _background = CardType.ARENA.value
+
+
+class RankCard(PlayerCard):
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('RANK', (await player_info.stats_prison).rank),
@@ -135,9 +148,6 @@ class RankCard(PlayerCard):
 
 
 class InfamyCard(PlayerCard):
-    def __init__(self, username: str = None, discord_user: nextcord.User = None):
-        super().__init__(username, discord_user, 'images/arena.png')
-
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('INFAMY', str((await player_info.stats_arena).infamy)),
@@ -146,9 +156,6 @@ class InfamyCard(PlayerCard):
 
 
 class KillsCard(PlayerCard):
-    def __init__(self, username: str = None, discord_user: nextcord.User = None):
-        super().__init__(username, discord_user, 'images/arena.png')
-
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('KILLS', str((await player_info.stats_arena).kills)),
@@ -157,9 +164,6 @@ class KillsCard(PlayerCard):
 
 
 class KdaCard(PlayerCard):
-    def __init__(self, username: str = None, discord_user: nextcord.User = None):
-        super().__init__(username, discord_user, 'images/arena.png')
-
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('KILLS', str((await player_info.stats_arena).kills)),
@@ -168,9 +172,6 @@ class KdaCard(PlayerCard):
 
 
 class DeathsCard(PlayerCard):
-    def __init__(self, username: str = None, discord_user: nextcord.User = None):
-        super().__init__(username, discord_user, 'images/arena.png')
-
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('DEATHS', str((await player_info.stats_arena).deaths)),
@@ -179,9 +180,6 @@ class DeathsCard(PlayerCard):
 
 
 class TimeCard(PlayerCard):
-    def __init__(self, username: str = None, discord_user: nextcord.User = None):
-        super().__init__(username, discord_user, random.choice(['images/prison.png', 'images/arena.png']))  # noqa: S311
-
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('TIME PLAYED', get_timedelta_representation(await player_info.time_played)),
@@ -190,9 +188,6 @@ class TimeCard(PlayerCard):
 
 
 class WikiCard(PlayerCard):
-    def __init__(self, username: str = None, discord_user: nextcord.User = None):
-        super().__init__(username, discord_user, random.choice(['images/prison.png', 'images/arena.png']))  # noqa: S311
-
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         return [
             ('POINTS', str(await player_info.wiki_points)),
