@@ -15,9 +15,15 @@ class PrivacyOptionsView(nextcord.ui.View):
         self._user = user
         self._privacy = privacy
 
-        for cat in Privacy:
+        cats = {
+            'Mines': Privacy.prison,
+            'Arena': Privacy.arena,
+            'Time played': Privacy.time,
+        }
+
+        for label, cat in cats.items():
             self.add_item(PrivacyOptionButton(
-                label=cat.name.title(),
+                label=label,
                 custom_id=cat.name,
                 style=nextcord.ButtonStyle.primary if cat.value & self._privacy else nextcord.ButtonStyle.secondary,
             ))
