@@ -53,4 +53,5 @@ class PlayerInfo:
     async def wiki_points(self):
         if not self._stats_wiki:
             self._stats_wiki = await self._player.WikiPoints().preload()
+
         return (await self._stats_wiki.data).value

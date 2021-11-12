@@ -49,7 +49,7 @@ class Player(commands.Cog):
         await self.respond_card(ctx, TimeCard, user, Privacy.time)
         
     @commands.command()
-    async def wiki(self, ctx, obj: typing.Optional[typing.Union[discord.Member, str]]):
+    async def wiki(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
         """Displays player wiki points"""
         await self.respond_card(ctx, WikiCard, user)
 
