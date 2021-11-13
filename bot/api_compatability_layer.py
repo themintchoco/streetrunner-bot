@@ -6,7 +6,7 @@ from io import BytesIO
 from typing import AsyncGenerator, List, Tuple
 
 import aiohttp
-import discord
+import nextcord
 from asyncache import cached
 from cachetools import TTLCache
 
@@ -14,7 +14,8 @@ from bot.api.SkinsApi.SkinsApi import SkinsApi
 from bot.api.StreetRunnerApi.Player import Player
 from bot.cosmetics import pets, titles
 from bot.cosmetics.cosmetics import Cosmetics
-from bot.exceptions import APIError, DiscordNotLinkedError, UsernameError
+from bot.exceptions import APIError
+from bot.player.privacy import Privacy
 from bot.player.stats import PlayerInfo
 from store.RedisClient import RedisClient
 
@@ -61,62 +62,25 @@ async def resolve_uuid(*, username: str = None, discord_id: int = None) -> str:
     if cached := await conn.get(cache_key):
         return cached.decode()
 
-    try:
-        uuid = (await Player({'mc_username': username, 'discord_id': discord_id}).PlayerInfo().data).uuid
-        await conn.set(cache_key, uuid, ex=datetime.timedelta(days=1))
-        return uuid
-
-    except aiohttp.ClientResponseError as e:
-        if e.status == 404:
-            if username:
-                raise UsernameError({'message': 'The username provided is invalid', 'username': username})
-            else:
-                raise DiscordNotLinkedError({
-                    'message': f'<@{discord_id}> is not linked to StreetRunner. '
-                               'Linking can be done by using the /discord command in-game. ',
-                    'discord_id': discord_id})
-        raise APIError(e)
+    uuid = (await Player({'mc_username': username, 'discord_id': discord_id}).PlayerInfo().data).uuid
+    await conn.set(cache_key, uuid, ex=datetime.timedelta(days=1))
+    return uuid
 
 
-async def get_player_info(*, username: str = None, discord_user: discord.User = None, type=None) -> PlayerInfo:
-    try:
-        player = Player({
-            'mc_username': username if username else None,
-            'discord_id': discord_user.id if discord_user else None,
-        })
-
-    except aiohttp.ClientResponseError as e:
-        if e.status == 404:
-            if username:
-                raise UsernameError({'message': 'The username provided is invalid', 'username': username})
-            else:
-                raise DiscordNotLinkedError({
-                    'message': f'<@{discord_user.id}> is not linked to StreetRunner. '
-                               'Linking can be done by using the /discord command in-game. ',
-                    'discord_id': discord_user.id})
-
-        raise APIError(e)
+async def get_player_info(*, username: str = None, discord_user: nextcord.User = None, type=None) -> PlayerInfo:
+    player = Player({
+        'mc_username': username if username else None,
+        'discord_id': discord_user.id if discord_user else None,
+    })
 
     return PlayerInfo(player)
 
 
-async def get_player_cosmetics(*, username: str = None, discord_user: discord.User = None) -> List[Cosmetics]:
-    try:
-        cosmetics_data = await Player({
-            'mc_username': username if username else None,
-            'discord_id': discord_user.id if discord_user else None,
-        }).PlayerCosmetics().data
-
-    except aiohttp.ClientResponseError as e:
-        if e.status == 404:
-            if username:
-                raise UsernameError({'message': 'The username provided is invalid', 'username': username})
-            else:
-                raise DiscordNotLinkedError({
-                    'message': f'<@{discord_user.id}> is not linked to StreetRunner. '
-                               'Linking can be done by using the /discord command in-game. ',
-                    'discord_id': discord_user})
-        raise APIError(e)
+async def get_player_cosmetics(*, username: str = None, discord_user: nextcord.User = None) -> List[Cosmetics]:
+    cosmetics_data = await Player({
+        'mc_username': username if username else None,
+        'discord_id': discord_user.id if discord_user else None,
+    }).PlayerCosmetics().data
 
     cosmetics = []
 
@@ -130,25 +94,17 @@ async def get_player_cosmetics(*, username: str = None, discord_user: discord.Us
     return cosmetics
 
 
-async def get_leaderboard(leaderboard_type) -> AsyncGenerator[PlayerInfo, None]:
-    try:
-        leaderboard_data = await leaderboard_type().data
-
-    except aiohttp.ClientResponseError as e:
-        raise APIError(e)
+async def get_leaderboard(leaderboard_type, privacy: Privacy = 0) -> AsyncGenerator[PlayerInfo, None]:
+    leaderboard_data = await leaderboard_type(query={'privacy': privacy.value}).data
 
     for entry in leaderboard_data:
         yield PlayerInfo(Player({'uuid': entry.uuid}))
 
 
-async def get_position(*, username: str = None, discord_user: discord.User = None, leaderboard_type) -> int:
-    try:
-        position = (await leaderboard_type().LeaderboardDataPosition({
-            'uuid': await resolve_uuid(username=username, discord_id=discord_user.id if discord_user else None),
-        }).data).value
-
-    except aiohttp.ClientResponseError as e:
-        raise APIError(e)
+async def get_position(*, username: str = None, discord_user: nextcord.User = None, leaderboard_type) -> int:
+    position = (await leaderboard_type().LeaderboardDataPosition({
+        'uuid': await resolve_uuid(username=username, discord_id=discord_user.id if discord_user else None),
+    }).data).value
 
     return position
 

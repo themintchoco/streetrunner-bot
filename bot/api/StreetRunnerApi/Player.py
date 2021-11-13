@@ -2,16 +2,30 @@ from marshmallow import fields
 from marshmallow import post_load
 
 from bot.api.StreetRunnerApi.StreetRunnerApi import StreetRunnerApi
+from bot.exceptions import APIError, UsernameError, DiscordNotLinkedError
 
 
 class Player(StreetRunnerApi):
     __endpoints__ = ['name/{mc_username}/', 'discord/{discord_id}/', 'uuid/{uuid}/']
 
+    def api_get_404(self):
+        if username := self._params.get('mc_username'):
+            raise UsernameError(username)
+        elif discord_id := self._params.get('discord_id'):
+            raise DiscordNotLinkedError(discord_id)
+        raise
+
 
 class PlayerInfo(Player):
     name = fields.String()
     uuid = fields.String()
-    discord = fields.String(allow_none=True)
+    discord = fields.Integer(allow_none=True)
+
+
+class PlayerPrivacy(Player):
+    __endpoints__ = ['privacy/']
+
+    value = fields.Integer()
 
 
 class PlayerStatsPrison(Player):
@@ -61,7 +75,15 @@ class PlayerCosmetics(Player):
 class WikiPoints(Player):
     __endpoints__ = ['wiki/']
 
+    value = fields.Float()
+
+
+class PlayerBalance(Player):
+    __endpoints__ = ['balance/']
+
     def __init__(self, *args, **kwargs):
+        kwargs.setdefault('many', True)
         super().__init__(*args, **kwargs)
 
-    value = fields.Float()
+    type = fields.String()
+    balance = fields.Integer()

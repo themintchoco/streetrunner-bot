@@ -1,13 +1,15 @@
 import asyncstdlib as a
-import discord
+import nextcord
 from PIL import Image, ImageDraw, ImageFont
 
 import bot.api.StreetRunnerApi.Leaderboard as Leaderboard
+from bot.api.StreetRunnerApi.Player import Player
 from bot.api_compatability_layer import get_leaderboard, get_player_info, get_position
 from bot.card.Avatar import Avatar
 from bot.card.Render import Render, Renderable
 from bot.card.card import FONT_BLACK, FONT_BOLD, SPACING
 from bot.exceptions import DiscordNotLinkedError, NotEnoughDataError
+from bot.player.privacy import Privacy
 from bot.player.stats import PlayerInfo
 from helpers.utilities import get_number_representation
 
@@ -16,12 +18,14 @@ LEADERBOARD_PODIUM_HEIGHT = 500
 
 
 class Podium(Renderable):
-    def __init__(self, username: str, discord_user: discord.User, leaderboard_type, display_name=''):
+    def __init__(self, username: str, discord_user: nextcord.User, leaderboard_type, display_name='',
+                 privacy: Privacy = 0):
         self._username = username
         self._discord_user = discord_user
         self._leaderboard_type = leaderboard_type
         self._display_name = display_name
-        self._data = get_leaderboard(leaderboard_type)
+        self._privacy = privacy
+        self._data = get_leaderboard(leaderboard_type, self._privacy)
 
     async def get_stats(self, player_info: PlayerInfo) -> str:
         raise NotImplementedError()
@@ -49,14 +53,11 @@ class Podium(Renderable):
         image_row.paste(image_avatar,
                         (4 * SPACING + self._position_length, (image_row.height - image_avatar.height) // 2))
 
-        draw_row.text(
-            (6 * SPACING + self._position_length + image_avatar.width, image_row.height // 2),
-            await player_info.username,
-            (212, 175, 55,
-             255) if self._target_position != -1 and (
-                await player_info.username) == (
-                await self._target_player_info.username) else (
-                255, 255, 255, 255), self._font_stats, anchor='lm')
+        draw_row.text((6 * SPACING + self._position_length + image_avatar.width, image_row.height // 2),
+                      await player_info.username,
+                      (212, 175, 55, 255) if self._target_position != -1 and (await player_info.username) == (
+                          await self._target_player_info.username) else (255, 255, 255, 255), self._font_stats,
+                      anchor='lm')
 
         draw_row.text((image_row.width - 2 * SPACING, image_row.height // 2),
                       await self.get_stats(player_info), (255, 255, 255, 255), self._font_stats, anchor='rm')
@@ -97,10 +98,13 @@ class Podium(Renderable):
         self._target_position = -1
         if self._username or self._discord_user:
             try:
-                self._target_position = await get_position(username=self._username, discord_user=self._discord_user,
-                                                           leaderboard_type=self._leaderboard_type)
-                self._target_player_info = await get_player_info(username=self._username,
-                                                                 discord_user=self._discord_user)
+                if not (await Player({'mc_username': self._username,
+                                      'discord_id': self._discord_user.id
+                                      }).PlayerPrivacy().data).value & self._privacy:
+                    self._target_position = await get_position(username=self._username, discord_user=self._discord_user,
+                                                               leaderboard_type=self._leaderboard_type)
+                    self._target_player_info = await get_player_info(username=self._username,
+                                                                     discord_user=self._discord_user)
             except DiscordNotLinkedError:
                 pass
 
@@ -139,19 +143,19 @@ class Podium(Renderable):
         draw_highlight.text((270, 270), await leaderboard_highlight[0].username,
                             (212, 175, 55, 255) if self._target_position != -1 and (
                                 await leaderboard_highlight[0].username) == (
-                                await self._target_player_info.username) else (
+                                                       await self._target_player_info.username) else (
                                 255, 255, 255, 255), font_highlight_big, anchor='mt')
 
         draw_highlight.text((93, 298), await leaderboard_highlight[1].username,
                             (212, 175, 55, 255) if self._target_position != -1 and (
                                 await leaderboard_highlight[1].username) == (
-                                await self._target_player_info.username) else (
+                                                       await self._target_player_info.username) else (
                                 255, 255, 255, 255), font_highlight_med, anchor='mt')
 
         draw_highlight.text((449, 308), await leaderboard_highlight[2].username,
                             (212, 175, 55, 255) if self._target_position != -1 and (
                                 await leaderboard_highlight[2].username) == (
-                                await self._target_player_info.username) else (
+                                                       await self._target_player_info.username) else (
                                 255, 255, 255, 255), font_highlight_med, anchor='mt')
 
         draw_highlight.polygon([(210, LEADERBOARD_PODIUM_HEIGHT + SPACING),
@@ -216,48 +220,48 @@ class Podium(Renderable):
 
 
 class RankPodium(Podium):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, Leaderboard.LeaderboardRank, 'Rank')
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, Leaderboard.LeaderboardRank, 'Rank', Privacy.prison)
 
     async def get_stats(self, player_info: PlayerInfo) -> str:
         return (await player_info.stats_prison).rank
 
 
 class KdaPodium(Podium):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, Leaderboard.LeaderboardKda, 'Kda')
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, Leaderboard.LeaderboardKda, 'Kda', Privacy.arena)
 
     async def get_stats(self, player_info: PlayerInfo) -> str:
         return '{:.2f}'.format((await player_info.stats_arena).kda)
 
 
 class KillsPodium(Podium):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, Leaderboard.LeaderboardKills, 'Kills')
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, Leaderboard.LeaderboardKills, 'Kills', Privacy.arena)
 
     async def get_stats(self, player_info: PlayerInfo) -> str:
         return get_number_representation((await player_info.stats_arena).kills)
 
 
 class BlocksPodium(Podium):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, Leaderboard.LeaderboardBlocks, 'Blocks')
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, Leaderboard.LeaderboardBlocks, 'Blocks', Privacy.prison)
 
     async def get_stats(self, player_info: PlayerInfo) -> str:
         return get_number_representation((await player_info.stats_prison).blocks)
 
 
 class InfamyPodium(Podium):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, Leaderboard.LeaderboardInfamy, 'Infamy')
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, Leaderboard.LeaderboardInfamy, 'Infamy', Privacy.arena)
 
     async def get_stats(self, player_info: PlayerInfo) -> str:
         return str((await player_info.stats_arena).infamy)
 
 
 class DeathsPodium(Podium):
-    def __init__(self, username: str = None, discord_user: discord.User = None):
-        super().__init__(username, discord_user, Leaderboard.LeaderboardDeaths, 'Deaths')
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, Leaderboard.LeaderboardDeaths, 'Deaths', Privacy.arena)
 
     async def get_stats(self, player_info: PlayerInfo) -> str:
         return get_number_representation((await player_info.stats_arena).deaths)
