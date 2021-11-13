@@ -11,7 +11,7 @@ from bot.card.card import FONT_MC_REGULAR, SPACING
 from bot.player.privacy import Privacy
 from helpers.utilities import get_number_representation
 
-BALANCE_WIDTH = 280
+BALANCE_WIDTH = 480
 BALANCE_ICON_WIDTH = 32
 BALANCE_RING_RADIUS = 100
 BALANCE_RING_WIDTH = 5
