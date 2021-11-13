@@ -4,6 +4,7 @@ import nextcord
 from PIL import Image, ImageDraw, ImageFont
 
 from bot.api.StreetRunnerApi.Leaderboard import LeaderboardTime
+from bot.api.StreetRunnerApi.Player import Player
 from bot.api_compatability_layer import get_leaderboard, get_player_info, get_position
 from bot.card.Avatar import Avatar
 from bot.card.GenericLeaderboard import GenericLeaderboard
