@@ -18,7 +18,8 @@ class PrivacyOptionsView(nextcord.ui.View):
         cats = {
             'Mines': Privacy.prison,
             'Arena': Privacy.arena,
-            'Time played': Privacy.time,
+            'Time Played': Privacy.time,
+            'Balance': Privacy.balance,
         }
 
         for label, cat in cats.items():

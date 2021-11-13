@@ -4,13 +4,16 @@ import nextcord
 from nextcord.ext import commands
 
 from bot.api import StreetRunnerApi
-from bot.card.PlayerCard import DeathsCard, InfamyCard, KdaCard, KillsCard, PlayerCard, RankCard, TimeCard, WikiCard
-from bot.exceptions import APIError, DiscordNotLinkedError, UsernameError
+from bot.card.BalanceCard import BalanceCard
+from bot.card.PlayerCard import PlayerCard
+from bot.card.StatsCard import DeathsCard, InfamyCard, KdaCard, KillsCard, RankCard, TimeCard, WikiCard
+from bot.cogs.cogs import PlayerRespondMixin, PlayerRespondType
+from bot.exceptions import PrivacyError, UsernameError
 from bot.player.privacy import Privacy
 from bot.view.PrivacyOptionsView import PrivacyOptionsView
 
 
-class Player(commands.Cog):
+class Player(commands.Cog, PlayerRespondMixin):
     """rank, infamy, kills, kda, deaths, time"""
 
     privacy_user_message_map = {}
@@ -47,13 +50,18 @@ class Player(commands.Cog):
     async def time(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
         """Displays player time"""
         await self.respond_card(ctx, TimeCard, user, Privacy.time)
-        
+
     @commands.command()
     async def wiki(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
         """Displays player wiki points"""
         await self.respond_card(ctx, WikiCard, user)
 
-    async def respond_card(self, ctx, card_type: PlayerCard, user, privacy_mask: Privacy = 0):
+    @commands.command()
+    async def balance(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
+        """Displays player balance"""
+        await self.respond_card(ctx, BalanceCard, user, Privacy.balance)
+
+    async def respond_card(self, ctx, card_type: PlayerCard, user, privacy: Privacy = 0):
         if user is None:
             username = None
             user = ctx.author
@@ -65,34 +73,20 @@ class Player(commands.Cog):
 
         async with ctx.typing():
             player = StreetRunnerApi.Player.Player({'mc_username': username, 'discord_id': user.id})
-            target = ctx
-
-            try:
-                if (await player.PlayerPrivacy().data).value & privacy_mask:
-                    player_info = await player.PlayerInfo().data
-
-                    if (target := self.bot.get_user(player_info.discord)) != ctx.author:
-                        await ctx.send(f'Due to {player_info.name}’s privacy settings, stats cannot be shown.')
-                        return
-
-            except APIError as e:
-                if e.status == 404:
-                    if username:
-                        raise UsernameError(username)
-                    else:
-                        raise DiscordNotLinkedError(user.id)
-
-                raise
-
-        async with target.typing():
-            render = await card_type(username=username, discord_user=user).render()
+            render = await card_type(username=username, discord_user=user, privacy=privacy).render()
 
         try:
             if render.multi_frame:
-                await target.send(file=nextcord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif'))
+                file = nextcord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif')
             else:
-                await target.send(file=nextcord.File(render.file('PNG'), 'player_card.png'))
-            await ctx.send('Sent to your DMs due to your privacy settings.')
+                file = nextcord.File(render.file('PNG'), 'player_card.png')
+
+            if await self.respond(ctx, player, privacy, file=file) == PlayerRespondType.DM:
+                await ctx.send('Sent to your DMs due to your privacy settings.')
+
+        except PrivacyError as e:
+            await ctx.send(f'Due to {e.args[0].name}’s privacy settings, stats cannot be shown.')
+
         except nextcord.errors.Forbidden:
             await ctx.send('DM cannot be sent, please check your settings. Alternatively, disable Privacy to allow '
                            'responses to be sent here. ')
@@ -110,8 +104,8 @@ class Player(commands.Cog):
                 embed=nextcord.Embed(
                     title=f'Privacy settings for {ctx.author.display_name}',
                     description='When Privacy is enabled, personal responses that fall in the selected categories '
-                    'will be sent to your DMs instead. You will also not appear in leaderboards for the categories '
-                    'selected. '
+                                'will be sent to your DMs instead. You will also not appear in leaderboards for the categories '
+                                'selected. '
                 ),
                 view=PrivacyOptionsView(user=ctx.author, privacy=privacy),
             )
@@ -123,6 +117,7 @@ class Player(commands.Cog):
     @deaths.error
     @time.error
     @wiki.error
+    @balance.error
     @privacy.error
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError) and isinstance(error.original, UsernameError):

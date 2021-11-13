@@ -18,4 +18,8 @@ class NotEnoughDataError(RuntimeError):
     pass
 
 
+class PrivacyError(RuntimeError):
+    pass
+
+
 APIError = ClientResponseError

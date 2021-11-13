@@ -68,3 +68,14 @@ class WikiPoints(Player):
     __endpoints__ = ['wiki/']
 
     value = fields.Float()
+
+
+class PlayerBalance(Player):
+    __endpoints__ = ['balance/']
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault('many', True)
+        super().__init__(*args, **kwargs)
+
+    type = fields.String()
+    balance = fields.Integer()
