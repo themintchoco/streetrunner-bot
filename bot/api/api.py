@@ -81,7 +81,8 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
                         return json.loads(result)
             except APIError as e:
                 if handler := getattr(self, f'api_get_{e.status}'):
-                    handler()
+                    return handler()
+                raise
 
         raise
 
@@ -104,7 +105,8 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
                         return
             except APIError as e:
                 if handler := getattr(self, f'api_post_{e.status}'):
-                    handler()
+                    return handler()
+                raise
 
     def cache_key_for_url(self, url):
         return hashlib.md5((url + json.dumps(self._query, sort_keys=True)).encode()).hexdigest()

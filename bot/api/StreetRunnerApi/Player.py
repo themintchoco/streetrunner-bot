@@ -13,6 +13,7 @@ class Player(StreetRunnerApi):
             raise UsernameError(username)
         elif discord_id := self._params.get('discord_id'):
             raise DiscordNotLinkedError(discord_id)
+        raise
 
 
 class PlayerInfo(Player):
