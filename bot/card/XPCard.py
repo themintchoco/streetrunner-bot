@@ -83,7 +83,9 @@ class XPCard(Renderable):
         draw_mask.ellipse((0, 0, 100, 100), fill=(255, 255, 255, 255))
 
         try:
-            image_avatar = Image.open(BytesIO(await self._discord_user.avatar_url_as(format='gif').read()))
+            image_avatar = Image.open(BytesIO(
+                await self._discord_user.display_avatar.with_size(128).with_format('gif').read()
+            ))
 
             frames = []
             for frame in ImageSequence.Iterator(image_avatar):
@@ -94,7 +96,9 @@ class XPCard(Renderable):
 
             return Render(*frames)
         except nextcord.InvalidArgument:
-            image_avatar = Image.open(BytesIO(await self._discord_user.avatar_url_as(format='png').read()))
+            image_avatar = Image.open(BytesIO(
+                await self._discord_user.display_avatar.with_size(128).with_static_format('png').read()
+            ))
             image_base.paste(image_avatar.resize((100, 100)), (avatar_origin[0] - 50, avatar_origin[1] - 50),
                              mask=image_mask)
 

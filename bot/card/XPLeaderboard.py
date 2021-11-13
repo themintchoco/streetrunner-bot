@@ -43,7 +43,7 @@ class XPLeaderboard(GenericLeaderboard):
         length_discrim = draw_row.textlength('#' + discord_user.discriminator, font_discrim)
         length_xp = draw_row.textlength(get_number_representation(user.xp), font_xp)
 
-        width_required = 14 * SPACING + self._position_length + 65 + length_name + length_discrim + length_xp
+        width_required = 14 * SPACING + self._position_length + 64 + length_name + length_discrim + length_xp
         if width_required > image_row.width:
             image_row = Image.new('RGBA', (int(width_required), ctx['ROW_HEIGHT']), color=(0, 0, 0, 0))
             draw_row = ImageDraw.Draw(image_row)
@@ -66,22 +66,22 @@ class XPLeaderboard(GenericLeaderboard):
                                   get_min_xp_for_level(get_level_from_xp(user.xp) + 1) - get_min_xp_for_level(
                               get_level_from_xp(user.xp))) * 360, fill=(77, 189, 138, 255))
 
-        image_mask = Image.new('RGBA', (65, 65), (0, 0, 0, 0))
+        image_mask = Image.new('RGBA', (64, 64), (0, 0, 0, 0))
         draw_mask = ImageDraw.Draw(image_mask)
-        draw_mask.ellipse((0, 0, 65, 65), fill=(255, 255, 255, 255))
+        draw_mask.ellipse((0, 0, 64, 64), fill=(255, 255, 255, 255))
 
-        image_avatar = Image.open(BytesIO(await discord_user.avatar_url_as(format='png').read()))
-        image_row.paste(image_avatar.resize((65, 65)),
-                        (4 * SPACING + self._position_length, (image_row.height - 65) // 2),
+        image_avatar = Image.open(BytesIO(await discord_user.display_avatar.with_size(64).with_static_format('png').read()))
+        image_row.paste(image_avatar,
+                        (4 * SPACING + self._position_length, (image_row.height - 64) // 2),
                         mask=image_mask)
 
-        draw_row.text((7 * SPACING + self._position_length + 65, (image_row.height + bounds_position[3]) // 2),
+        draw_row.text((7 * SPACING + self._position_length + 64, (image_row.height + bounds_position[3]) // 2),
                       discord_user.name,
                       (212, 175, 55, 255) if self._target and self._target.discord_id == discord_user.id else (
                           255, 255, 255, 255), font_name, anchor='ls')
 
         draw_row.text(
-            (8 * SPACING + self._position_length + 65 + length_name, (image_row.height + bounds_position[3]) // 2),
+            (8 * SPACING + self._position_length + 64 + length_name, (image_row.height + bounds_position[3]) // 2),
             '#' + discord_user.discriminator, (192, 192, 192, 255), font_discrim, anchor='ls')
 
         draw_row.text((image_row.width - 2 * SPACING, image_row.height // 2),
