@@ -56,12 +56,9 @@ class BalanceCard(PlayerCard):
                                        (image_base.height - image_model.height) // 2),
                          mask=image_model)
 
-        total = 2 * math.pi
-        angle_segment = total / len(balances)
-        angle = angle_segment / 4
-
+        angle_sector = 2 * math.pi / len(balances)
+        angle = angle_sector / 4
         for i, (balance_type, value) in enumerate(balances):
-            angle += angle_segment
             direction = (math.sin(angle), -math.cos(angle))
             x = int(direction[0] * BALANCE_RING_RADIUS + image_base.width // 2)
             y = int(direction[1] * BALANCE_RING_RADIUS + image_base.height // 2)
@@ -73,5 +70,7 @@ class BalanceCard(PlayerCard):
                             y + direction[1] * BALANCE_ICON_WIDTH),
                            get_number_representation(value),
                            (255, 255, 255), self._font, anchor='rm' if direction[0] < 0 else 'lm')
+
+            angle += angle_sector
 
         return Render(image_base)
