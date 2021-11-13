@@ -88,8 +88,8 @@ class Player(commands.Cog, PlayerRespondMixin):
             await ctx.send(f'Due to {e.args[0].name}’s privacy settings, stats cannot be shown.')
 
         except nextcord.errors.Forbidden:
-            await ctx.send('DM cannot be sent, please check your settings. Alternatively, disable Privacy to allow '
-                           'responses to be sent here. ')
+            await ctx.send('DM cannot be sent. Please check your Discord settings and ensure that server members can '
+                           'send you DMs. Alternatively, disable Privacy to allow responses to be sent here. ')
 
     @commands.command()
     async def privacy(self, ctx):
