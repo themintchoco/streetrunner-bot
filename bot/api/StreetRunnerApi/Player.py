@@ -2,10 +2,17 @@ from marshmallow import fields
 from marshmallow import post_load
 
 from bot.api.StreetRunnerApi.StreetRunnerApi import StreetRunnerApi
+from bot.exceptions import APIError, UsernameError, DiscordNotLinkedError
 
 
 class Player(StreetRunnerApi):
     __endpoints__ = ['name/{mc_username}/', 'discord/{discord_id}/', 'uuid/{uuid}/']
+
+    def api_get_404(self):
+        if username := self._params.get('mc_username'):
+            raise UsernameError(username)
+        elif discord_id := self._params.get('discord_id'):
+            raise DiscordNotLinkedError(discord_id)
 
 
 class PlayerInfo(Player):

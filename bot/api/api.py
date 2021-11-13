@@ -73,11 +73,15 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
             if query := urllib.parse.urlencode(self._query):
                 url += '?' + query
 
-            async with aiohttp.ClientSession(raise_for_status=True) as s:
-                async with s.get(url, *args, **kwargs) as r:
-                    result = await r.text()
-                    await conn.set(f'api:{cache_key}', result, ex=30)
-                    return json.loads(result)
+            try:
+                async with aiohttp.ClientSession(raise_for_status=True) as s:
+                    async with s.get(url, *args, **kwargs) as r:
+                        result = await r.text()
+                        await conn.set(f'api:{cache_key}', result, ex=30)
+                        return json.loads(result)
+            except APIError as e:
+                if handler := getattr(self, f'api_get_{e.status}'):
+                    handler()
 
         raise
 
@@ -94,9 +98,13 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
             cache_key = self.cache_key_for_url(url)
             await conn.delete(f'api:{cache_key}')
 
-            async with aiohttp.ClientSession(raise_for_status=True) as s:
-                async with s.post(url, *args, **kwargs) as r:
-                    return
+            try:
+                async with aiohttp.ClientSession(raise_for_status=True) as s:
+                    async with s.post(url, *args, **kwargs) as r:
+                        return
+            except APIError as e:
+                if handler := getattr(self, f'api_post_{e.status}'):
+                    handler()
 
     def cache_key_for_url(self, url):
         return hashlib.md5((url + json.dumps(self._query, sort_keys=True)).encode()).hexdigest()

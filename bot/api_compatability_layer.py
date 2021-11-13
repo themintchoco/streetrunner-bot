@@ -14,7 +14,7 @@ from bot.api.SkinsApi.SkinsApi import SkinsApi
 from bot.api.StreetRunnerApi.Player import Player
 from bot.cosmetics import pets, titles
 from bot.cosmetics.cosmetics import Cosmetics
-from bot.exceptions import APIError, DiscordNotLinkedError, UsernameError
+from bot.exceptions import APIError
 from bot.player.privacy import Privacy
 from bot.player.stats import PlayerInfo
 from store.RedisClient import RedisClient
@@ -62,53 +62,25 @@ async def resolve_uuid(*, username: str = None, discord_id: int = None) -> str:
     if cached := await conn.get(cache_key):
         return cached.decode()
 
-    try:
-        uuid = (await Player({'mc_username': username, 'discord_id': discord_id}).PlayerInfo().data).uuid
-        await conn.set(cache_key, uuid, ex=datetime.timedelta(days=1))
-        return uuid
-
-    except APIError as e:
-        if e.status == 404:
-            if username:
-                raise UsernameError(username)
-            else:
-                raise DiscordNotLinkedError(discord_id)
-        raise
+    uuid = (await Player({'mc_username': username, 'discord_id': discord_id}).PlayerInfo().data).uuid
+    await conn.set(cache_key, uuid, ex=datetime.timedelta(days=1))
+    return uuid
 
 
 async def get_player_info(*, username: str = None, discord_user: nextcord.User = None, type=None) -> PlayerInfo:
-    try:
-        player = Player({
-            'mc_username': username if username else None,
-            'discord_id': discord_user.id if discord_user else None,
-        })
-
-    except APIError as e:
-        if e.status == 404:
-            if username:
-                raise UsernameError(username)
-            else:
-                raise DiscordNotLinkedError(discord_id)
-
-        raise
+    player = Player({
+        'mc_username': username if username else None,
+        'discord_id': discord_user.id if discord_user else None,
+    })
 
     return PlayerInfo(player)
 
 
 async def get_player_cosmetics(*, username: str = None, discord_user: nextcord.User = None) -> List[Cosmetics]:
-    try:
-        cosmetics_data = await Player({
-            'mc_username': username if username else None,
-            'discord_id': discord_user.id if discord_user else None,
-        }).PlayerCosmetics().data
-
-    except APIError as e:
-        if e.status == 404:
-            if username:
-                raise UsernameError(username)
-            else:
-                raise DiscordNotLinkedError(discord_id)
-        raise
+    cosmetics_data = await Player({
+        'mc_username': username if username else None,
+        'discord_id': discord_user.id if discord_user else None,
+    }).PlayerCosmetics().data
 
     cosmetics = []
 
