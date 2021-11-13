@@ -58,7 +58,7 @@ class BalanceCard(PlayerCard):
 
         total = 2 * math.pi
         angle_segment = total / len(balances)
-        angle = -1 * math.pi + angle_segment / 2
+        angle = angle_segment / 4
 
         for i, (balance_type, value) in enumerate(balances):
             angle += angle_segment
