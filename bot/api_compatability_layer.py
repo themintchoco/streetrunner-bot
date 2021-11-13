@@ -125,7 +125,7 @@ async def get_chat_xp(discord_id: List[int], timerange: List[Tuple[datetime.date
 
     async with aiohttp.ClientSession() as s:
         async with s.post(
-                'https://streetrunner.gg/api/xp/', json=query,
+                'https://streetrunner.gg/api/xp/', json=query, ssl=False,
                 headers={'Authorization': os.environ['API_KEY']}) as r:
             if r.status != 200:
                 raise APIError(r)

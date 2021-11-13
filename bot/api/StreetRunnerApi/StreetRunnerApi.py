@@ -8,8 +8,10 @@ class StreetRunnerApi(ApiSchema):
 
     def api_get(self, *args, **kwargs):
         kwargs.setdefault('headers', {}).setdefault('Authorization', os.environ['API_KEY'])
+        kwargs.setdefault('ssl', False)
         return super().api_get(*args, **kwargs)
 
     def api_post(self, *args, **kwargs):
         kwargs.setdefault('headers', {}).setdefault('Authorization', os.environ['API_KEY'])
+        kwargs.setdefault('ssl', False)
         return super().api_post(*args, **kwargs)
