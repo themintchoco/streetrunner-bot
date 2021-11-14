@@ -49,7 +49,7 @@ class BalanceCard(PlayerCard):
                            image_base.height // 2 - BALANCE_RING_RADIUS,
                            image_base.width // 2 + BALANCE_RING_RADIUS,
                            image_base.height // 2 + BALANCE_RING_RADIUS),
-                          (0, 0, 0, 0), (255, 255, 255, 143), BALANCE_RING_WIDTH)
+                          (0, 0, 0, 0), (127, 127, 127, 143), BALANCE_RING_WIDTH)
 
         image_model = (await PlayerModel((await player.PlayerInfo().data).uuid, 3).render()).image
         image_base.paste(image_model, ((image_base.width - image_model.width) // 2,
