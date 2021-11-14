@@ -58,13 +58,21 @@ class BalanceCard(PlayerCard):
 
         angle_sector = 2 * math.pi / len(balances)
         angle = angle_sector / 4
-        for i, (balance_type, value) in enumerate(balances):
+        for balance_type, value in balances:
             direction = (math.sin(angle), -math.cos(angle))
             x = int(direction[0] * BALANCE_RING_RADIUS + image_base.width // 2)
             y = int(direction[1] * BALANCE_RING_RADIUS + image_base.height // 2)
 
             image_icon = Image.open(balance_type.value).resize((BALANCE_ICON_WIDTH, BALANCE_ICON_WIDTH), Image.NEAREST)
             image_base.paste(image_icon, (x - BALANCE_ICON_WIDTH // 2, y - BALANCE_ICON_WIDTH // 2), mask=image_icon)
+
+            x0, y0, x1, y1 = draw_base.textbbox((x + direction[0] * BALANCE_ICON_WIDTH,
+                                                 y + direction[1] * BALANCE_ICON_WIDTH),
+                                                get_number_representation(value),
+                                                self._font, anchor='rm' if direction[0] < 0 else 'lm')
+            draw_base.rectangle((x0 - 6, y0 - 8, x1 + 6, y1 + 8), (27, 12, 27, 200), (0, 0, 0, 0), 0)
+            draw_base.rectangle((x0 - 8, y0 - 6, x1 + 8, y1 + 6), (27, 12, 27, 200), (0, 0, 0, 0), 0)
+            draw_base.rectangle((x0 - 6, y0 - 6, x1 + 6, y1 + 6), (27, 12, 27, 200), (42, 8, 92, 255), 2)
 
             draw_base.text((x + direction[0] * BALANCE_ICON_WIDTH,
                             y + direction[1] * BALANCE_ICON_WIDTH),
