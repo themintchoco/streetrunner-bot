@@ -3,6 +3,7 @@ import json
 import urllib
 
 import aiohttp
+import sentry_sdk
 from marshmallow import Schema, post_load
 from marshmallow.schema import SchemaMeta
 
@@ -57,56 +58,60 @@ class ApiSchema(Schema, metaclass=ApiSchemaBase):
         raise AttributeError
 
     async def api_get(self, *args, **kwargs):
-        conn = RedisClient().conn
+        with sentry_sdk.start_transaction(op='api.get', name=self.__class__.__name__):
+            conn = RedisClient().conn
 
-        for endpoint in self.__endpoints__:
-            try:
-                url = endpoint.format(
-                    **{k: urllib.parse.quote(str(v), safe='') for k, v in self._params.items() if v is not None})
-            except KeyError:
-                continue
+            for endpoint in self.__endpoints__:
+                try:
+                    url = endpoint.format(
+                        **{k: urllib.parse.quote(str(v), safe='') for k, v in self._params.items() if v is not None})
+                except KeyError:
+                    continue
 
-            cache_key = self.cache_key_for_url(url)
-            if cached := await conn.get(f'api:{cache_key}'):
-                return json.loads(cached)
+                cache_key = self.cache_key_for_url(url)
+                if cached := await conn.get(f'api:{cache_key}'):
+                    return json.loads(cached)
 
-            if query := urllib.parse.urlencode(self._query):
-                url += '?' + query
+                if query := urllib.parse.urlencode(self._query):
+                    url += '?' + query
 
-            try:
-                async with aiohttp.ClientSession(raise_for_status=True) as s:
-                    async with s.get(url, *args, **kwargs) as r:
-                        result = await r.text()
-                        await conn.set(f'api:{cache_key}', result, ex=30)
-                        return json.loads(result)
-            except APIError as e:
-                if handler := getattr(self, f'api_get_{e.status}'):
-                    return handler()
-                raise
+                with sentry_sdk.start_span(op='http', description=f'GET {url}') as span:
+                    try:
+                        async with aiohttp.ClientSession(raise_for_status=True) as s:
+                            async with s.get(url, *args, **kwargs) as r:
+                                result = await r.text()
+                                await conn.set(f'api:{cache_key}', result, ex=30)
+                                return json.loads(result)
+                    except APIError as e:
+                        if handler := getattr(self, f'api_get_{e.status}'):
+                            return handler()
+                        raise
 
-        raise
+            raise
 
     async def api_post(self, *args, **kwargs):
-        conn = RedisClient().conn
+        with sentry_sdk.start_transaction(op='api.post', name=self.__class__.__name__):
+            conn = RedisClient().conn
 
-        for endpoint in self.__endpoints__:
-            try:
-                url = endpoint.format(
-                    **{k: urllib.parse.quote(str(v), safe='') for k, v in self._params.items() if v is not None})
-            except KeyError:
-                continue
+            for endpoint in self.__endpoints__:
+                try:
+                    url = endpoint.format(
+                        **{k: urllib.parse.quote(str(v), safe='') for k, v in self._params.items() if v is not None})
+                except KeyError:
+                    continue
 
-            cache_key = self.cache_key_for_url(url)
-            await conn.delete(f'api:{cache_key}')
+                cache_key = self.cache_key_for_url(url)
+                await conn.delete(f'api:{cache_key}')
 
-            try:
-                async with aiohttp.ClientSession(raise_for_status=True) as s:
-                    async with s.post(url, *args, **kwargs) as r:
-                        return
-            except APIError as e:
-                if handler := getattr(self, f'api_post_{e.status}'):
-                    return handler()
-                raise
+                with sentry_sdk.start_span(op='http', description=f'POST {url}') as span:
+                    try:
+                        async with aiohttp.ClientSession(raise_for_status=True) as s:
+                            async with s.post(url, *args, **kwargs) as r:
+                                return
+                    except APIError as e:
+                        if handler := getattr(self, f'api_post_{e.status}'):
+                            return handler()
+                        raise
 
     def cache_key_for_url(self, url):
         return hashlib.md5((url + json.dumps(self._query, sort_keys=True)).encode()).hexdigest()
