@@ -221,10 +221,8 @@ class WebServer(commands.Cog):
         )
         @self.routes.post('/cosmetics/{uuid}')
         async def update_cosmetics(request):
-            try:
-                discord_id = (await Player({'uuid': request.match_info['uuid']}).PlayerInfo().data).discord
-            except AttributeError:
-                raise web.HTTPNotFound()
+            if (discord_id := (await Player({'uuid': request.match_info['uuid']}).PlayerInfo().data).discord) is None:
+                raise web.HTTPOk()
 
             guild = self.bot.get_guild(int(os.environ['GUILD_ID']))
             if not guild:
