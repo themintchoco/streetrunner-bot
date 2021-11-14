@@ -81,7 +81,8 @@ class Player(commands.Cog, PlayerRespondMixin):
             else:
                 file = nextcord.File(render.file('PNG'), 'player_card.png')
 
-            if await self.respond(ctx, player, privacy, file=file) == PlayerRespondType.DM:
+            if (await self.respond(ctx, player, privacy, file=file) == PlayerRespondType.DM
+                    and ctx.channel.type == nextcord.ChannelType.text):
                 await ctx.send('Sent to your DMs due to your privacy settings.')
 
         except PrivacyError as e:
