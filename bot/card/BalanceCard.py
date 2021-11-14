@@ -70,9 +70,9 @@ class BalanceCard(PlayerCard):
                                                  y + direction[1] * BALANCE_ICON_WIDTH),
                                                 get_number_representation(value),
                                                 self._font, anchor='rm' if direction[0] < 0 else 'lm')
-            draw_base.rectangle((x0 - 6, y0 - 8, x1 + 6, y1 + 8), (27, 12, 27, 200), (0, 0, 0, 0), 0)
-            draw_base.rectangle((x0 - 8, y0 - 6, x1 + 8, y1 + 6), (27, 12, 27, 200), (0, 0, 0, 0), 0)
-            draw_base.rectangle((x0 - 6, y0 - 6, x1 + 6, y1 + 6), (27, 12, 27, 200), (42, 8, 92, 255), 2)
+            draw_base.rectangle((x0 - 6, y0 - 8, x1 + 6, y1 + 8), (27, 12, 27, 248), (0, 0, 0, 0), 0)
+            draw_base.rectangle((x0 - 8, y0 - 6, x1 + 8, y1 + 6), (27, 12, 27, 248), (0, 0, 0, 0), 0)
+            draw_base.rectangle((x0 - 6, y0 - 6, x1 + 6, y1 + 6), (27, 12, 27, 248), (42, 8, 92, 255), 2)
 
             draw_base.text((x + direction[0] * BALANCE_ICON_WIDTH,
                             y + direction[1] * BALANCE_ICON_WIDTH),
