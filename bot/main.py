@@ -1,4 +1,5 @@
 import os
+import sys
 
 import nextcord
 import sentry_sdk
@@ -12,17 +13,6 @@ from bot.cogs.XP import XP
 from bot.config import bot
 
 BLACKLISTED_CHANNELS = [797035821630095393]
-
-sentry_sdk.init(
-    'https://7b74da9447304a35b6f8c49da4fd09f1@o737869.ingest.sentry.io/5785215',
-    traces_sample_rate=1.0,
-)
-
-bot.add_cog(Player(bot))
-bot.add_cog(XP(bot))
-bot.add_cog(Leaderboard(bot))
-bot.add_cog(Admin(bot))
-bot.add_cog(WebServer(bot))
 
 
 async def process_xp(message):
@@ -62,4 +52,28 @@ async def on_error(event, *args, **kwargs):
     raise
 
 
-bot.run(os.environ['TOKEN'])
+def main():
+    args = sys.argv[1:]
+    try:
+        test = args[0] == 'test'
+    except IndexError:
+        test = False
+
+    if not test:
+        sentry_sdk.init(
+            'https://7b74da9447304a35b6f8c49da4fd09f1@o737869.ingest.sentry.io/5785215',
+            traces_sample_rate=1.0,
+        )
+
+    bot.add_cog(Player(bot))
+    bot.add_cog(XP(bot))
+    bot.add_cog(Leaderboard(bot))
+    bot.add_cog(Admin(bot))
+    bot.add_cog(WebServer(bot))
+
+    if not test:
+        bot.run(os.environ['TOKEN'])
+
+
+if __name__ == '__main__':
+    main()
