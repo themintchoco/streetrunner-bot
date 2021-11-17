@@ -234,7 +234,7 @@ class WebServer(commands.Cog):
 
             cosmetic_data = await request.json()
 
-            for cosmetic_type, cosmetic_name in cosmetic_data['new'].items():
+            for cosmetic_type in {*cosmetic_data.get('old', {}).keys(), *cosmetic_data.get('new', {}).keys()}:
                 if cosmetic_type == 'TITLE':
                     cosmetic_from_known_string = titles.from_known_string
                     kls = titles.Title
@@ -244,14 +244,16 @@ class WebServer(commands.Cog):
                 else:
                     continue
 
-                if cosmetic_name_old := cosmetic_data.get('old', {}).get(cosmetic_type):
-                    if role := getattr(cosmetic_from_known_string(cosmetic_name_old), 'role', None):
+                cosmetic_name_new = cosmetic_data.get('new', {}).get(cosmetic_type)
+                if cosmetic_name := cosmetic_data.get('old', {}).get(cosmetic_type):
+                    if (cosmetic_name != cosmetic_name_new
+                        and role := getattr(cosmetic_from_known_string(cosmetic_name), 'role', None)):
                         await member.remove_roles(guild.get_role(role))
                 else:
                     await member.remove_roles(*(guild.get_role(x) for x in kls.roles()))
 
-                if cosmetic_name:
-                    if role := getattr(cosmetic_from_known_string(cosmetic_name), 'role', None):
+                if cosmetic_name_new and cosmetic_name_new != cosmetic_name:
+                    if role := getattr(cosmetic_from_known_string(cosmetic_name_new), 'role', None):
                         await member.add_roles(guild.get_role(role))
 
             return web.Response()
