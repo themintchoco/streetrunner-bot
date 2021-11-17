@@ -1,4 +1,5 @@
 import os
+import sys
 
 import nextcord
 import sentry_sdk
@@ -61,5 +62,11 @@ async def on_error(event, *args, **kwargs):
     # allow Sentry to capture the error
     raise
 
+args = sys.argv[1:]
+try:
+    test = args[1] == 'test'
+except IndexError:
+    test = False
 
-bot.run(os.environ['TOKEN'])
+if not test:
+    bot.run(os.environ['TOKEN'])
