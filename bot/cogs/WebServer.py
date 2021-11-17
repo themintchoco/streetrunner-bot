@@ -246,9 +246,9 @@ class WebServer(commands.Cog):
 
                 cosmetic_name_new = cosmetic_data.get('new', {}).get(cosmetic_type)
                 if cosmetic_name := cosmetic_data.get('old', {}).get(cosmetic_type):
-                    if (cosmetic_name != cosmetic_name_new
-                        and role := getattr(cosmetic_from_known_string(cosmetic_name), 'role', None)):
-                        await member.remove_roles(guild.get_role(role))
+                    if cosmetic_name != cosmetic_name_new:
+                        if role := getattr(cosmetic_from_known_string(cosmetic_name), 'role', None):
+                            await member.remove_roles(guild.get_role(role))
                 else:
                     await member.remove_roles(*(guild.get_role(x) for x in kls.roles()))
 
