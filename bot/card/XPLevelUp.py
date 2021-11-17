@@ -82,11 +82,15 @@ class XPLevelUp(Renderable):
         draw_mask.ellipse((0, 0, 65, 65), fill=(255, 255, 255, 255))
 
         try:
-            image_avatar = Image.open(BytesIO(await self._discord_user.avatar_url_as(format='gif').read()))
+            image_avatar = Image.open(
+                BytesIO(await self._discord_user.display_avatar.with_size(128).with_format('gif').read())
+            )
             avatar_frames = get_animated_avatar_frames(image_avatar)
             animated_avatar = True
         except nextcord.InvalidArgument:
-            image_avatar = Image.open(BytesIO(await self._discord_user.avatar_url_as(format='png').read()))
+            image_avatar = Image.open(
+                BytesIO(await self._discord_user.display_avatar.with_size(128).with_static_format('png').read())
+            )
             image_base.paste(image_avatar.resize((65, 65)), (2 * SPACING, (image_base.height - 65) // 2),
                              mask=image_mask)
             animated_avatar = False
