@@ -4,6 +4,8 @@ on: [push, pull_request]
 
 env:
   PYTHONPATH: ${{ github.workspace }}
+  BASIC_USER: ''
+  BASIC_PASS: ''
 
 jobs:
   test:
