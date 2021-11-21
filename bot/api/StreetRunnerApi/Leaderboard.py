@@ -62,8 +62,7 @@ class LeaderboardMoney(LeaderboardData):
     value = fields.Float()
 
 
-class LeaderboardDataPosition(LeaderboardBlocks, LeaderboardDeaths, LeaderboardInfamy, LeaderboardKda,
-                              LeaderboardKills, LeaderboardRank, LeaderboardTime, LeaderboardMoney):
+class LeaderboardDataPosition(*LeaderboardData.__subclasses__()):
     __endpoints__ = ['{uuid}/']
 
     def __init__(self, *args, **kwargs):
