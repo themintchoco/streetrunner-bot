@@ -1,7 +1,7 @@
 import nextcord
 from nextcord.ext import commands
 
-from bot.card.Podium import BlocksPodium, DeathsPodium, InfamyPodium, KdaPodium, KillsPodium, RankPodium
+from bot.card.Podium import BlocksPodium, DeathsPodium, InfamyPodium, KdaPodium, KillsPodium, RankPodium, MoneyPodium
 from bot.card.TimeLeaderboard import TimeLeaderboard
 from bot.card.XPLeaderboard import XPLeaderboard
 from bot.exceptions import NotEnoughDataError, UsernameError
@@ -67,6 +67,13 @@ class Leaderboard(commands.Cog):
         """Displays the current leaderboard in terms of play time"""
         async with ctx.typing():
             render = await TimeLeaderboard(discord_user=ctx.author).render()
+        await ctx.send(file=nextcord.File(render.file('PNG'), 'leaderboard.png'))
+
+    @leaderboard.command(name='money')
+    async def leaderboard_money(self, ctx):
+        """Displays the current leaderboard in terms of money"""
+        async with ctx.typing():
+            render = await MoneyPodium(discord_user=ctx.author).render()
         await ctx.send(file=nextcord.File(render.file('PNG'), 'leaderboard.png'))
 
     @leaderboard.command(name='xp')

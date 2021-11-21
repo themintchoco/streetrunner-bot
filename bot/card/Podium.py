@@ -6,6 +6,7 @@ import bot.api.StreetRunnerApi.Leaderboard as Leaderboard
 from bot.api.StreetRunnerApi.Player import Player
 from bot.api_compatability_layer import get_leaderboard, get_player_info, get_position
 from bot.card.Avatar import Avatar
+from bot.card.BalanceCard import BalanceType
 from bot.card.Render import Render, Renderable
 from bot.card.card import FONT_BLACK, FONT_BOLD, SPACING
 from bot.exceptions import DiscordNotLinkedError, NotEnoughDataError
@@ -265,3 +266,11 @@ class DeathsPodium(Podium):
 
     async def get_stats(self, player_info: PlayerInfo) -> str:
         return get_number_representation((await player_info.stats_arena).deaths)
+
+
+class MoneyPodium(Podium):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, Leaderboard.LeaderboardMoney, 'Money', Privacy.balance)
+
+    async def get_stats(self, player_info: PlayerInfo) -> str:
+        return get_number_representation((await player_info.balance)[BalanceType.MONEY])

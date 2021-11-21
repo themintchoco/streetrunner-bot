@@ -56,8 +56,14 @@ class LeaderboardTime(LeaderboardData):
     value = fields.Function(deserialize=lambda value: datetime.timedelta(seconds=float(value)))
 
 
+class LeaderboardMoney(LeaderboardData):
+    __endpoints__ = ['balance/money/']
+
+    value = fields.Float()
+
+
 class LeaderboardDataPosition(LeaderboardBlocks, LeaderboardDeaths, LeaderboardInfamy, LeaderboardKda,
-                              LeaderboardKills, LeaderboardRank, LeaderboardTime):
+                              LeaderboardKills, LeaderboardRank, LeaderboardTime, LeaderboardMoney):
     __endpoints__ = ['{uuid}/']
 
     def __init__(self, *args, **kwargs):
