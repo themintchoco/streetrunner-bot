@@ -1,5 +1,3 @@
-from enum import Enum
-
 import math
 from PIL import Image, ImageDraw, ImageFont
 
@@ -8,6 +6,7 @@ from bot.card.PlayerCard import PlayerCard
 from bot.card.PlayerModel import PlayerModel
 from bot.card.Render import Render
 from bot.card.card import FONT_MC_REGULAR, SPACING
+from bot.player.balance import BalanceType
 from bot.player.privacy import Privacy
 from helpers.utilities import get_number_representation
 
@@ -16,12 +15,12 @@ BALANCE_ICON_WIDTH = 32
 BALANCE_RING_RADIUS = 100
 BALANCE_RING_WIDTH = 5
 
-
-class BalanceType(Enum):
-    MONEY = 'images/money.png'
-    TOKEN = 'images/token.png'
-    CREDIT = 'images/credit.png'
-    MYSTERIOUS_ESSENCE = 'images/me.png'
+BALANCE_CARD_BACKGROUNDS = {
+    BalanceType.Money: 'images/money.png',
+    BalanceType.Token: 'images/token.png',
+    BalanceType.Credit: 'images/credit.png',
+    BalanceType.ME: 'images/me.png',
+}
 
 
 class BalanceCard(PlayerCard):
@@ -33,7 +32,8 @@ class BalanceCard(PlayerCard):
 
         for balance in await player.PlayerBalance().data:
             try:
-                if ((balance_type := BalanceType[balance.type]) in [BalanceType.TOKEN] and
+                if ((balance_type := BALANCE_CARD_BACKGROUNDS[BalanceType(balance.type)]) in [
+                    BALANCE_CARD_BACKGROUNDS[BalanceType.Token]] and
                         not (await player.PlayerPrivacy().data).value & Privacy.balance):
                     continue
             except KeyError:

@@ -1,6 +1,6 @@
 from enum import Enum
 
-from bot.card.BalanceCard import BalanceType
+from bot.player.balance import BalanceType
 
 
 class PlayerStatsType(Enum):
@@ -64,4 +64,4 @@ class PlayerInfo:
         if not self._balance:
             self._balance = await self._player.PlayerBalance().preload()
 
-        return {BalanceType[x.type]: x.balance for x in await self._balance.data}
+        return {BalanceType(x.type): x.balance for x in await self._balance.data}
