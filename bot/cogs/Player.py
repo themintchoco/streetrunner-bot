@@ -1,5 +1,3 @@
-import typing
-
 import nextcord
 from nextcord.ext import commands
 
@@ -22,42 +20,42 @@ class Player(commands.Cog, PlayerRespondMixin):
         self.bot = bot
 
     @commands.command(aliases=['prison'])
-    async def rank(self, ctx, username: str):
+    async def rank(self, ctx, username: str = None):
         """Displays player Prison stats"""
         await self.respond_card(ctx, RankCard, username, Privacy.prison)
 
     @commands.command(aliases=['arena'])
-    async def infamy(self, ctx, username: str):
+    async def infamy(self, ctx, username: str = None):
         """Displays player Arena stats"""
         await self.respond_card(ctx, InfamyCard, username, Privacy.arena)
 
     @commands.command()
-    async def kills(self, ctx, username: str):
+    async def kills(self, ctx, username: str = None):
         """Displays player Arena kill stats"""
         await self.respond_card(ctx, KillsCard, username, Privacy.arena)
 
     @commands.command()
-    async def kda(self, ctx, username: str):
+    async def kda(self, ctx, username: str = None):
         """Displays player Arena kda stats"""
         await self.respond_card(ctx, KdaCard, username, Privacy.arena)
 
     @commands.command()
-    async def deaths(self, ctx, username: str):
+    async def deaths(self, ctx, username: str = None):
         """Displays player Arena death stats"""
         await self.respond_card(ctx, DeathsCard, username, Privacy.arena)
 
     @commands.command()
-    async def time(self, ctx, username: str):
+    async def time(self, ctx, username: str = None):
         """Displays player time"""
         await self.respond_card(ctx, TimeCard, username, Privacy.time)
 
     @commands.command()
-    async def wiki(self, ctx, username: str):
+    async def wiki(self, ctx, username: str = None):
         """Displays player wiki points"""
         await self.respond_card(ctx, WikiCard, username)
 
     @commands.command()
-    async def balance(self, ctx, username: str):
+    async def balance(self, ctx, username: str = None):
         """Displays player balance"""
         await self.respond_card(ctx, BalanceCard, username, Privacy.balance)
 
