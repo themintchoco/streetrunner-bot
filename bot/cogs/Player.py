@@ -22,54 +22,55 @@ class Player(commands.Cog, PlayerRespondMixin):
         self.bot = bot
 
     @commands.command(aliases=['prison'])
-    async def rank(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
+    async def rank(self, ctx, username: str):
         """Displays player Prison stats"""
-        await self.respond_card(ctx, RankCard, user, Privacy.prison)
+        await self.respond_card(ctx, RankCard, username, Privacy.prison)
 
     @commands.command(aliases=['arena'])
-    async def infamy(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
+    async def infamy(self, ctx, username: str):
         """Displays player Arena stats"""
-        await self.respond_card(ctx, InfamyCard, user, Privacy.arena)
+        await self.respond_card(ctx, InfamyCard, username, Privacy.arena)
 
     @commands.command()
-    async def kills(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
+    async def kills(self, ctx, username: str):
         """Displays player Arena kill stats"""
-        await self.respond_card(ctx, KillsCard, user, Privacy.arena)
+        await self.respond_card(ctx, KillsCard, username, Privacy.arena)
 
     @commands.command()
-    async def kda(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
+    async def kda(self, ctx, username: str):
         """Displays player Arena kda stats"""
-        await self.respond_card(ctx, KdaCard, user, Privacy.arena)
+        await self.respond_card(ctx, KdaCard, username, Privacy.arena)
 
     @commands.command()
-    async def deaths(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
+    async def deaths(self, ctx, username: str):
         """Displays player Arena death stats"""
-        await self.respond_card(ctx, DeathsCard, user, Privacy.arena)
+        await self.respond_card(ctx, DeathsCard, username, Privacy.arena)
 
     @commands.command()
-    async def time(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
+    async def time(self, ctx, username: str):
         """Displays player time"""
-        await self.respond_card(ctx, TimeCard, user, Privacy.time)
+        await self.respond_card(ctx, TimeCard, username, Privacy.time)
 
     @commands.command()
-    async def wiki(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
+    async def wiki(self, ctx, username: str):
         """Displays player wiki points"""
-        await self.respond_card(ctx, WikiCard, user)
+        await self.respond_card(ctx, WikiCard, username)
 
     @commands.command()
-    async def balance(self, ctx, user: typing.Optional[typing.Union[nextcord.Member, str]]):
+    async def balance(self, ctx, username: str):
         """Displays player balance"""
-        await self.respond_card(ctx, BalanceCard, user, Privacy.balance)
+        await self.respond_card(ctx, BalanceCard, username, Privacy.balance)
 
-    async def respond_card(self, ctx, card_type: PlayerCard, user, privacy: Privacy = 0):
-        if user is None:
-            username = None
-            user = ctx.author
-        elif isinstance(user, str):
-            username = user
-            user = ctx.author
-        else:
-            username = None
+    async def respond_card(self, ctx, card_type: PlayerCard, username, privacy: Privacy = 0):
+        user = ctx.author
+
+        try:
+            if username and username[:2] == '<@':
+                if not (user := self.bot.get_user(int(username[2:-1]))):
+                    raise UsernameError()
+                username = None
+        except ValueError:
+            raise UsernameError()
 
         async with ctx.typing():
             player = StreetRunnerApi.Player.Player({'mc_username': username, 'discord_id': user.id})
