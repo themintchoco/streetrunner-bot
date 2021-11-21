@@ -13,6 +13,7 @@ from bot.cogs.XP import XP
 from bot.config import bot
 
 BLACKLISTED_CHANNELS = [797035821630095393]
+DEV_MODE = os.environ.get('DEV', None) == 'DEV'
 
 
 async def process_xp(message):
@@ -30,7 +31,11 @@ def is_xp_command(message):
 
 @bot.event
 async def on_message(message):
-    if message.guild and (message.guild.id == 846060357901615115) ^ (os.environ.get('DEV', False) == 'DEV'):
+    if message.channel.type != nextcord.ChannelType.text and DEV_MODE:
+        # prevent development bot from replying to DMs
+        return
+
+    if message.guild and (message.guild.id == 846060357901615115) ^ DEV_MODE:
         # prevent production bot from replying to dev server and vice versa
         return
 
