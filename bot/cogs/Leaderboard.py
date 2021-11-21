@@ -1,14 +1,14 @@
 import nextcord
 from nextcord.ext import commands
 
-from bot.card.Podium import BlocksPodium, DeathsPodium, InfamyPodium, KdaPodium, KillsPodium, RankPodium
+from bot.card.Podium import BlocksPodium, DeathsPodium, InfamyPodium, KdaPodium, KillsPodium, MoneyPodium, RankPodium
 from bot.card.TimeLeaderboard import TimeLeaderboard
 from bot.card.XPLeaderboard import XPLeaderboard
 from bot.exceptions import NotEnoughDataError, UsernameError
 
 
 class Leaderboard(commands.Cog):
-    """rank, blocks, infamy, kda, kills, deaths, time, xp"""
+    """rank, blocks, infamy, kda, kills, deaths, time, money, xp"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -18,7 +18,8 @@ class Leaderboard(commands.Cog):
         """Displays the current leaderboard!"""
         if ctx.invoked_subcommand is None:
             await ctx.send(
-                f'usage: {self.bot.command_prefix}{ctx.invoked_with} <rank|blocks|infamy|kda|kills|deaths|time|xp>')
+                f'usage: {self.bot.command_prefix}{ctx.invoked_with} '
+                '<rank|blocks|infamy|kda|kills|deaths|time|money|xp>')
 
     @leaderboard.command(name='rank')
     async def leaderboard_rank(self, ctx):
@@ -69,27 +70,19 @@ class Leaderboard(commands.Cog):
             render = await TimeLeaderboard(discord_user=ctx.author).render()
         await ctx.send(file=nextcord.File(render.file('PNG'), 'leaderboard.png'))
 
+    @leaderboard.command(name='money')
+    async def leaderboard_money(self, ctx):
+        """Displays the current leaderboard in terms of money"""
+        async with ctx.typing():
+            render = await MoneyPodium(discord_user=ctx.author).render()
+        await ctx.send(file=nextcord.File(render.file('PNG'), 'leaderboard.png'))
+
     @leaderboard.command(name='xp')
     async def leaderboard_xp(self, ctx):
         """Displays the current leaderboard in terms of discord XP"""
         async with ctx.typing():
             render = await XPLeaderboard(discord_user=ctx.author).render()
         await ctx.send(file=nextcord.File(render.file(format='PNG'), 'xp_leaderboard.png'))
-
-    # @leaderboard.command(name='tournament')
-    # async def leaderboard_tournament(self, ctx):
-    #     """Displays the current tournament leaderboard! Fame and rewards await the top 10 players! """
-    #     username = None
-    #     async with ctx.typing():
-    #         render = await event.render_event_leaderboard(discord_user=ctx.author)
-    #         try:
-    #             username = (await card.get_player_info(discord_user=ctx.author)).username
-    #         except:
-    #             pass
-    #
-    #     await ctx.send(file=nextcord.File(render.file(format='PNG'), 'tournament.png'))
-    #     await ctx.send('View the full leaderboard LIVE at https://streetrunner.gg/tournament/'
-    #                    + (f'?username={username}' if username else ''))
 
     @leaderboard.error
     @leaderboard_rank.error
@@ -99,6 +92,7 @@ class Leaderboard(commands.Cog):
     @leaderboard_kills.error
     @leaderboard_deaths.error
     @leaderboard_time.error
+    @leaderboard_money.error
     @leaderboard_xp.error
     async def on_command_error(self, ctx, error):
         if isinstance(error, commands.CommandInvokeError):

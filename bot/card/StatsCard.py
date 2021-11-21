@@ -1,9 +1,7 @@
 import random
 from abc import ABC
-from enum import Enum
 from typing import List, Tuple
 
-import nextcord
 from PIL import Image, ImageDraw, ImageFont
 
 from bot.api_compatability_layer import get_player_cosmetics, get_player_info
@@ -12,20 +10,20 @@ from bot.card.PlayerModel import PlayerModel
 from bot.card.Render import Render
 from bot.card.card import FONT_BLACK, FONT_BOLD, FONT_LIGHT, FONT_REGULAR, SPACING
 from bot.cosmetics.cosmetics import CosmeticsType
-from bot.player.stats import PlayerInfo
+from bot.player.stats import PlayerInfo, PlayerStatsType
 from helpers.utilities import get_number_representation, get_timedelta_representation
 
 STATS_CARD_WIDTH = 640
 STATS_CARD_HEIGHT = 220
 
-
-class CardType(Enum):
-    PRISON = 'images/prison.jpg'
-    ARENA = 'images/arena.jpg'
+STATS_CARD_BACKGROUND = {
+    PlayerStatsType.Prison: 'images/prison.jpg',
+    PlayerStatsType.Arena: 'images/arena.jpg'
+}
 
 
 class StatsCard(PlayerCard):
-    _background = random.choice(list(CardType)).value
+    _background = random.choice(list(STATS_CARD_BACKGROUND.values()))
 
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         raise NotImplementedError()
@@ -129,11 +127,11 @@ class StatsCard(PlayerCard):
 
 
 class PrisonCard(StatsCard, ABC):
-    _background = CardType.PRISON.value
+    _background = STATS_CARD_BACKGROUND[PlayerStatsType.Prison]
 
 
 class ArenaCard(StatsCard, ABC):
-    _background = CardType.ARENA.value
+    _background = STATS_CARD_BACKGROUND[PlayerStatsType.Arena]
 
 
 class RankCard(PrisonCard):

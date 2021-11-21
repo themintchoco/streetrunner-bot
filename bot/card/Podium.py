@@ -9,6 +9,7 @@ from bot.card.Avatar import Avatar
 from bot.card.Render import Render, Renderable
 from bot.card.card import FONT_BLACK, FONT_BOLD, SPACING
 from bot.exceptions import DiscordNotLinkedError, NotEnoughDataError
+from bot.player.balance import BalanceType
 from bot.player.privacy import Privacy
 from bot.player.stats import PlayerInfo
 from helpers.utilities import get_number_representation
@@ -265,3 +266,11 @@ class DeathsPodium(Podium):
 
     async def get_stats(self, player_info: PlayerInfo) -> str:
         return get_number_representation((await player_info.stats_arena).deaths)
+
+
+class MoneyPodium(Podium):
+    def __init__(self, username: str = None, discord_user: nextcord.User = None):
+        super().__init__(username, discord_user, Leaderboard.LeaderboardMoney, 'Money', Privacy.balance)
+
+    async def get_stats(self, player_info: PlayerInfo) -> str:
+        return get_number_representation((await player_info.balance)[BalanceType.Money])

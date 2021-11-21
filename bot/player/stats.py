@@ -1,5 +1,7 @@
 from enum import Enum
 
+from bot.player.balance import BalanceType
+
 
 class PlayerStatsType(Enum):
     Prison, Arena = range(2)
@@ -13,6 +15,7 @@ class PlayerInfo:
         self._stats_arena = None
         self._stats_time = None
         self._stats_wiki = None
+        self._balance = None
 
     @property
     async def uuid(self):
@@ -55,3 +58,10 @@ class PlayerInfo:
             self._stats_wiki = await self._player.WikiPoints().preload()
 
         return (await self._stats_wiki.data).value
+
+    @property
+    async def balance(self):
+        if not self._balance:
+            self._balance = await self._player.PlayerBalance().preload()
+
+        return {BalanceType(x.type): x.balance for x in await self._balance.data}
