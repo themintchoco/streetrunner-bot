@@ -1,3 +1,5 @@
+import re
+
 import nextcord
 from nextcord.ext import commands
 
@@ -63,8 +65,8 @@ class Player(commands.Cog, PlayerRespondMixin):
         user = ctx.author
 
         try:
-            if username and username[:2] == '<@':
-                if not (user := self.bot.get_user(int(username[2:-1]))):
+            if username and (match := re.match(r'<@!?(\d+?)>', username)):
+                if not (user := self.bot.get_user(int(match.group(1)))):
                     raise UsernameError()
                 username = None
         except ValueError:
