@@ -32,14 +32,14 @@ class BalanceCard(PlayerCard):
 
         for balance in await player.PlayerBalance().data:
             try:
-                if ((balance_type := BALANCE_CARD_BACKGROUNDS[BalanceType(balance.type)]) in [
+                if ((balance_bg := BALANCE_CARD_BACKGROUNDS[BalanceType(balance.type)]) in [
                     BALANCE_CARD_BACKGROUNDS[BalanceType.Token]] and
                         not (await player.PlayerPrivacy().data).value & Privacy.balance):
                     continue
             except KeyError:
                 continue
 
-            balances.append((balance_type, balance.balance))
+            balances.append((balance_bg, balance.balance))
 
         image_base = Image.new('RGBA', (BALANCE_WIDTH, 2 * (BALANCE_RING_RADIUS + BALANCE_ICON_WIDTH + SPACING)),
                                color=(0, 0, 0, 0))
@@ -58,12 +58,12 @@ class BalanceCard(PlayerCard):
 
         angle_sector = 2 * math.pi / len(balances)
         angle = angle_sector / 4
-        for balance_type, value in balances:
+        for balance_bg, value in balances:
             direction = (math.sin(angle), -math.cos(angle))
             x = int(direction[0] * BALANCE_RING_RADIUS + image_base.width // 2)
             y = int(direction[1] * BALANCE_RING_RADIUS + image_base.height // 2)
 
-            image_icon = Image.open(balance_type.value).resize((BALANCE_ICON_WIDTH, BALANCE_ICON_WIDTH), Image.NEAREST)
+            image_icon = Image.open(balance_bg).resize((BALANCE_ICON_WIDTH, BALANCE_ICON_WIDTH), Image.NEAREST)
             image_base.paste(image_icon, (x - BALANCE_ICON_WIDTH // 2, y - BALANCE_ICON_WIDTH // 2), mask=image_icon)
 
             x0, y0, x1, y1 = draw_base.textbbox((x + direction[0] * BALANCE_ICON_WIDTH,
