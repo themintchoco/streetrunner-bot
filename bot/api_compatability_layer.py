@@ -13,7 +13,7 @@ from cachetools import TTLCache
 from bot.api.SkinsApi.SkinsApi import SkinsApi
 from bot.api.StreetRunnerApi.Player import Player
 from bot.cosmetics import pets, titles
-from bot.cosmetics.cosmetics import Cosmetics
+from bot.cosmetics.cosmetics import Cosmetics, CosmeticsType
 from bot.exceptions import APIError
 from bot.player.privacy import Privacy
 from bot.player.stats import PlayerInfo
@@ -82,14 +82,14 @@ async def get_player_cosmetics(*, username: str = None, discord_user: nextcord.U
         'discord_id': discord_user.id if discord_user else None,
     }).PlayerCosmetics().data
 
-    cosmetics = []
+    cosmetics = {}
 
     for cosmetic_data in cosmetics_data:
         if cosmetic_data.type == 'TITLE':
-            cosmetics.append(titles.from_known_string(cosmetic_data.name))
+            cosmetics[CosmeticsType.Title] = titles.from_known_string(cosmetic_data.name)
 
         if cosmetic_data.type == 'PET':
-            cosmetics.append(pets.from_known_string(cosmetic_data.name))
+            cosmetics[CosmeticsType.Pet] = pets.from_known_string(cosmetic_data.name)
 
     return cosmetics
 

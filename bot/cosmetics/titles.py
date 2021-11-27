@@ -1,5 +1,6 @@
 from colour import Color
 
+from bot.card import Ribbon
 from bot.coloreffect import ColorEffect, ColorEffectBreathe, ColorEffectUnicorn
 from bot.cosmetics.cosmetics import Cosmetics, CosmeticsType
 
@@ -101,6 +102,16 @@ class WealthyBold(Title):
     color = ColorEffect('#fecd60')
     id = 'WEALTHY_BOLD'
     role = 906013562403717141
+
+
+class Exalted(Title):
+    bold = True
+    font = ColorEffect('black', alpha=0.8)
+    color = ColorEffect('#bfff00', duration=20)
+    shine = ColorEffect('#00ffff')
+    ribbon = Ribbon.RibbonShine
+    id = 'EXALTED'
+    role = 914038102182465617
 
 
 known_titles = {x.id: x() for x in Title.known()}

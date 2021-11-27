@@ -77,7 +77,7 @@ class Player(commands.Cog, PlayerRespondMixin):
             render = await card_type(username=username, discord_user=user, privacy=privacy).render()
 
         try:
-            if render.multi_frame:
+            if render.animated:
                 file = nextcord.File(render.file_animated(format='GIF', loop=0), 'player_card.gif')
             else:
                 file = nextcord.File(render.file('PNG'), 'player_card.png')
