@@ -107,9 +107,11 @@ class WealthyBold(Title):
 class Exalted(Title):
     bold = True
     font = ColorEffect('black', alpha=0.8)
-    color = ColorEffect('#bfff00', duration=20)
+    color = ColorEffect('#bfff00', duration=30)
     shine = ColorEffect('#00ffff')
-    ribbon = Ribbon.RibbonShine
+    width = 50
+    fade_width = 50
+    ribbon = Ribbon.RibbonWave
     id = 'EXALTED'
     role = 914038102182465617
 

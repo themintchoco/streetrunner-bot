@@ -18,13 +18,16 @@ class ColorEffect:
             self.color = (Color(*color, **kwargs),)
 
     def __getitem__(self, t):
-        return self.rgba(self.color[0])
+        return self.color[0]
 
     def __iter__(self):
         for i in range(self.duration):
             yield self[i]
 
     def rgba(self, color):
+        if isinstance(color, int):
+            color = self[color]
+
         return tuple(int(i * 255) for i in (*color.rgb, self.alpha))
 
 
@@ -32,7 +35,7 @@ class ColorEffectBlink(ColorEffect):
     animated = True
 
     def __getitem__(self, t):
-        return self.rgba(self.color[round(self.time_function(t) // (1 / len(self.color)))])
+        return self.color[round(self.time_function(t) // (1 / len(self.color)))]
 
     def time_function(self, t):
         return t / self.duration
@@ -42,9 +45,7 @@ class ColorEffectUnicorn(ColorEffect):
     animated = True
 
     def __getitem__(self, t):
-        return self.rgba(
-            self.spectrum[round(min(self.time_function(t) * 100 * (len(self.color) - 1), len(self.spectrum) - 1))]
-        )
+        return self.spectrum[round(min(self.time_function(t) * 100 * (len(self.color) - 1), len(self.spectrum) - 1))]
 
     @functools.cached_property
     def spectrum(self):
