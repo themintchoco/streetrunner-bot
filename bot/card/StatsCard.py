@@ -92,9 +92,6 @@ class StatsCard(PlayerCard):
         draw_base.text((14 * SPACING + image_skin.width + max(length_stats_left, 80), 10 * SPACING), stats[1][1],
                        (77, 189, 138), font_stats)
 
-        from bot.cosmetics.titles import Exalted
-        player_cosmetics[CosmeticsType.Title] = Exalted()
-
         if title := player_cosmetics.get(CosmeticsType.Title):
             ribbon = await (getattr(title, 'ribbon', Ribbon)(title)).render()
 
