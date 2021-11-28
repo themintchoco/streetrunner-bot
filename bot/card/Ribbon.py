@@ -1,6 +1,6 @@
 import asyncio
-import math
 
+import math
 from PIL import Image, ImageDraw, ImageFont
 
 from bot.card.Render import Render, Renderable
@@ -18,11 +18,11 @@ class Ribbon(Renderable):
         self._bold = getattr(title, 'bold', False)
         self._font = getattr(title, 'font', ColorEffect('white'))
 
-    async def render_background(self, n) -> Image:
+    def render_background(self, n) -> Image:
         image_background = Image.new('RGBA', (RIBBON_WIDTH, RIBBON_HEIGHT), color=self._color.rgba(n))
         return image_background
 
-    async def render_foreground(self, background, n):
+    def render_foreground(self, background, n):
         image_foreground = Image.new('RGBA', background.size, (0, 0, 0, 0))
         draw_foreground = ImageDraw.Draw(image_foreground)
 
@@ -32,8 +32,13 @@ class Ribbon(Renderable):
         return image_foreground
 
     async def render(self) -> Render:
-        a = zip(backgrounds := await asyncio.gather(*(self.render_background(i) for i in range(self._color.duration))),
-            await asyncio.gather(*(self.render_foreground(backgrounds[i], i) for i in range(self._color.duration))))
+        loop = asyncio.get_running_loop()
+
+        a = zip(backgrounds := await asyncio.gather(*(loop.run_in_executor(None, self.render_background, i)
+                                                      for i in range(self._color.duration))),
+                await asyncio.gather(*(loop.run_in_executor(None, self.render_foreground, backgrounds[i], i)
+                                       for i in range(self._color.duration))))
+
         frames = [Image.alpha_composite(image_background, image_foreground) for image_background, image_foreground in a]
         return Render(*frames)
 
@@ -45,20 +50,22 @@ class RibbonShine(Ribbon):
         self._width = getattr(title, 'width', 100)
         self._angle = getattr(title, 'angle', math.pi / 6)
 
-    async def render_shine(self, background, n):
+    def render_shine(self, background, n):
         return Image.new('RGBA', (self._width, background.height),
                          color=self._shine.rgba(n % self._shine.duration))
 
-    async def render_background(self, n) -> Image:
-        image_background = await super().render_background(n)
-        image_shine = await self.render_shine(image_background, n)
+    def render_background(self, n) -> Image:
+        image_background = super().render_background(n)
+        image_shine = self.render_shine(image_background, n)
 
         offset = int(math.tan(abs(self._angle)) * image_shine.height)
         image_overlay = Image.new('RGBA', (image_shine.width + offset, image_shine.height), (0, 0, 0, 0))
         image_overlay.paste(image_shine, (0 if self._angle < 0 else offset, 0))
         image_overlay = image_overlay.transform(image_overlay.size, Image.AFFINE, (1, self._angle, 0, 0, 1, 0))
         image_background.alpha_composite(image_overlay,
-                                         (int(n / self._color.duration * (image_background.width + 2 * image_overlay.width) - image_overlay.width), 0))
+                                         (int(n / self._color.duration * (
+                                                 image_background.width + 2 * image_overlay.width) - image_overlay.width),
+                                          0))
 
         return image_background
 
@@ -68,7 +75,7 @@ class RibbonWave(RibbonShine):
         super().__init__(title)
         self._fade = getattr(title, 'fade_width', self._width // 2)
 
-    async def render_shine(self, background, n):
+    def render_shine(self, background, n):
         color = self._shine.rgba(n % self._shine.duration)
 
         image_shine = Image.new('RGBA', (self._width + 2 * self._fade, background.height), color=color)
