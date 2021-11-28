@@ -8,7 +8,8 @@ from bot.api_compatability_layer import get_player_cosmetics, get_player_info
 from bot.card.PlayerCard import PlayerCard
 from bot.card.PlayerModel import PlayerModel
 from bot.card.Render import Render
-from bot.card.card import FONT_BLACK, FONT_BOLD, FONT_LIGHT, FONT_REGULAR, SPACING
+from bot.card.Ribbon import Ribbon
+from bot.card.card import FONT_BLACK, FONT_BOLD, FONT_LIGHT, SPACING
 from bot.cosmetics.cosmetics import CosmeticsType
 from bot.player.stats import PlayerInfo, PlayerStatsType
 from helpers.utilities import get_number_representation, get_timedelta_representation
@@ -28,16 +29,6 @@ class StatsCard(PlayerCard):
     async def get_stats(self, player_info: PlayerInfo) -> List[Tuple[str]]:
         raise NotImplementedError()
 
-    async def render_ribbon(self, string, bold, color) -> Render:
-        image_ribbon = Image.new('RGBA', (215, 35), color=tuple(int(i * 255) for i in color.rgb))
-        draw_ribbon = ImageDraw.Draw(image_ribbon)
-
-        font_ribbon = ImageFont.truetype(FONT_BLACK if bold else FONT_REGULAR, 18)
-        draw_ribbon.text((image_ribbon.width // 2, image_ribbon.height // 2),
-                         string, (255, 255, 255, 255), font_ribbon, anchor='mm')
-
-        return image_ribbon.rotate(-35, expand=True).crop((0, 30, 164, STATS_CARD_HEIGHT))
-
     async def render(self) -> Render:
         player_info = await get_player_info(username=self._username, discord_user=self._discord_user)
         player_cosmetics = await get_player_cosmetics(username=self._username, discord_user=self._discord_user)
@@ -54,9 +45,8 @@ class StatsCard(PlayerCard):
         length_name = draw_base.textlength(await player_info.username, font_username)
 
         width_required = 12 * SPACING + image_skin.width + length_name
-        for cosmetic in player_cosmetics:
-            if cosmetic.type == CosmeticsType.Title:
-                width_required += 135
+        if CosmeticsType.Title in player_cosmetics:
+            width_required += 135
 
         if width_required > image_base.width:
             image_base = Image.new('RGBA', (int(width_required), STATS_CARD_HEIGHT), color=(0, 0, 0, 0))
@@ -102,25 +92,16 @@ class StatsCard(PlayerCard):
         draw_base.text((14 * SPACING + image_skin.width + max(length_stats_left, 80), 10 * SPACING), stats[1][1],
                        (77, 189, 138), font_stats)
 
-        animated = False
-        frames = []
-        for cosmetic in player_cosmetics:
-            if cosmetic.type == CosmeticsType.Title:
-                effect = cosmetic.color
-                animated = effect.type != 'static'
+        if title := player_cosmetics.get(CosmeticsType.Title):
+            ribbon = await (getattr(title, 'ribbon', Ribbon)(title)).render()
 
-                if animated:
-                    for color in effect:
-                        frame = image_base.copy()
+            frames = []
+            for image in ribbon.images:
+                frame = image_base.copy()
+                image = image.rotate(-35, expand=True).crop((0, 30, 164, STATS_CARD_HEIGHT))
+                frame.paste(image, (image_base.width - 175, SPACING), mask=image)
+                frames.append(frame)
 
-                        image_ribbon = await self.render_ribbon(str(cosmetic), cosmetic.bold, color)
-                        frame.paste(image_ribbon, (image_base.width - 175, SPACING), mask=image_ribbon)
-                        frames.append(frame)
-                else:
-                    image_ribbon = await self.render_ribbon(str(cosmetic), cosmetic.bold, effect[0])
-                    image_base.paste(image_ribbon, (image_base.width - 175, SPACING), mask=image_ribbon)
-
-        if animated:
             return Render(*frames)
 
         return Render(image_base)

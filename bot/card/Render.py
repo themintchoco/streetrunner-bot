@@ -1,4 +1,5 @@
 from io import BytesIO
+from typing import Generator
 
 from PIL import Image
 
@@ -21,8 +22,12 @@ class Render:
         return self._images[0]
 
     @property
-    def multi_frame(self) -> bool:
+    def animated(self) -> bool:
         return len(self._images) > 1
+
+    @property
+    def images(self) -> Generator[Image.Image, None, None]:
+        yield from self._images
 
     def file(self, *args, **kwargs) -> BytesIO:
         fp = BytesIO()

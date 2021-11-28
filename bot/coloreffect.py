@@ -6,9 +6,11 @@ from colour import Color
 
 
 class ColorEffect:
+    animated = False
+
     def __init__(self, *color, duration=1, **kwargs):
-        self.type = 'static'
         self.duration = duration
+        self.alpha = kwargs.pop('alpha', 1)
 
         if isinstance(color[0], Color):
             self.color = color
@@ -22,11 +24,15 @@ class ColorEffect:
         for i in range(self.duration):
             yield self[i]
 
+    def rgba(self, color):
+        if isinstance(color, int):
+            color = self[color]
+
+        return tuple(int(i * 255) for i in (*color.rgb, self.alpha))
+
 
 class ColorEffectBlink(ColorEffect):
-    def __init__(self, *color, **kwargs):
-        super().__init__(*color, **kwargs)
-        self.type = 'blink'
+    animated = True
 
     def __getitem__(self, t):
         return self.color[round(self.time_function(t) // (1 / len(self.color)))]
@@ -36,9 +42,7 @@ class ColorEffectBlink(ColorEffect):
 
 
 class ColorEffectUnicorn(ColorEffect):
-    def __init__(self, *color, **kwargs):
-        super().__init__(*color, **kwargs)
-        self.type = 'unicorn'
+    animated = True
 
     def __getitem__(self, t):
         return self.spectrum[round(min(self.time_function(t) * 100 * (len(self.color) - 1), len(self.spectrum) - 1))]
@@ -55,7 +59,6 @@ class ColorEffectUnicorn(ColorEffect):
 class ColorEffectBreathe(ColorEffectUnicorn):
     def __init__(self, *color, inhale_rate=1.4, exhale_rate=1.4, **kwargs):
         super().__init__(*color, **kwargs)
-        self.type = 'breathe'
         self.inhale_rate = inhale_rate
         self.exhale_rate = exhale_rate
 

@@ -59,7 +59,7 @@ class XP(commands.Cog):
             async with ctx.typing():
                 render = await XPCard(discord_user=ctx.author).render()
 
-            if render.multi_frame:
+            if render.animated:
                 await ctx.send(file=nextcord.File(render.file_animated(format='GIF', loop=0), 'xp.gif'))
             else:
                 await ctx.send(file=nextcord.File(render.file(format='PNG'), 'xp.png'))
