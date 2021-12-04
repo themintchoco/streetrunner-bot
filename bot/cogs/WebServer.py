@@ -226,7 +226,7 @@ class WebServer(commands.Cog):
         @docs(
             tags=['message'],
             summary='Edit a message',
-            description='Edits a message sent to the specified Discord channel',
+            description='Edits the specified message',
             responses={
                 200: {'description': 'OK'},
                 400: {'description': 'Request is malformed'},
@@ -234,8 +234,8 @@ class WebServer(commands.Cog):
             },
         )
         @request_schema(MessageUpdateSchema)
-        @self.routes.post('/message/{channel_id}/{message_id}/edit')
-        async def send_channel(request):
+        @self.routes.post('/message/{channel_id}/{message_id}')
+        async def edit_message(request):
             channel = self.bot.get_channel(int(request.match_info['channel_id']))
             if not channel:
                 raise web.HTTPNotFound()
@@ -253,6 +253,31 @@ class WebServer(commands.Cog):
                 raise web.HTTPBadRequest()
 
             await self.update_message(message.edit, data)
+            return web.Response()
+
+        @docs(
+            tags=['message'],
+            summary='Delete a message',
+            description='Deletes the specified message',
+            responses={
+                200: {'description': 'OK'},
+                404: {'description': 'Channel or message was not found'},
+            },
+        )
+        @self.routes.delete('/message/{channel_id}/{message_id}')
+        async def delete_message(request):
+            channel = self.bot.get_channel(int(request.match_info['channel_id']))
+            if not channel:
+                raise web.HTTPNotFound()
+
+            try:
+                message = await channel.fetch_message(int(request.match_info['message_id']))
+            except nextcord.NotFound:
+                raise web.HTTPNotFound()
+            except Exception:
+                raise web.HTTPInternalServerError()
+
+            await message.delete()
             return web.Response()
 
         @docs(
