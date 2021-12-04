@@ -35,3 +35,12 @@ class MessageSchema(Schema):
 class MessageQuerySchema(Schema):
     embeds = fields.Bool()
     reactions = fields.Bool()
+
+
+class MessageUpdateSchema(Schema):
+    content = fields.String()
+    embeds = fields.List(fields.Nested(EmbedSchema))
+
+
+class MessageUpdateResponseSchema(Schema):
+    id = fields.Integer()
