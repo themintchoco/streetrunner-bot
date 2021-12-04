@@ -338,7 +338,7 @@ class WebServer(commands.Cog):
             securityDefinitions={
                 'BasicAuth': {'type': 'basic', 'name': 'Authorization', 'in': 'header'},
             },
-            version='v1.3.0',
+            version='v1.4.0',
             url='/swagger.json',
         )
 
