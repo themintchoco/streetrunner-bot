@@ -8,9 +8,9 @@ from aiohttp_apispec import docs, querystring_schema, request_schema, response_s
 from aiohttp_remotes import BasicAuth, Secure, XForwardedRelaxed, setup
 from nextcord.ext import commands, tasks
 
-from bot.api.StreetRunnerApi.Player import Player, PlayerCosmetics
+from bot.api.StreetRunnerApi.Player import Player
 from bot.cosmetics import pets, titles
-from docs.schema import ChannelSchema, MessageQuerySchema, MessageSchema, UserSchema
+from docs.schema import ChannelSchema, MessageQuerySchema, MessageSchema, MessageUpdateResponseSchema, MessageUpdateSchema, UserSchema
 
 
 class WebServer(commands.Cog):
@@ -65,22 +65,27 @@ class WebServer(commands.Cog):
             description='Sends a message to the specified Discord channel',
             responses={
                 200: {'description': 'OK'},
+                400: {'description': 'Request is malformed'},
                 404: {'description': 'Channel was not found'},
             },
         )
+        @request_schema(MessageUpdateSchema)
+        @response_schema(MessageUpdateResponseSchema)
         @self.routes.post('/channel/{id}/send')
         async def send_channel(request):
             channel = self.bot.get_channel(int(request.match_info['id']))
             if not channel:
                 raise web.HTTPNotFound()
 
-            msg = await request.text()
             try:
-                await channel.send(embed=nextcord.Embed.from_dict(json.loads(msg)))
+                data = await request.json()
             except json.decoder.JSONDecodeError:
-                await channel.send(msg)
+                raise web.HTTPBadRequest()
 
-            return web.Response()
+            message = await self.update_message(channel.send, data)
+            return web.json_response({
+                'id': message.id,
+            })
 
         @docs(
             tags=['user'],
@@ -106,23 +111,27 @@ class WebServer(commands.Cog):
             summary='Send a message',
             description='Sends a message to the specified user',
             responses={
-                200: {'description': 'OK'},
+                400: {'description': 'Request is malformed'},
                 404: {'description': 'User was not found'},
             },
         )
+        @request_schema(MessageUpdateSchema)
+        @response_schema(MessageUpdateResponseSchema, 200)
         @self.routes.post('/user/{id}/send')
         async def send_user(request):
             user = self.bot.get_user(int(request.match_info['id']))
             if not user:
                 raise web.HTTPNotFound()
 
-            msg = await request.text()
             try:
-                await user.send(embed=nextcord.Embed.from_dict(json.loads(msg)))
+                data = await request.json()
             except json.decoder.JSONDecodeError:
-                await user.send(msg)
+                raise web.HTTPBadRequest()
 
-            return web.Response()
+            message = await self.update_message(user.send, data)
+            return web.json_response({
+                'id': message.id,
+            })
 
         @docs(
             tags=['user'],
@@ -151,10 +160,12 @@ class WebServer(commands.Cog):
             summary='Send a message',
             description='Sends a message to the specified user',
             responses={
-                200: {'description': 'OK'},
+                400: {'description': 'Request is malformed'},
                 404: {'description': 'User was not found'},
             },
         )
+        @request_schema(MessageUpdateSchema)
+        @response_schema(MessageUpdateResponseSchema, 200)
         @self.routes.post('/user/{name}/{discrim}/send')
         async def send_member(request):
             guild = self.bot.get_guild(int(os.environ['GUILD_ID']))
@@ -164,13 +175,15 @@ class WebServer(commands.Cog):
             if not member:
                 raise web.HTTPNotFound()
 
-            msg = await request.text()
             try:
-                await member.send(embed=nextcord.Embed.from_dict(json.loads(msg)))
+                data = await request.json()
             except json.decoder.JSONDecodeError:
-                await member.send(msg)
+                raise web.HTTPBadRequest()
 
-            return web.Response()
+            message = await self.update_message(member.send, data)
+            return web.json_response({
+                'id': message.id,
+            })
 
         @docs(
             tags=['message'],
@@ -209,6 +222,63 @@ class WebServer(commands.Cog):
                     })
 
             return web.json_response(response)
+
+        @docs(
+            tags=['message'],
+            summary='Edit a message',
+            description='Edits the specified message',
+            responses={
+                200: {'description': 'OK'},
+                400: {'description': 'Request is malformed'},
+                404: {'description': 'Channel or message was not found'},
+            },
+        )
+        @request_schema(MessageUpdateSchema)
+        @self.routes.post('/message/{channel_id}/{message_id}')
+        async def edit_message(request):
+            channel = self.bot.get_channel(int(request.match_info['channel_id']))
+            if not channel:
+                raise web.HTTPNotFound()
+
+            try:
+                message = await channel.fetch_message(int(request.match_info['message_id']))
+            except nextcord.NotFound:
+                raise web.HTTPNotFound()
+            except Exception:
+                raise web.HTTPInternalServerError()
+
+            try:
+                data = await request.json()
+            except json.decoder.JSONDecodeError:
+                raise web.HTTPBadRequest()
+
+            await self.update_message(message.edit, data)
+            return web.Response()
+
+        @docs(
+            tags=['message'],
+            summary='Delete a message',
+            description='Deletes the specified message',
+            responses={
+                200: {'description': 'OK'},
+                404: {'description': 'Channel or message was not found'},
+            },
+        )
+        @self.routes.delete('/message/{channel_id}/{message_id}')
+        async def delete_message(request):
+            channel = self.bot.get_channel(int(request.match_info['channel_id']))
+            if not channel:
+                raise web.HTTPNotFound()
+
+            try:
+                message = await channel.fetch_message(int(request.match_info['message_id']))
+            except nextcord.NotFound:
+                raise web.HTTPNotFound()
+            except Exception:
+                raise web.HTTPInternalServerError()
+
+            await message.delete()
+            return web.Response()
 
         @docs(
             tags=['cosmetics'],
@@ -268,9 +338,18 @@ class WebServer(commands.Cog):
             securityDefinitions={
                 'BasicAuth': {'type': 'basic', 'name': 'Authorization', 'in': 'header'},
             },
-            version='v1.3.0',
+            version='v1.4.0',
             url='/swagger.json',
         )
+
+    async def update_message(self, f, data):
+        content = data.get('content')
+        embeds = [nextcord.Embed.from_dict(embed) for embed in data.get('embeds', [])]
+
+        if not content and not embeds:
+            raise web.HTTPBadRequest()
+
+        return await f(content=content, embeds=embeds)
 
     @tasks.loop()
     async def web_server(self):
